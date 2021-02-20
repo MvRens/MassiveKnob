@@ -185,7 +185,6 @@ namespace MassiveKnob.Forms
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Massive Knob - Settings";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.SettingsForm_FormClosing);
-            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.SettingsForm_FormClosed);
             this.NotifyIconMenu.ResumeLayout(false);
             this.CommunicationGroupbox.ResumeLayout(false);
             this.CommunicationGroupbox.PerformLayout();

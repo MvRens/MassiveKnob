@@ -36,8 +36,15 @@ namespace MassiveKnob.Hardware
             {
                 observers.Remove(observer);
             }
-            
 
+
+            public void Connecting()
+            {
+                foreach (var observer in observers)
+                    observer.Connecting();
+            }
+
+            
             public void Connected(int knobCount)
             {
                 foreach (var observer in observers)

@@ -35,7 +35,8 @@ namespace MassiveKnob
             container.Register<IAudioDeviceManagerFactory, CoreAudioDeviceManagerFactory>();
             
             // For testing without the hardware:
-            container.Register<IMassiveKnobHardwareFactory>(() => new MockMassiveKnobHardwareFactory(3, TimeSpan.FromSeconds(1), 25));
+            container.Register<IMassiveKnobHardwareFactory, SerialMassiveKnobHardwareFactory>();
+            //container.Register<IMassiveKnobHardwareFactory>(() => new MockMassiveKnobHardwareFactory(3, TimeSpan.FromSeconds(1), 25));
             
             return container;
         }

@@ -4,6 +4,7 @@ namespace MassiveKnob.Hardware
 {
     public interface IMassiveKnobHardwareObserver
     {
+        void Connecting();
         void Connected(int knobCount);
         void Disconnected();
 
@@ -25,6 +26,6 @@ namespace MassiveKnob.Hardware
 
     public interface IMassiveKnobHardwareFactory
     {
-        IMassiveKnobHardware Create(string serialPort);
+        IMassiveKnobHardware Create(string portName);
     }
 }

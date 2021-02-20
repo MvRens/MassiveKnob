@@ -4,6 +4,8 @@ using System.IO.Ports;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Dapplo.Windows.Devices;
+using Dapplo.Windows.Devices.Enums;
 using MassiveKnob.Hardware;
 using MassiveKnob.Settings;
 using MassiveKnob.UserControls;
@@ -11,13 +13,15 @@ using Nito.AsyncEx;
 
 namespace MassiveKnob.Forms
 {
-    public partial class SettingsForm : Form, IMassiveKnobHardwareObserver
+    public partial class SettingsForm : Form, IMassiveKnobHardwareObserver, IObserver<DeviceNotificationEvent>
     {
         private readonly IAudioDeviceManager audioDeviceManager;
         private readonly IMassiveKnobHardwareFactory massiveKnobHardwareFactory;
         private readonly List<KnobDeviceControl> knobDeviceControls = new List<KnobDeviceControl>();
 
         private bool loading = true;
+        private string lastConnectedPort = null;
+        private IDisposable deviceSubscription;
         private IMassiveKnobHardware hardware;
         private IAudioDevice[] devices;
         private Settings.Settings settings;
@@ -35,42 +39,43 @@ namespace MassiveKnob.Forms
             this.massiveKnobHardwareFactory = massiveKnobHardwareFactory;
             
             InitializeComponent();
-
             SerialPortStatusLabel.Text = Strings.StatusNotConnected;
 
-            Task.Run(async () =>
-            {
-                await LoadSettings();
-
-                await Task.WhenAll(
-                    LoadSerialPorts(),
-                    LoadAudioDevices()
-                );
-
-                loading = false;
-                await Connect();
-            }).ContinueWith(t =>
-            {
-                if (t.IsFaulted && t.Exception != null)
-                    SafeCall(() => throw t.Exception);
-            });
+            // Due to the form not being visible initially (see SetVisibleCore), we can't use the Load event
+            AsyncLoad();
         }
         
-        
-        private void SafeCall(Action action)
+
+        private async void AsyncLoad()
+        {
+            await LoadSettings();
+
+            await Task.WhenAll(
+                LoadSerialPorts(),
+                LoadAudioDevices()
+            );
+
+            deviceSubscription = DeviceNotification.OnNotification.Subscribe(this);
+
+            loading = false;
+            await Connect();
+        }
+
+
+        private void RunInUIContext(Action action)
         {
             if (InvokeRequired)
                 Invoke(action);
             else
                 action();
         }
-
-
+        
+        
         private Task LoadSerialPorts()
         {
             var portNames = SerialPort.GetPortNames();
             
-            SafeCall(() =>
+            RunInUIContext(() =>
             {
                 SerialPortCombobox.BeginUpdate();
                 try
@@ -97,22 +102,19 @@ namespace MassiveKnob.Forms
         private async Task LoadSettings()
         {
             var newSettings = await SettingsJsonSerializer.Deserialize();
-            SafeCall(() => SetSettings(newSettings));
+            RunInUIContext(() => SetSettings(newSettings));
         }
 
 
-        private void SaveSettings()
+        private async Task SaveSettings()
         {
             if (settings == null)
                 return;
-            
-            Task.Run(async () =>
-            {
-                using (await saveSettingsLock.LockAsync())
-                { 
-                    await SettingsJsonSerializer.Serialize(settings);
-                }
-            });
+
+            using (await saveSettingsLock.LockAsync())
+            { 
+                await SettingsJsonSerializer.Serialize(settings);
+            }
         }
 
 
@@ -120,9 +122,8 @@ namespace MassiveKnob.Forms
         {
             string serialPort = null;
             
-            SafeCall(() =>
+            RunInUIContext(() =>
             {
-                SerialPortStatusLabel.Text = Strings.StatusConnecting;
                 serialPort = (string)SerialPortCombobox.SelectedItem;
             });
 
@@ -145,7 +146,7 @@ namespace MassiveKnob.Forms
         private async Task LoadAudioDevices()
         {
             var newDevices = await audioDeviceManager.GetDevices();
-            SafeCall(() => SetDevices(newDevices));
+            RunInUIContext(() => SetDevices(newDevices));
         }
 
 
@@ -158,10 +159,12 @@ namespace MassiveKnob.Forms
             SerialPortCombobox.SelectedItem = value.SerialPort;
             
             // No need to update the knob device user controls, as they are not loaded yet
+            // (guaranteed by the order in AsyncLoad)
 
             settings = value;
         }
 
+        
         private void SetDevices(IEnumerable<IAudioDevice> value)
         {
             devices = value.ToArray();
@@ -206,13 +209,13 @@ namespace MassiveKnob.Forms
                     if (i < settings.Knobs.Count)
                         knobDeviceControl.SetDeviceId(settings.Knobs[i].DeviceId);
 
-                    knobDeviceControl.OnDeviceChanged += (sender, args) =>
+                    knobDeviceControl.OnDeviceChanged += async (sender, args) =>
                     {
                         while (settings.Knobs.Count - 1 < args.KnobIndex)
                             settings.Knobs.Add(new Settings.Settings.KnobSettings());
 
                         settings.Knobs[args.KnobIndex].DeviceId = args.DeviceId;
-                        SaveSettings();
+                        await SaveSettings();
                     };
 
                     knobDeviceControls.Add(knobDeviceControl);
@@ -241,7 +244,13 @@ namespace MassiveKnob.Forms
         {
             // Prevent the form from showing at startup
             if (!startupVisibleCalled)
+            {
                 startupVisibleCalled = true;
+
+                // Make sure the underlying window is still created, otherwise Close won't work
+                if (!IsHandleCreated)
+                    CreateHandle();
+            }
             else
                 base.SetVisibleCore(value);
         }
@@ -253,16 +262,43 @@ namespace MassiveKnob.Forms
         }
         
         
-        private void Quit()
+        private async Task Quit()
         {
+            Hide();
+            
+            deviceSubscription?.Dispose();
+            
+            foreach (var knobDeviceControl in knobDeviceControls)
+                knobDeviceControl.Dispose();
+
+            knobDeviceControls.Clear();
+
+
+            if (hardware != null)
+            {
+                hardware.DetachObserver(this);
+                await hardware.Disconnect();
+            }
+
+            audioDeviceManager?.Dispose();
+
             closing = true;
             Close();
         }
 
 
+        public void Connecting()
+        {
+            RunInUIContext(() =>
+            {
+                SerialPortStatusLabel.Text = Strings.StatusConnecting;
+            });
+        }
+        
+
         public void Connected(int knobCount)
         {
-            SafeCall(() =>
+            RunInUIContext(() =>
             {
                 SerialPortStatusLabel.Text = Strings.StatusConnected;
                 SetKnobCount(knobCount);
@@ -272,14 +308,15 @@ namespace MassiveKnob.Forms
 
         public void Disconnected()
         {
-            SafeCall(() =>
+            RunInUIContext(() =>
             {
                 SerialPortStatusLabel.Text = Strings.StatusNotConnected;
+                lastConnectedPort = null;
             });
         }
 
 
-        public void VolumeChanged(int knob, int volume)
+        public async void VolumeChanged(int knob, int volume)
         {
             if (knob >= settings.Knobs.Count)
                 return;
@@ -289,15 +326,12 @@ namespace MassiveKnob.Forms
 
             var deviceId = settings.Knobs[knob].DeviceId.Value;
 
-            Task.Run(async () =>
+            using (await setVolumeLock.LockAsync())
             {
-                using (await setVolumeLock.LockAsync())
-                {
-                    var device = await audioDeviceManager.GetDeviceById(deviceId);
-                    if (device != null)
-                        await device.SetVolume(volume);
-                }
-            });
+                var device = await audioDeviceManager.GetDeviceById(deviceId);
+                if (device != null)
+                    await device.SetVolume(volume);
+            }
         }
 
 
@@ -310,20 +344,6 @@ namespace MassiveKnob.Forms
             e.Cancel = true;
         }
 
-
-        private void SettingsForm_FormClosed(object sender, FormClosedEventArgs e)
-        {
-            foreach (var knobDeviceControl in knobDeviceControls)
-                knobDeviceControl.Dispose();
-
-            knobDeviceControls.Clear();
-            
-
-            hardware?.DetachObserver(this);
-            hardware?.Disconnect().GetAwaiter().GetResult();
-            audioDeviceManager?.Dispose();
-        }        
-        
         
         private void NotifyIcon_DoubleClick(object sender, EventArgs e)
         {
@@ -331,9 +351,9 @@ namespace MassiveKnob.Forms
         }
 
         
-        private void QuitToolStripMenuItem_Click(object sender, EventArgs e)
+        private async void QuitToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Quit();
+            await Quit();
         }
 
         
@@ -349,15 +369,39 @@ namespace MassiveKnob.Forms
         }
 
         
-        private void SerialPortCombobox_SelectedIndexChanged(object sender, EventArgs e)
+        private async void SerialPortCombobox_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (loading || (string)SerialPortCombobox.SelectedItem == settings.SerialPort)
+            var newPort = (string) SerialPortCombobox.SelectedItem;
+            if (loading || newPort == lastConnectedPort)
                 return;
-            
-            settings.SerialPort = (string) SerialPortCombobox.SelectedItem;
-            SaveSettings();
 
-            Task.Run(Connect);
+            lastConnectedPort = newPort;
+            if (settings.SerialPort != newPort)
+            {
+                settings.SerialPort = (string) SerialPortCombobox.SelectedItem;
+                await SaveSettings();
+            }
+
+            await Connect();
+        }
+
+        
+        public async void OnNext(DeviceNotificationEvent value)
+        {
+            if ((value.EventType == DeviceChangeEvent.DeviceArrival ||
+                 value.EventType == DeviceChangeEvent.DeviceRemoveComplete) &&
+                value.Is(DeviceBroadcastDeviceType.DeviceInterface))
+            {
+                await LoadSerialPorts();
+            }
+        }
+
+        public void OnError(Exception error)
+        {
+        }
+
+        public void OnCompleted()
+        {
         }
     }
 }

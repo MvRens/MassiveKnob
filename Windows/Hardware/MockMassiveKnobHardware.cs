@@ -48,6 +48,7 @@ namespace MassiveKnob.Hardware
     }
     
     
+    // ReSharper disable once UnusedMember.Global - for testing purposes only
     public class MockMassiveKnobHardwareFactory : IMassiveKnobHardwareFactory
     {
         private readonly int knobCount;
@@ -62,7 +63,7 @@ namespace MassiveKnob.Hardware
         }
         
         
-        public IMassiveKnobHardware Create(string serialPort)
+        public IMassiveKnobHardware Create(string portName)
         {
             return new MockMassiveKnobHardware(knobCount, volumeChangeInterval, maxVolume);
         }

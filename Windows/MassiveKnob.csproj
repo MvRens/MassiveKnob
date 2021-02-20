@@ -65,6 +65,7 @@
     <Compile Include="Hardware\IAudioDeviceManager.cs" />
     <Compile Include="Hardware\IMassiveKnobHardware.cs" />
     <Compile Include="Hardware\MockMassiveKnobHardware.cs" />
+    <Compile Include="Hardware\SerialMassiveKnobHardware.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Settings\Settings.cs" />
@@ -115,6 +116,12 @@
     </PackageReference>
     <PackageReference Include="AudioSwitcher.AudioApi.CoreAudio">
       <Version>4.0.0-alpha5</Version>
+    </PackageReference>
+    <PackageReference Include="Dapplo.Windows.Devices">
+      <Version>0.11.24</Version>
+    </PackageReference>
+    <PackageReference Include="Dapplo.Windows.Messages">
+      <Version>0.11.24</Version>
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json">
       <Version>12.0.3</Version>
