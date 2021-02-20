@@ -13,8 +13,8 @@ Because of the second requirement, a simple media keys HID device does not suffi
 
 **Nice to have**
 1. Physical buttons to switch the active device
-a. by changing the Windows default output device
-b. by running a VoiceMeeter macro
+  - by changing the Windows default output device
+  - by running a VoiceMeeter macro
 2. Corresponding LEDs to indicate the currently active device
 3. OSD
 4. API / plugins to use extra knobs and buttons for other purposes
