@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
@@ -25,8 +24,7 @@ namespace MassiveKnob.Settings
 
         public static async Task Serialize(Settings settings, string filename)
         {
-            var serializedSettings = SerializedSettings.FromSettings(settings);
-            var json = JsonConvert.SerializeObject(serializedSettings);
+            var json = JsonConvert.SerializeObject(settings);
 
             using (var stream = new FileStream(filename, FileMode.Create, FileAccess.Write, FileShare.Read, 4096, true))
             using (var streamWriter = new StreamWriter(stream, Encoding.UTF8))
@@ -58,49 +56,7 @@ namespace MassiveKnob.Settings
             if (string.IsNullOrEmpty(json))
                 return Settings.Default();
 
-            var serializedSettings = JsonConvert.DeserializeObject<SerializedSettings>(json);
-            return serializedSettings.ToSettings();
-        }
-
-
-        private class SerializedSettings
-        {
-            // ReSharper disable MemberCanBePrivate.Local - used for JSON serialization
-            public string SerialPort;
-            public SerializedKnobSettings[] Knobs;
-            // ReSharper restore MemberCanBePrivate.Local
-
-
-            public static SerializedSettings FromSettings(Settings settings)
-            {
-                return new SerializedSettings
-                {
-                    SerialPort = settings.SerialPort,
-                    Knobs = settings.Knobs.Select(knob => new SerializedKnobSettings
-                    {
-                        DeviceId = knob.DeviceId
-                    }).ToArray()
-                };
-            }
-
-            
-            public Settings ToSettings()
-            {
-                return new Settings
-                {
-                    SerialPort = SerialPort,
-                    Knobs = Knobs.Select(knob => new Settings.KnobSettings
-                    {
-                        DeviceId = knob.DeviceId
-                    }).ToList()
-                };
-            }
-            
-
-            public class SerializedKnobSettings
-            {
-                public Guid? DeviceId;
-            }
+            return JsonConvert.DeserializeObject<Settings>(json);
         }
     }
 }

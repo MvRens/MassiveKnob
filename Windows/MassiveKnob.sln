@@ -3,7 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.31005.135
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MassiveKnob", "MassiveKnob.csproj", "{73130EC7-49B3-40AD-8367-1095C0F41905}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MassiveKnob", "MassiveKnob\MassiveKnob.csproj", "{73130EC7-49B3-40AD-8367-1095C0F41905}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MassiveKnob.Plugin", "MassiveKnob.Plugin\MassiveKnob.Plugin.csproj", "{A1298BE4-1D23-416C-8C56-FC9264487A95}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MassiveKnob.Plugin.CoreAudio", "MassiveKnob.Plugin.CoreAudio\MassiveKnob.Plugin.CoreAudio.csproj", "{5BD5E2F2-9923-4F74-AC69-ACDA0B847937}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MassiveKnob.Plugin.MockDevice", "MassiveKnob.Plugin.MockDevice\MassiveKnob.Plugin.MockDevice.csproj", "{674DE974-B134-4DB5-BFAF-7BC3D05E16DE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +21,18 @@ Global
 		{73130EC7-49B3-40AD-8367-1095C0F41905}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{73130EC7-49B3-40AD-8367-1095C0F41905}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{73130EC7-49B3-40AD-8367-1095C0F41905}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1298BE4-1D23-416C-8C56-FC9264487A95}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1298BE4-1D23-416C-8C56-FC9264487A95}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1298BE4-1D23-416C-8C56-FC9264487A95}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1298BE4-1D23-416C-8C56-FC9264487A95}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5BD5E2F2-9923-4F74-AC69-ACDA0B847937}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5BD5E2F2-9923-4F74-AC69-ACDA0B847937}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5BD5E2F2-9923-4F74-AC69-ACDA0B847937}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5BD5E2F2-9923-4F74-AC69-ACDA0B847937}.Release|Any CPU.Build.0 = Release|Any CPU
+		{674DE974-B134-4DB5-BFAF-7BC3D05E16DE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{674DE974-B134-4DB5-BFAF-7BC3D05E16DE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{674DE974-B134-4DB5-BFAF-7BC3D05E16DE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{674DE974-B134-4DB5-BFAF-7BC3D05E16DE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
