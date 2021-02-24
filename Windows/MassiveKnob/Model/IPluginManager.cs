@@ -5,8 +5,7 @@ namespace MassiveKnob.Model
 {
     public interface IPluginManager
     {
-        IEnumerable<IMassiveKnobPlugin> Plugins { get; }
-
         IEnumerable<IMassiveKnobDevicePlugin> GetDevicePlugins();
+        IEnumerable<IMassiveKnobActionPlugin> GetActionPlugins();
     }
 }

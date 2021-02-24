@@ -9,8 +9,7 @@ const byte KnobCount = 1;
 
 // For each potentiometer, specify the port
 const byte KnobPin[KnobCount] = {
-//  A0,
-  A1
+  A2 
 };
 
 // Minimum time between reporting changing values, reduces serial traffic
@@ -46,6 +45,7 @@ float emaValue[KnobCount];
 unsigned long currentTime;
 unsigned long lastPlot;
 
+
 void setup() 
 {
   Serial.begin(115200);
@@ -56,7 +56,10 @@ void setup()
 
   // Seed the moving average
   for (byte knobIndex = 0; knobIndex < KnobCount; knobIndex++)
+  {
+    pinMode(KnobPin[knobIndex], INPUT);
     emaValue[knobIndex] = analogRead(KnobPin[knobIndex]);
+  }
 
   for (byte seed = 1; seed < EMASeedCount - 1; seed++)
     for (byte knobIndex = 0; knobIndex < KnobCount; knobIndex++)
@@ -119,18 +122,28 @@ void processMessage(byte message)
     case 'Q':   // Quit
       processQuitMessage();
       break;
+
+    default:
+      outputError("Unknown message: " + (char)message);
+      break;
   }
 }
 
 
 void processHandshakeMessage()
 {
-  byte buffer[2];
+  byte buffer[3];
   if (Serial.readBytes(buffer, 3) < 3)
+  {
+    outputError("Invalid handshake length");
     return;
+  }
   
   if (buffer[0] != 'M' || buffer[1] != 'K')
+  {
+    outputError("Invalid handshake: " + String((char)buffer[0]) + String((char)buffer[1]) + String((char)buffer[2]));
     return;
+  }
 
   switch (buffer[2])
   {
@@ -147,6 +160,8 @@ void processHandshakeMessage()
       break;
 
     default:
+      outputMode = PlainText;
+      outputError("Unknown output mode: " + String((char)buffer[2]));
       return;
   }
 
@@ -185,6 +200,11 @@ void processQuitMessage()
 
 byte getVolume(byte knobIndex)
 {
+  analogRead(KnobPin[knobIndex]);
+  
+  // Give the ADC some time to stabilize
+  delay(10);
+  
   analogReadValue[knobIndex] = analogRead(KnobPin[knobIndex]);
   emaValue[knobIndex] = (EMAAlpha * analogReadValue[knobIndex]) + ((1 - EMAAlpha) * emaValue[knobIndex]);
   
@@ -227,4 +247,22 @@ void outputPlotter()
   }
 
   Serial.println();
+}
+
+
+void outputError(String message)
+{
+  switch (outputMode)
+  {   
+    case Binary:
+      Serial.write('E');
+      Serial.write((byte)message.length());
+      Serial.print(message);
+      break;
+    
+    case PlainText:
+      Serial.print("Error: ");
+      Serial.println(message);
+      break;
+  }
 }

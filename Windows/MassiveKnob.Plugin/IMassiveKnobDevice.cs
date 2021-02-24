@@ -25,7 +25,6 @@ namespace MassiveKnob.Plugin
         /// <summary>
         /// Called when the device is selected.
         /// </summary>
-        /// <param name="context">Provides an interface to the Massive Knob settings and device. Can be stored until the device instance is disposed.</param>
-        IMassiveKnobDeviceInstance Create(IMassiveKnobContext context);
+        IMassiveKnobDeviceInstance Create();
     }
 }

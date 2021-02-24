@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Threading.Tasks;
 using System.Windows.Controls;
+using AudioSwitcher.AudioApi;
+using MassiveKnob.Plugin.CoreAudio.Settings;
 
 namespace MassiveKnob.Plugin.CoreAudio.Actions
 {
@@ -12,45 +14,62 @@ namespace MassiveKnob.Plugin.CoreAudio.Actions
         public string Description { get; } = "Sets the volume for the selected device, regardless of the current default device.";
         
         
-        public IMassiveKnobActionInstance Create(IMassiveKnobActionContext context)
+        public IMassiveKnobActionInstance Create()
         {
-            return new Instance(context);
+            return new Instance();
         }
         
         
         private class Instance : IMassiveKnobAnalogAction
         {
-            private readonly Settings settings;
+            private IMassiveKnobActionContext actionContext;
+            private DeviceVolumeActionSettings settings;
+            private IDevice playbackDevice;
 
-            
-            public Instance(IMassiveKnobContext context)
+
+            public void Initialize(IMassiveKnobActionContext context)
             {
-                settings = context.GetSettings<Settings>();
+                actionContext = context;
+                settings = context.GetSettings<DeviceVolumeActionSettings>();
+                ApplySettings();
             }
-            
+
             
             public void Dispose()
             {
             }
 
-            
+
+            private void ApplySettings()
+            {
+                var coreAudioController = CoreAudioControllerInstance.Acquire();
+                playbackDevice = settings.DeviceId.HasValue ? coreAudioController.GetDevice(settings.DeviceId.Value) : null;
+            }
+
+
             public UserControl CreateSettingsControl()
             {
-                return null;
+                var viewModel = new DeviceVolumeActionSettingsViewModel(settings);
+                viewModel.PropertyChanged += (sender, args) =>
+                {
+                    if (!viewModel.IsSettingsProperty(args.PropertyName))
+                        return;
+                    
+                    actionContext.SetSettings(settings);
+                    ApplySettings();
+                };
+
+                return new DeviceVolumeActionSettingsView(viewModel);
             }
 
-
-            public ValueTask AnalogChanged(byte value)
+            
+            public async ValueTask AnalogChanged(byte value)
             {
-                // TODO set volume
-                return default;
+                if (playbackDevice == null)
+                    return;
+                
+                await playbackDevice.SetVolumeAsync(value);
             }
-        }
-
-
-        private class Settings
-        {
-
         }
     }
 }

@@ -24,7 +24,7 @@ namespace MassiveKnob.Helpers
                 itemToCheck = VisualTreeHelper.GetParent(itemToCheck);
 
             // If you stopped at a ComboBoxItem, you're in the dropdown
-            var inDropDown = (itemToCheck is ComboBoxItem);
+            var inDropDown = itemToCheck is ComboBoxItem;
 
             return inDropDown
                 ? DropdownItemsTemplate ?? DropdownItemsTemplateSelector?.SelectTemplate(item, container)
@@ -33,6 +33,7 @@ namespace MassiveKnob.Helpers
     }
 
 
+    // ReSharper disable once UnusedMember.Global - used in XAML
     public class ComboBoxTemplateSelectorExtension : MarkupExtension
     {
         public DataTemplate SelectedItemTemplate { get; set; }
@@ -42,7 +43,7 @@ namespace MassiveKnob.Helpers
 
         public override object ProvideValue(IServiceProvider serviceProvider)
         {
-            return new ComboBoxTemplateSelector()
+            return new ComboBoxTemplateSelector
             {
                 SelectedItemTemplate = SelectedItemTemplate,
                 SelectedItemTemplateSelector = SelectedItemTemplateSelector,

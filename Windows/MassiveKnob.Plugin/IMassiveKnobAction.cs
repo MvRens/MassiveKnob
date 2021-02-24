@@ -19,12 +19,17 @@ namespace MassiveKnob.Plugin
         InputDigital = 1 << 1,
         
         /// <summary>
-        /// Can be assigned to an output, like an LED or relay.
+        /// Can be assigned to an analog output.
         /// </summary>
-        OutputSignal = 1 << 2
+        OutputAnalog = 1 << 2,
+
+        /// <summary>
+        /// Can be assigned to a digital output, like an LED or relay.
+        /// </summary>
+        OutputDigital = 1 << 3
     }
-    
-    
+
+
     /// <summary>
     /// Provides information about an action which can be assigned to a knob or button.
     /// </summary>
@@ -53,7 +58,6 @@ namespace MassiveKnob.Plugin
         /// <summary>
         /// Called when an action is bound to a knob or button to create an instance of the action.
         /// </summary>
-        /// <param name="context">Provides an interface to the Massive Knob settings and device. Can be stored until the action instance is disposed.</param>
-        IMassiveKnobActionInstance Create(IMassiveKnobActionContext context);
+        IMassiveKnobActionInstance Create();
     }
 }

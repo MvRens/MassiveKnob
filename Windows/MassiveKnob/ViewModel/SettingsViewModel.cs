@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Windows;
 using System.Windows.Controls;
 using MassiveKnob.Model;
 using MassiveKnob.Plugin;
@@ -11,47 +12,42 @@ namespace MassiveKnob.ViewModel
 {
     public class SettingsViewModel : INotifyPropertyChanged
     {
-        private readonly Settings.Settings settings;
         private readonly IMassiveKnobOrchestrator orchestrator;
         private DeviceViewModel selectedDevice;
         private UserControl settingsControl;
 
+        private DeviceSpecs? specs;
+        private IEnumerable<InputOutputViewModel> analogInputs;
+        private IEnumerable<InputOutputViewModel> digitalInputs;
+        private IEnumerable<InputOutputViewModel> analogOutputs;
+        private IEnumerable<InputOutputViewModel> digitalOutputs;
 
-        public IEnumerable<DeviceViewModel> Devices { get; }
+
+        // ReSharper disable UnusedMember.Global - used by WPF Binding
+        public IList<DeviceViewModel> Devices { get; }
+        public IList<ActionViewModel> Actions { get; }
+
+
         public DeviceViewModel SelectedDevice
         {
             get => selectedDevice;
-
             set
             {
                 if (value == selectedDevice)
                     return;
 
                 selectedDevice = value;
-                var deviceInstance = orchestrator.SetActiveDevice(value?.Device);
-                
-                if (value == null)
-                    settings.Device = null;
-                else
-                {
-                    settings.Device = new Settings.Settings.DeviceSettings
-                    {
-                        PluginId = value.Plugin.PluginId,
-                        DeviceId = value.Device.DeviceId,
-                        Settings = null
-                    };
-                }
+                var deviceInfo = orchestrator.SetActiveDevice(value?.Device);
 
                 OnPropertyChanged();
 
-                SettingsControl = deviceInstance?.CreateSettingsControl();
+                SettingsControl = deviceInfo?.Instance.CreateSettingsControl();
             }
         }
 
         public UserControl SettingsControl
         {
             get => settingsControl;
-
             set
             {
                 if (value == settingsControl)
@@ -62,20 +58,113 @@ namespace MassiveKnob.ViewModel
             }
         }
 
-
-
-
-        public SettingsViewModel(IPluginManager pluginManager, Settings.Settings settings, IMassiveKnobOrchestrator orchestrator)
+        public DeviceSpecs? Specs
         {
-            this.settings = settings;
+            get => specs;
+            set
+            {
+                specs = value;
+                OnPropertyChanged();
+                OnOtherPropertyChanged("AnalogInputVisibility");
+                OnOtherPropertyChanged("DigitalInputVisibility");
+
+                AnalogInputs = Enumerable
+                    .Range(0, specs?.AnalogInputCount ?? 0)
+                    .Select(i => new InputOutputViewModel(this, orchestrator, MassiveKnobActionType.InputAnalog, i));
+
+                DigitalInputs = Enumerable
+                    .Range(0, specs?.DigitalInputCount ?? 0)
+                    .Select(i => new InputOutputViewModel(this, orchestrator, MassiveKnobActionType.InputDigital, i));
+            }
+        }
+
+        public Visibility AnalogInputVisibility => specs.HasValue && specs.Value.AnalogInputCount > 0
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+
+        public IEnumerable<InputOutputViewModel> AnalogInputs
+        {
+            get => analogInputs;
+            set
+            {
+                analogInputs = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public Visibility DigitalInputVisibility => specs.HasValue && specs.Value.DigitalInputCount > 0
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+
+        public IEnumerable<InputOutputViewModel> DigitalInputs
+        {
+            get => digitalInputs;
+            set
+            {
+                digitalInputs = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public Visibility AnalogOutputVisibility => specs.HasValue && specs.Value.AnalogOutputCount > 0
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+
+        public IEnumerable<InputOutputViewModel> AnalogOutputs
+        {
+            get => analogOutputs;
+            set
+            {
+                analogOutputs = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public Visibility DigitalOutputVisibility => specs.HasValue && specs.Value.DigitalOutputCount > 0
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+
+        public IEnumerable<InputOutputViewModel> DigitalOutputs
+        {
+            get => digitalOutputs;
+            set
+            {
+                digitalOutputs = value;
+                OnPropertyChanged();
+            }
+        }
+        // ReSharper restore UnusedMember.Global
+
+
+
+        public SettingsViewModel(IPluginManager pluginManager, IMassiveKnobOrchestrator orchestrator)
+        {
             this.orchestrator = orchestrator;
 
-            Devices = pluginManager.GetDevicePlugins().SelectMany(dp => dp.Devices.Select(d => new DeviceViewModel(dp, d)));
+            orchestrator.ActiveDeviceSubject.Subscribe(info => { Specs = info.Specs; });
 
-            if (settings.Device != null)
-                SelectedDevice = Devices.FirstOrDefault(d =>
-                    d.Plugin.PluginId == settings.Device.PluginId &&
-                    d.Device.DeviceId == settings.Device.DeviceId);
+
+            Devices = pluginManager.GetDevicePlugins()
+                .SelectMany(dp => dp.Devices.Select(d => new DeviceViewModel(dp, d)))
+                .ToList();
+
+            var allActions = new List<ActionViewModel>
+            {
+                new ActionViewModel(null, null)
+            };
+
+            allActions.AddRange(
+                pluginManager.GetActionPlugins()
+                    .SelectMany(ap => ap.Actions.Select(a => new ActionViewModel(ap, a))));
+            
+            Actions = allActions;
+
+            if (orchestrator.ActiveDevice == null)
+                return;
+
+            selectedDevice = Devices.Single(d => d.Device.DeviceId == orchestrator.ActiveDevice.Info.DeviceId);
+            SettingsControl = orchestrator.ActiveDevice.Instance.CreateSettingsControl();
+            Specs = orchestrator.ActiveDevice.Specs;
         }
 
 
@@ -86,24 +175,9 @@ namespace MassiveKnob.ViewModel
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
-        
-
-        public class DeviceViewModel
+        protected virtual void OnOtherPropertyChanged(string propertyName)
         {
-            // ReSharper disable UnusedMember.Global - used by WPF Binding
-            public string Name => Device.Name;
-            public string Description => Device.Description;
-            // ReSharper restore UnusedMember.Global
-
-            public IMassiveKnobDevicePlugin Plugin { get; }
-            public IMassiveKnobDevice Device { get; }
-
-
-            public DeviceViewModel(IMassiveKnobDevicePlugin plugin, IMassiveKnobDevice device)
-            {
-                Plugin = plugin;
-                Device = device;
-            }
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }

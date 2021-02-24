@@ -1,4 +1,5 @@
-﻿using System;
+﻿/*
+using System;
 using System.Windows.Input;
 
 namespace MassiveKnob.Helpers
@@ -78,3 +79,4 @@ namespace MassiveKnob.Helpers
         }
     }
 }
+*/

@@ -117,31 +117,7 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="StatusConnected" xml:space="preserve">
-    <value>Connected</value>
-  </data>
-  <data name="StatusConnecting" xml:space="preserve">
-    <value>Connecting...</value>
-  </data>
-  <data name="StatusNotConnected" xml:space="preserve">
-    <value>Not connected</value>
-  </data>
-  <data name="KnobIndex" xml:space="preserve">
-    <value>Knob {0}</value>
-  </data>
-  <data name="DeviceDisplayNameActive" xml:space="preserve">
-    <value>{0}</value>
-  </data>
-  <data name="DeviceDisplayNameDisabled" xml:space="preserve">
-    <value>{0} (Disabled)</value>
-  </data>
-  <data name="DeviceDisplayNameInactive" xml:space="preserve">
-    <value>{0} (Inactive)</value>
-  </data>
-  <data name="DeviceDisplayNameNotPresent" xml:space="preserve">
-    <value>{0} (Not present)</value>
-  </data>
-  <data name="DeviceDisplayNameUnplugged" xml:space="preserve">
-    <value>{0} (Unplugged)</value>
+  <data name="ActionNotConfigured" xml:space="preserve">
+    <value>Not configured</value>
   </data>
 </root>

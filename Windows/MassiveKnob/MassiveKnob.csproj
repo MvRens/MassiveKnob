@@ -58,19 +58,20 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Hardware\AbstractMassiveKnobHardware.cs" />
-    <Compile Include="Hardware\CoreAudioDeviceManager.cs" />
-    <Compile Include="Hardware\IAudioDeviceManager.cs" />
-    <Compile Include="Hardware\IMassiveKnobHardware.cs" />
-    <Compile Include="Hardware\MockMassiveKnobHardware.cs" />
-    <Compile Include="Hardware\SerialMassiveKnobHardware.cs" />
     <Compile Include="Helpers\ComboBoxTemplateSelector.cs" />
     <Compile Include="Helpers\DelegateCommand.cs" />
+    <Compile Include="Helpers\SerialQueue.cs" />
     <Compile Include="Model\IMassiveKnobOrchestrator.cs" />
     <Compile Include="Model\IPluginManager.cs" />
     <Compile Include="Model\MassiveKnobOrchestrator.cs" />
     <Compile Include="Model\PluginManager.cs" />
+    <Compile Include="ViewModel\ActionViewModel.cs" />
+    <Compile Include="ViewModel\DeviceViewModel.cs" />
+    <Compile Include="ViewModel\InputOutputViewModel.cs" />
     <Compile Include="ViewModel\SettingsViewModel.cs" />
+    <Compile Include="View\InputOutputView.xaml.cs">
+      <DependentUpon>InputOutputView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="View\SettingsWindow.xaml.cs">
       <DependentUpon>SettingsWindow.xaml</DependentUpon>
     </Compile>
@@ -116,6 +117,9 @@
     <PackageReference Include="SimpleInjector">
       <Version>5.2.1</Version>
     </PackageReference>
+    <PackageReference Include="System.Reactive">
+      <Version>5.0.0</Version>
+    </PackageReference>
   </ItemGroup>
   <ItemGroup>
     <Content Include="MainIcon.ico" />
@@ -133,6 +137,10 @@
   </ItemGroup>
   <ItemGroup>
     <Page Include="Style.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\InputOutputView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

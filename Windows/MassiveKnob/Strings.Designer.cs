@@ -61,83 +61,11 @@ namespace MassiveKnob {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0}.
+        ///   Looks up a localized string similar to Not configured.
         /// </summary>
-        internal static string DeviceDisplayNameActive {
+        internal static string ActionNotConfigured {
             get {
-                return ResourceManager.GetString("DeviceDisplayNameActive", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {0} (Disabled).
-        /// </summary>
-        internal static string DeviceDisplayNameDisabled {
-            get {
-                return ResourceManager.GetString("DeviceDisplayNameDisabled", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {0} (Inactive).
-        /// </summary>
-        internal static string DeviceDisplayNameInactive {
-            get {
-                return ResourceManager.GetString("DeviceDisplayNameInactive", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {0} (Not present).
-        /// </summary>
-        internal static string DeviceDisplayNameNotPresent {
-            get {
-                return ResourceManager.GetString("DeviceDisplayNameNotPresent", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {0} (Unplugged).
-        /// </summary>
-        internal static string DeviceDisplayNameUnplugged {
-            get {
-                return ResourceManager.GetString("DeviceDisplayNameUnplugged", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Knob {0}.
-        /// </summary>
-        internal static string KnobIndex {
-            get {
-                return ResourceManager.GetString("KnobIndex", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Connected.
-        /// </summary>
-        internal static string StatusConnected {
-            get {
-                return ResourceManager.GetString("StatusConnected", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Connecting....
-        /// </summary>
-        internal static string StatusConnecting {
-            get {
-                return ResourceManager.GetString("StatusConnecting", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Not connected.
-        /// </summary>
-        internal static string StatusNotConnected {
-            get {
-                return ResourceManager.GetString("StatusNotConnected", resourceCulture);
+                return ResourceManager.GetString("ActionNotConfigured", resourceCulture);
             }
         }
     }

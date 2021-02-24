@@ -1,5 +1,9 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Style TargetType="Window" x:Key="DefaultWindow">
+        <Setter Property="Background" Value="#f0f0f0" />
+    </Style>
+
     <Style TargetType="MenuItem" x:Key="DefaultMenuItem">
         <Setter Property="FontWeight" Value="Bold" />
     </Style>
@@ -12,8 +16,19 @@
         <Setter Property="Padding" Value="5" />
     </Style>
 
+    <Style TargetType="TextBlock" x:Key="SubHeader">
+        <Setter Property="Background" Value="LightSlateGray" />
+        <Setter Property="Foreground" Value="White" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="Padding" Value="5" />
+    </Style>
+
     <Style TargetType="StackPanel" x:Key="Content">
         <Setter Property="Margin" Value="8" />
+    </Style>
+
+    <Style TargetType="ContentControl" x:Key="SettingsControl">
+        <Setter Property="Margin" Value="0,8,0,0"></Setter>
     </Style>
 
     <Style TargetType="TextBlock" x:Key="ComboBoxDescription">

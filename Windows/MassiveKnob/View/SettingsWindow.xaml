@@ -4,9 +4,13 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:helpers="clr-namespace:MassiveKnob.Helpers"
+        xmlns:viewModel="clr-namespace:MassiveKnob.ViewModel"
+        xmlns:view="clr-namespace:MassiveKnob.View"
         mc:Ignorable="d"
         Title="Massive Knob - Settings" Height="555" Width="704.231"
-        WindowStartupLocation="CenterScreen">
+        WindowStartupLocation="CenterScreen"
+        Style="{StaticResource DefaultWindow}"
+        d:DataContext="{d:DesignInstance Type=viewModel:SettingsViewModel}">
     <Window.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -14,32 +18,103 @@
             </ResourceDictionary.MergedDictionaries>
 
             <DataTemplate x:Key="DeviceDropdownItem">
-                <StackPanel Orientation="Vertical">
+                <StackPanel Orientation="Vertical" d:DataContext="{d:DesignInstance Type=viewModel:DeviceViewModel}">
                     <TextBlock Text="{Binding Name}" />
-                    <TextBlock Text="{Binding Description}" Style="{StaticResource ComboBoxDescription}" />
+                    <TextBlock Text="{Binding Description}" Style="{StaticResource ComboBoxDescription}" Visibility="{Binding DescriptionVisibility}" />
                 </StackPanel>
             </DataTemplate>
 
             <DataTemplate x:Key="DeviceSelectedItem">
-                <TextBlock Text="{Binding Name}" />
+                <TextBlock Text="{Binding Name}" d:DataContext="{d:DesignInstance Type=viewModel:DeviceViewModel}" />
             </DataTemplate>
         </ResourceDictionary>
     </Window.Resources>
 
     <ScrollViewer>
         <StackPanel Orientation="Vertical">
+            <!--
+            
+                Device
+            
+            -->
             <TextBlock Style="{StaticResource Header}">Device</TextBlock>
             
             <StackPanel Orientation="Vertical" Style="{StaticResource Content}">
-                <ComboBox SelectedItem="{Binding SelectedDevice}" ItemsSource="{Binding Devices}" ItemTemplateSelector="{helpers:ComboBoxTemplateSelector 
-                    SelectedItemTemplate={StaticResource DeviceSelectedItem},
-                    DropdownItemsTemplate={StaticResource DeviceDropdownItem}}" />
+                <ComboBox 
+                    ItemsSource="{Binding Devices}" 
+                    SelectedItem="{Binding SelectedDevice}"
+                    IsSynchronizedWithCurrentItem="False" 
+                    ItemTemplateSelector="{helpers:ComboBoxTemplateSelector 
+                        SelectedItemTemplate={StaticResource DeviceSelectedItem},
+                        DropdownItemsTemplate={StaticResource DeviceDropdownItem}}" />
 
-                <ContentControl Focusable="False" Content="{Binding SettingsControl}" />
+
+                <ContentControl Focusable="False" Content="{Binding SettingsControl}" Style="{StaticResource SettingsControl}" />
             </StackPanel>
-            
 
-            <TextBlock Style="{StaticResource Header}">Controls</TextBlock>
+
+            <!--
+            
+                Analog inputs
+            
+            -->
+            <TextBlock Style="{StaticResource Header}" Visibility="{Binding AnalogInputVisibility}">Analog inputs</TextBlock>
+
+            <ItemsControl ItemsSource="{Binding AnalogInputs}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <view:InputOutputView />
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+
+            <!--
+            
+                Digital inputs
+            
+            -->
+            <TextBlock Style="{StaticResource Header}" Visibility="{Binding DigitalInputVisibility}">Digital inputs</TextBlock>
+
+            <ItemsControl ItemsSource="{Binding DigitalInputs}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <view:InputOutputView />
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+
+            <!--
+            
+                Analog outputs
+            
+            -->
+            <TextBlock Style="{StaticResource Header}" Visibility="{Binding AnalogOutputVisibility}">Analog outputs</TextBlock>
+
+            <ItemsControl ItemsSource="{Binding AnalogOutputs}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <view:InputOutputView />
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+
+            <!--
+            
+                Digital outputs
+            
+            -->
+            <TextBlock Style="{StaticResource Header}" Visibility="{Binding DigitalOutputVisibility}">Digital outputs</TextBlock>
+
+            <ItemsControl ItemsSource="{Binding DigitalOutputs}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <view:InputOutputView />
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
         </StackPanel>
     </ScrollViewer>
 </Window>

@@ -1,13 +1,25 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace MassiveKnob.Settings
 {
     public static class SettingsJsonSerializer
     {
+        private static readonly JsonSerializerSettings DefaultSettings = new JsonSerializerSettings
+        {
+            Formatting = Formatting.Indented,
+            Converters = new List<JsonConverter>
+            {
+                new StringEnumConverter()
+            }
+        };
+        
+        
         public static string GetDefaultFilename()
         {
             var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"MassiveKnob");
@@ -24,7 +36,7 @@ namespace MassiveKnob.Settings
 
         public static async Task Serialize(Settings settings, string filename)
         {
-            var json = JsonConvert.SerializeObject(settings);
+            var json = JsonConvert.SerializeObject(settings, DefaultSettings);
 
             using (var stream = new FileStream(filename, FileMode.Create, FileAccess.Write, FileShare.Read, 4096, true))
             using (var streamWriter = new StreamWriter(stream, Encoding.UTF8))
@@ -35,28 +47,34 @@ namespace MassiveKnob.Settings
         }
 
 
-        public static Task<Settings> Deserialize()
+        public static Settings Deserialize()
         {
             return Deserialize(GetDefaultFilename());
         }
 
-        public static async Task<Settings> Deserialize(string filename)
+        public static Settings Deserialize(string filename)
         {
-            if (!File.Exists(filename))
-                return Settings.Default();
+            Settings settings = null;
 
-            string json;
-
-            using (var stream = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 4096, true))
-            using (var streamReader = new StreamReader(stream, Encoding.UTF8))
+            if (File.Exists(filename))
             {
-                json = await streamReader.ReadToEndAsync();
+                string json;
+
+                using (var stream = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 4096, true))
+                using (var streamReader = new StreamReader(stream, Encoding.UTF8))
+                {
+                    json = streamReader.ReadToEnd();
+                }
+
+                if (!string.IsNullOrEmpty(json))
+                    settings = JsonConvert.DeserializeObject<Settings>(json, DefaultSettings);
             }
+            
+            if (settings == null)
+                settings = new Settings();
 
-            if (string.IsNullOrEmpty(json))
-                return Settings.Default();
-
-            return JsonConvert.DeserializeObject<Settings>(json);
+            settings.Verify();
+            return settings;
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using MassiveKnob.Plugin.CoreAudio.Actions;
 
 namespace MassiveKnob.Plugin.CoreAudio
@@ -17,5 +18,17 @@ namespace MassiveKnob.Plugin.CoreAudio
         {
             new DeviceVolumeAction()
         };
+
+
+        public MassiveKnobCoreAudioPlugin()
+        {
+            // My system suffers from this issue: https://github.com/xenolightning/AudioSwitcher/issues/40
+            // ...which causes the first call to the CoreAudioController to take up to 10 seconds,
+            // so initialise it as soon as possible. Bit of a workaround, but eh.
+            Task.Run(() =>
+            {
+                CoreAudioControllerInstance.Acquire();
+            });
+        }
     }
 }

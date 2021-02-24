@@ -8,7 +8,7 @@ namespace MassiveKnob.Plugin
     public interface IMassiveKnobAnalogAction : IMassiveKnobActionInstance
     {
         /// <summary>
-        /// Called when a knob's position changes.
+        /// Called when an analog input's value changes.
         /// </summary>
         /// <param name="value">The new value. Range is 0 to 100.</param>
         ValueTask AnalogChanged(byte value);

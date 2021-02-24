@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MassiveKnob.Plugin.CoreAudi
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MassiveKnob.Plugin.MockDevice", "MassiveKnob.Plugin.MockDevice\MassiveKnob.Plugin.MockDevice.csproj", "{674DE974-B134-4DB5-BFAF-7BC3D05E16DE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MassiveKnob.Plugin.SerialDevice", "MassiveKnob.Plugin.SerialDevice\MassiveKnob.Plugin.SerialDevice.csproj", "{FC0D22D8-5F1B-4D85-8269-FA4837CDE3A2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{674DE974-B134-4DB5-BFAF-7BC3D05E16DE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{674DE974-B134-4DB5-BFAF-7BC3D05E16DE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{674DE974-B134-4DB5-BFAF-7BC3D05E16DE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FC0D22D8-5F1B-4D85-8269-FA4837CDE3A2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FC0D22D8-5F1B-4D85-8269-FA4837CDE3A2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FC0D22D8-5F1B-4D85-8269-FA4837CDE3A2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FC0D22D8-5F1B-4D85-8269-FA4837CDE3A2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -44,6 +44,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="IMassiveKnobDeviceContext.cs" />
     <Compile Include="IMassiveKnobActionContext.cs" />
     <Compile Include="IMassiveKnobActionInstance.cs" />
     <Compile Include="IMassiveKnobActionPlugin.cs" />
@@ -52,7 +53,7 @@
     <Compile Include="IMassiveKnobAnalogAction.cs" />
     <Compile Include="IMassiveKnobContext.cs" />
     <Compile Include="IMassiveKnobDevice.cs" />
-    <Compile Include="IMassiveKnobHardwarePlugin.cs" />
+    <Compile Include="IMassiveKnobDevicePlugin.cs" />
     <Compile Include="MassiveKnobPluginAttribute.cs" />
     <Compile Include="IMassiveKnobPlugin.cs" />
     <Compile Include="IMassiveKnobAction.cs" />

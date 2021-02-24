@@ -48,9 +48,11 @@
     <Compile Include="Devices\MockDevice.cs" />
     <Compile Include="MassiveKnobMockDevicePlugin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Settings\MockDeviceSettings.xaml.cs">
-      <DependentUpon>MockDeviceSettings.xaml</DependentUpon>
+    <Compile Include="Settings\MockDeviceSettingsView.xaml.cs">
+      <DependentUpon>MockDeviceSettingsView.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Settings\MockDeviceSettings.cs" />
+    <Compile Include="Settings\MockDeviceSettingsViewModel.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\MassiveKnob.Plugin\MassiveKnob.Plugin.csproj">
@@ -60,7 +62,7 @@
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
-    <Page Include="Settings\MockDeviceSettings.xaml">
+    <Page Include="Settings\MockDeviceSettingsView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
