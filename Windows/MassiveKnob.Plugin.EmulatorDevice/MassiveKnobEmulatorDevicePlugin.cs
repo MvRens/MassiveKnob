@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace MassiveKnob.Plugin.MockDevice
+namespace MassiveKnob.Plugin.EmulatorDevice
 {
     [MassiveKnobPlugin]
-    public class MassiveKnobMockDevicePlugin : IMassiveKnobDevicePlugin
+    public class MassiveKnobEmulatorDevicePlugin : IMassiveKnobDevicePlugin
     {
         public Guid PluginId { get; } = new Guid("85f04232-d70f-494c-94a2-41452591ffb3");
         public string Name { get; } = "Mock Device";
@@ -14,7 +14,7 @@ namespace MassiveKnob.Plugin.MockDevice
 
         public IEnumerable<IMassiveKnobDevice> Devices { get; } = new IMassiveKnobDevice[]
         {
-            new Devices.MockDevice()
+            new EmulatorDevice.Devices.EmulatorDevice()
         };
     }
 }

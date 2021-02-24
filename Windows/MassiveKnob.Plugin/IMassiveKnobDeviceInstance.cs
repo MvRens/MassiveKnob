@@ -19,5 +19,19 @@ namespace MassiveKnob.Plugin
         /// determined by the UserControl. Return null to indicate there are no settings for this device.
         /// </summary>
         UserControl CreateSettingsControl();
+
+        /// <summary>
+        /// Called when the state of an analog output should be changed.
+        /// </summary>
+        /// <param name="analogOutputIndex">The index of the analog output to set.</param>
+        /// <param name="value">The analog value in the range of 0 to 100.</param>
+        void SetAnalogOutput(int analogOutputIndex, byte value);
+
+        /// <summary>
+        /// Called when the state of a digital output should be changed.
+        /// </summary>
+        /// <param name="digitalOutputIndex">The index of the digital output to set.</param>
+        /// <param name="on">Whether the signal is on or off.</param>
+        void SetDigitalOutput(int digitalOutputIndex, bool on);
     }
 }

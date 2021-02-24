@@ -26,10 +26,10 @@
             </DataTemplate>
         </ResourceDictionary>
     </UserControl.Resources>
-    <StackPanel Orientation="Vertical">
+    <StackPanel Orientation="Vertical" Style="{StaticResource Content}">
         <TextBlock Text="{Binding DisplayName}" Style="{StaticResource SubHeader}"></TextBlock>
 
-        <StackPanel Orientation="Vertical" Style="{StaticResource Content}">
+        <StackPanel Orientation="Vertical">
             <ComboBox 
                 ItemsSource="{Binding Actions}" 
                 SelectedItem="{Binding SelectedAction}" 

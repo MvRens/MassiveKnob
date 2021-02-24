@@ -132,4 +132,52 @@
   <data name="DeviceDisplayNameUnplugged" xml:space="preserve">
     <value>{0} (Unplugged)</value>
   </data>
+  <data name="GetMutedDescription" xml:space="preserve">
+    <value>Sets the digital output to the muted state for the selected device, regardless of the current default device.</value>
+  </data>
+  <data name="GetMutedName" xml:space="preserve">
+    <value>Muted / unmuted</value>
+  </data>
+  <data name="GetVolumeDescription" xml:space="preserve">
+    <value>Sets the analog output to the volume for the selected device, regardless of the current default device.</value>
+  </data>
+  <data name="GetVolumeName" xml:space="preserve">
+    <value>Volume</value>
+  </data>
+  <data name="PluginDescription" xml:space="preserve">
+    <value>Included with Massive Knob by default. Provides volume control per device and default device switching.</value>
+  </data>
+  <data name="PluginName" xml:space="preserve">
+    <value>Windows Core Audio</value>
+  </data>
+  <data name="SetMutedDescription" xml:space="preserve">
+    <value>Toggles the muted state for the selected device, regardless of the current default device.</value>
+  </data>
+  <data name="SetMutedName" xml:space="preserve">
+    <value>Mute / unmute</value>
+  </data>
+  <data name="SettingGetMutedInverted" xml:space="preserve">
+    <value>Inverted (muted is off)</value>
+  </data>
+  <data name="SettingOSD" xml:space="preserve">
+    <value>Show On-Screen Display</value>
+  </data>
+  <data name="SettingPlaybackDevice" xml:space="preserve">
+    <value>Playback device</value>
+  </data>
+  <data name="SettingSetMutedSetInverted" xml:space="preserve">
+    <value>Inverted (off is muted)</value>
+  </data>
+  <data name="SettingSetMutedToggleFalse" xml:space="preserve">
+    <value>Set mute depending on value (eg. switch)</value>
+  </data>
+  <data name="SettingSetMutedToggleTrue" xml:space="preserve">
+    <value>Toggle mute when input turns on (eg. push button)</value>
+  </data>
+  <data name="SetVolumeDescription" xml:space="preserve">
+    <value>Sets the volume for the selected device to the value of the analog input, regardless of the current default device.</value>
+  </data>
+  <data name="SetVolumeName" xml:space="preserve">
+    <value>Volume</value>
+  </data>
 </root>

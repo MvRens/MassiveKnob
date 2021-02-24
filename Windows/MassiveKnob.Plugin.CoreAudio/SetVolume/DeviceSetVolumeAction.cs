@@ -2,16 +2,16 @@
 using System.Threading.Tasks;
 using System.Windows.Controls;
 using AudioSwitcher.AudioApi;
-using MassiveKnob.Plugin.CoreAudio.Settings;
+using MassiveKnob.Plugin.CoreAudio.OSD;
 
-namespace MassiveKnob.Plugin.CoreAudio.Actions
+namespace MassiveKnob.Plugin.CoreAudio.SetVolume
 {
-    public class DeviceVolumeAction : IMassiveKnobAction
+    public class DeviceSetVolumeAction : IMassiveKnobAction
     {
         public Guid ActionId { get; } = new Guid("aabd329c-8be5-4d1e-90ab-5114143b21dd");
         public MassiveKnobActionType ActionType { get; } = MassiveKnobActionType.InputAnalog;
-        public string Name { get; } = "Set volume";
-        public string Description { get; } = "Sets the volume for the selected device, regardless of the current default device.";
+        public string Name { get; } = Strings.SetVolumeName;
+        public string Description { get; } = Strings.SetVolumeDescription;
         
         
         public IMassiveKnobActionInstance Create()
@@ -23,14 +23,14 @@ namespace MassiveKnob.Plugin.CoreAudio.Actions
         private class Instance : IMassiveKnobAnalogAction
         {
             private IMassiveKnobActionContext actionContext;
-            private DeviceVolumeActionSettings settings;
+            private DeviceSetVolumeActionSettings settings;
             private IDevice playbackDevice;
 
 
             public void Initialize(IMassiveKnobActionContext context)
             {
                 actionContext = context;
-                settings = context.GetSettings<DeviceVolumeActionSettings>();
+                settings = context.GetSettings<DeviceSetVolumeActionSettings>();
                 ApplySettings();
             }
 
@@ -49,7 +49,7 @@ namespace MassiveKnob.Plugin.CoreAudio.Actions
 
             public UserControl CreateSettingsControl()
             {
-                var viewModel = new DeviceVolumeActionSettingsViewModel(settings);
+                var viewModel = new DeviceSetVolumeActionSettingsViewModel(settings);
                 viewModel.PropertyChanged += (sender, args) =>
                 {
                     if (!viewModel.IsSettingsProperty(args.PropertyName))
@@ -59,7 +59,7 @@ namespace MassiveKnob.Plugin.CoreAudio.Actions
                     ApplySettings();
                 };
 
-                return new DeviceVolumeActionSettingsView(viewModel);
+                return new DeviceSetVolumeActionSettingsView(viewModel);
             }
 
             
@@ -69,6 +69,9 @@ namespace MassiveKnob.Plugin.CoreAudio.Actions
                     return;
                 
                 await playbackDevice.SetVolumeAsync(value);
+
+                if (settings.OSD)
+                    OSDManager.Show(playbackDevice);
             }
         }
     }

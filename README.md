@@ -16,8 +16,8 @@ Because of the second requirement, a simple media keys HID device does not suffi
   - by changing the Windows default output device
   - by running a VoiceMeeter macro
 2. Corresponding LEDs to indicate the currently active device
-3. OSD
-4. API / plugins to use extra knobs and buttons for other purposes
+3. ✔ OSD
+4. ✔ API / plugins to use extra knobs and buttons for other purposes
 
 ## Developing
 The hardware side uses an Arduino sketch to communicate the hardware state over the serial port.

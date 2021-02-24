@@ -174,6 +174,7 @@ namespace MassiveKnob.Plugin.SerialDevice.Worker
 
                 if ((char) response == 'H')
                 {
+                    // TODO support multiple I/O's
                     var knobCount = serialPort.ReadByte();
                     if (knobCount > -1)
                     {

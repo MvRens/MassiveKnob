@@ -10,6 +10,7 @@ using MassiveKnob.Plugin;
 
 namespace MassiveKnob.ViewModel
 {
+    // TODO better design-time version
     public class SettingsViewModel : INotifyPropertyChanged
     {
         private readonly IMassiveKnobOrchestrator orchestrator;
@@ -65,8 +66,10 @@ namespace MassiveKnob.ViewModel
             {
                 specs = value;
                 OnPropertyChanged();
-                OnOtherPropertyChanged("AnalogInputVisibility");
-                OnOtherPropertyChanged("DigitalInputVisibility");
+                OnDependantPropertyChanged("AnalogInputVisibility");
+                OnDependantPropertyChanged("DigitalInputVisibility");
+                OnDependantPropertyChanged("AnalogOutputVisibility");
+                OnDependantPropertyChanged("DigitalOutputVisibility");
 
                 AnalogInputs = Enumerable
                     .Range(0, specs?.AnalogInputCount ?? 0)
@@ -75,6 +78,14 @@ namespace MassiveKnob.ViewModel
                 DigitalInputs = Enumerable
                     .Range(0, specs?.DigitalInputCount ?? 0)
                     .Select(i => new InputOutputViewModel(this, orchestrator, MassiveKnobActionType.InputDigital, i));
+
+                AnalogOutputs = Enumerable
+                    .Range(0, specs?.AnalogOutputCount ?? 0)
+                    .Select(i => new InputOutputViewModel(this, orchestrator, MassiveKnobActionType.OutputAnalog, i));
+
+                DigitalOutputs = Enumerable
+                    .Range(0, specs?.DigitalOutputCount ?? 0)
+                    .Select(i => new InputOutputViewModel(this, orchestrator, MassiveKnobActionType.OutputDigital, i));
             }
         }
 
@@ -175,7 +186,7 @@ namespace MassiveKnob.ViewModel
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
-        protected virtual void OnOtherPropertyChanged(string propertyName)
+        protected virtual void OnDependantPropertyChanged(string propertyName)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }

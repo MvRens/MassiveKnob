@@ -9,7 +9,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MassiveKnob.Plugin", "Massi
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MassiveKnob.Plugin.CoreAudio", "MassiveKnob.Plugin.CoreAudio\MassiveKnob.Plugin.CoreAudio.csproj", "{5BD5E2F2-9923-4F74-AC69-ACDA0B847937}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MassiveKnob.Plugin.MockDevice", "MassiveKnob.Plugin.MockDevice\MassiveKnob.Plugin.MockDevice.csproj", "{674DE974-B134-4DB5-BFAF-7BC3D05E16DE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MassiveKnob.Plugin.EmulatorDevice", "MassiveKnob.Plugin.EmulatorDevice\MassiveKnob.Plugin.EmulatorDevice.csproj", "{674DE974-B134-4DB5-BFAF-7BC3D05E16DE}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MassiveKnob.Plugin.SerialDevice", "MassiveKnob.Plugin.SerialDevice\MassiveKnob.Plugin.SerialDevice.csproj", "{FC0D22D8-5F1B-4D85-8269-FA4837CDE3A2}"
 EndProject

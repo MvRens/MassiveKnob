@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using MassiveKnob.Plugin.CoreAudio.Actions;
+using MassiveKnob.Plugin.CoreAudio.GetMuted;
+using MassiveKnob.Plugin.CoreAudio.GetVolume;
+using MassiveKnob.Plugin.CoreAudio.SetMuted;
+using MassiveKnob.Plugin.CoreAudio.SetVolume;
 
 namespace MassiveKnob.Plugin.CoreAudio
 {
@@ -9,14 +12,17 @@ namespace MassiveKnob.Plugin.CoreAudio
     public class MassiveKnobCoreAudioPlugin : IMassiveKnobActionPlugin
     {
         public Guid PluginId { get; } = new Guid("eaa5d3f8-8f9b-4a4b-8e29-827228d23e95");
-        public string Name { get; } = "Windows Core Audio";
-        public string Description { get; } = "Included with Massive Knob by default. Provides volume control per device and default device switching.";
+        public string Name { get; } = Strings.PluginName;
+        public string Description { get; } = Strings.PluginDescription;
         public string Author { get; } = "Mark van Renswoude <mark@x2software.net>";
         public string Url { get; } = "https://www.github.com/MvRens/MassiveKnob/";
 
         public IEnumerable<IMassiveKnobAction> Actions { get; } = new IMassiveKnobAction[]
         {
-            new DeviceVolumeAction()
+            new DeviceSetVolumeAction(),
+            new DeviceGetVolumeAction(),
+            new DeviceSetMutedAction(),
+            new DeviceGetMutedAction()
         };
 
 

@@ -17,10 +17,9 @@
     </Style>
 
     <Style TargetType="TextBlock" x:Key="SubHeader">
-        <Setter Property="Background" Value="LightSlateGray" />
-        <Setter Property="Foreground" Value="White" />
         <Setter Property="FontSize" Value="14" />
-        <Setter Property="Padding" Value="5" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Margin" Value="0,0,0,4" />
     </Style>
 
     <Style TargetType="StackPanel" x:Key="Content">

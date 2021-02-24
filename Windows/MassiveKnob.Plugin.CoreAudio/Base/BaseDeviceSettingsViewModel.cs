@@ -7,11 +7,22 @@ using System.Threading.Tasks;
 using System.Windows;
 using AudioSwitcher.AudioApi;
 
-namespace MassiveKnob.Plugin.CoreAudio.Settings
+namespace MassiveKnob.Plugin.CoreAudio.Base
 {
+    public class BaseDeviceSettingsViewModel<T> : BaseDeviceSettingsViewModel where T : BaseDeviceSettings
+    {
+        protected new T Settings => (T)base.Settings;
+
+        public BaseDeviceSettingsViewModel(T settings) : base(settings)
+        {
+        }
+    }
+
+
+
     public class BaseDeviceSettingsViewModel : INotifyPropertyChanged
     {
-        private readonly BaseDeviceSettings settings;
+        protected readonly BaseDeviceSettings Settings;
         public event PropertyChangedEventHandler PropertyChanged;
 
         private IList<PlaybackDeviceViewModel> playbackDevices;
@@ -37,7 +48,21 @@ namespace MassiveKnob.Plugin.CoreAudio.Settings
                     return;
 
                 selectedDevice = value;
-                settings.DeviceId = selectedDevice?.Id;
+                Settings.DeviceId = selectedDevice?.Id;
+                OnPropertyChanged();
+            }
+        }
+
+
+        public bool OSD
+        {
+            get => Settings.OSD;
+            set
+            {
+                if (value == Settings.OSD)
+                    return;
+
+                Settings.OSD = value;
                 OnPropertyChanged();
             }
         }
@@ -46,7 +71,7 @@ namespace MassiveKnob.Plugin.CoreAudio.Settings
 
         public BaseDeviceSettingsViewModel(BaseDeviceSettings settings)
         {
-            this.settings = settings;
+            Settings = settings;
 
             Task.Run(async () =>
             {

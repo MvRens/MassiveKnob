@@ -22,7 +22,7 @@ namespace MassiveKnob.Plugin.CoreAudio {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    internal class Strings {
+    public class Strings {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
@@ -36,7 +36,7 @@ namespace MassiveKnob.Plugin.CoreAudio {
         ///   Returns the cached ResourceManager instance used by this class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Resources.ResourceManager ResourceManager {
+        public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
                     global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("MassiveKnob.Plugin.CoreAudio.Strings", typeof(Strings).Assembly);
@@ -51,7 +51,7 @@ namespace MassiveKnob.Plugin.CoreAudio {
         ///   resource lookups using this strongly typed resource class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Globalization.CultureInfo Culture {
+        public static global::System.Globalization.CultureInfo Culture {
             get {
                 return resourceCulture;
             }
@@ -63,7 +63,7 @@ namespace MassiveKnob.Plugin.CoreAudio {
         /// <summary>
         ///   Looks up a localized string similar to {0}.
         /// </summary>
-        internal static string DeviceDisplayNameActive {
+        public static string DeviceDisplayNameActive {
             get {
                 return ResourceManager.GetString("DeviceDisplayNameActive", resourceCulture);
             }
@@ -72,7 +72,7 @@ namespace MassiveKnob.Plugin.CoreAudio {
         /// <summary>
         ///   Looks up a localized string similar to {0} (Disabled).
         /// </summary>
-        internal static string DeviceDisplayNameDisabled {
+        public static string DeviceDisplayNameDisabled {
             get {
                 return ResourceManager.GetString("DeviceDisplayNameDisabled", resourceCulture);
             }
@@ -81,7 +81,7 @@ namespace MassiveKnob.Plugin.CoreAudio {
         /// <summary>
         ///   Looks up a localized string similar to {0} (Inactive).
         /// </summary>
-        internal static string DeviceDisplayNameInactive {
+        public static string DeviceDisplayNameInactive {
             get {
                 return ResourceManager.GetString("DeviceDisplayNameInactive", resourceCulture);
             }
@@ -90,7 +90,7 @@ namespace MassiveKnob.Plugin.CoreAudio {
         /// <summary>
         ///   Looks up a localized string similar to {0} (Not present).
         /// </summary>
-        internal static string DeviceDisplayNameNotPresent {
+        public static string DeviceDisplayNameNotPresent {
             get {
                 return ResourceManager.GetString("DeviceDisplayNameNotPresent", resourceCulture);
             }
@@ -99,9 +99,153 @@ namespace MassiveKnob.Plugin.CoreAudio {
         /// <summary>
         ///   Looks up a localized string similar to {0} (Unplugged).
         /// </summary>
-        internal static string DeviceDisplayNameUnplugged {
+        public static string DeviceDisplayNameUnplugged {
             get {
                 return ResourceManager.GetString("DeviceDisplayNameUnplugged", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sets the digital output to the muted state for the selected device, regardless of the current default device..
+        /// </summary>
+        public static string GetMutedDescription {
+            get {
+                return ResourceManager.GetString("GetMutedDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Muted / unmuted.
+        /// </summary>
+        public static string GetMutedName {
+            get {
+                return ResourceManager.GetString("GetMutedName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sets the analog output to the volume for the selected device, regardless of the current default device..
+        /// </summary>
+        public static string GetVolumeDescription {
+            get {
+                return ResourceManager.GetString("GetVolumeDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Volume.
+        /// </summary>
+        public static string GetVolumeName {
+            get {
+                return ResourceManager.GetString("GetVolumeName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Included with Massive Knob by default. Provides volume control per device and default device switching..
+        /// </summary>
+        public static string PluginDescription {
+            get {
+                return ResourceManager.GetString("PluginDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Windows Core Audio.
+        /// </summary>
+        public static string PluginName {
+            get {
+                return ResourceManager.GetString("PluginName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Toggles the muted state for the selected device, regardless of the current default device..
+        /// </summary>
+        public static string SetMutedDescription {
+            get {
+                return ResourceManager.GetString("SetMutedDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Mute / unmute.
+        /// </summary>
+        public static string SetMutedName {
+            get {
+                return ResourceManager.GetString("SetMutedName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Inverted (muted is off).
+        /// </summary>
+        public static string SettingGetMutedInverted {
+            get {
+                return ResourceManager.GetString("SettingGetMutedInverted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Show On-Screen Display.
+        /// </summary>
+        public static string SettingOSD {
+            get {
+                return ResourceManager.GetString("SettingOSD", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Playback device.
+        /// </summary>
+        public static string SettingPlaybackDevice {
+            get {
+                return ResourceManager.GetString("SettingPlaybackDevice", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Inverted (off is muted).
+        /// </summary>
+        public static string SettingSetMutedSetInverted {
+            get {
+                return ResourceManager.GetString("SettingSetMutedSetInverted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Set mute depending on value (eg. switch).
+        /// </summary>
+        public static string SettingSetMutedToggleFalse {
+            get {
+                return ResourceManager.GetString("SettingSetMutedToggleFalse", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Toggle mute when input turns on (eg. push button).
+        /// </summary>
+        public static string SettingSetMutedToggleTrue {
+            get {
+                return ResourceManager.GetString("SettingSetMutedToggleTrue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sets the volume for the selected device to the value of the analog input, regardless of the current default device..
+        /// </summary>
+        public static string SetVolumeDescription {
+            get {
+                return ResourceManager.GetString("SetVolumeDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Volume.
+        /// </summary>
+        public static string SetVolumeName {
+            get {
+                return ResourceManager.GetString("SetVolumeName", resourceCulture);
             }
         }
     }

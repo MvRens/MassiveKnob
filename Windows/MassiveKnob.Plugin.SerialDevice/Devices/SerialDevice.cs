@@ -59,6 +59,17 @@ namespace MassiveKnob.Plugin.SerialDevice.Devices
                 
                 return new SerialDeviceSettingsView(viewModel);
             }
+
+            
+            public void SetAnalogOutput(int analogOutputIndex, byte value)
+            {
+                // TODO Support SetAnalogOutput
+            }
+
+            public void SetDigitalOutput(int digitalOutputIndex, bool @on)
+            {
+                // TODO Support SetDigitalOutput
+            }
         }
     }
 }

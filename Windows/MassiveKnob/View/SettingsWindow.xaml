@@ -30,7 +30,7 @@
         </ResourceDictionary>
     </Window.Resources>
 
-    <ScrollViewer>
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Orientation="Vertical">
             <!--
             

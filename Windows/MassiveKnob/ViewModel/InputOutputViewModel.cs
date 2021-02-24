@@ -24,7 +24,7 @@ namespace MassiveKnob.ViewModel
             ? $"Output #{index + 1}"
             : $"Input #{index + 1}";
 
-        public IList<ActionViewModel> Actions => settingsViewModel.Actions;
+        public IList<ActionViewModel> Actions { get; }
 
 
         public ActionViewModel SelectedAction
@@ -65,6 +65,9 @@ namespace MassiveKnob.ViewModel
             this.orchestrator = orchestrator;
             this.actionType = actionType;
             this.index = index;
+
+
+            Actions = settingsViewModel.Actions.Where(a => a.RepresentsNull || a.Action.ActionType == actionType).ToList();
 
             var actionInfo = orchestrator.GetAction(actionType, index);
             
