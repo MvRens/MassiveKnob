@@ -5,10 +5,10 @@
  * 
  */
 // Set this to the number of potentiometers you have connected
-const byte KnobCount = 1;
+const byte AnalogInputCount = 1;
 
 // For each potentiometer, specify the port
-const byte KnobPin[KnobCount] = {
+const byte AnalogInputPin[AnalogInputCount] = {
   A2 
 };
 
@@ -38,10 +38,10 @@ enum OutputMode {
 };
 OutputMode outputMode = Binary;
 
-byte volume[KnobCount];
-unsigned long lastChange[KnobCount];
-int analogReadValue[KnobCount];
-float emaValue[KnobCount];
+byte analogValue[AnalogInputCount];
+unsigned long lastChange[AnalogInputCount];
+int analogReadValue[AnalogInputCount];
+float emaValue[AnalogInputCount];
 unsigned long currentTime;
 unsigned long lastPlot;
 
@@ -55,23 +55,23 @@ void setup()
 
 
   // Seed the moving average
-  for (byte knobIndex = 0; knobIndex < KnobCount; knobIndex++)
+  for (byte analogInputIndex = 0; analogInputIndex < AnalogInputCount; analogInputIndex++)
   {
-    pinMode(KnobPin[knobIndex], INPUT);
-    emaValue[knobIndex] = analogRead(KnobPin[knobIndex]);
+    pinMode(AnalogInputPin[analogInputIndex], INPUT);
+    emaValue[analogInputIndex] = analogRead(AnalogInputPin[analogInputIndex]);
   }
 
   for (byte seed = 1; seed < EMASeedCount - 1; seed++)
-    for (byte knobIndex = 0; knobIndex < KnobCount; knobIndex++)
-      getVolume(knobIndex);
+    for (byte analogInputIndex = 0; analogInputIndex < AnalogInputCount; analogInputIndex++)
+      getAnalogValue(analogInputIndex);
 
 
   // Read the initial values
   currentTime = millis();  
-  for (byte knobIndex = 0; knobIndex < KnobCount; knobIndex++)
+  for (byte analogInputIndex = 0; analogInputIndex < AnalogInputCount; analogInputIndex++)
   {
-    volume[knobIndex] = getVolume(knobIndex);
-    lastChange[knobIndex] = currentTime;
+    analogValue[analogInputIndex] = getAnalogValue(analogInputIndex);
+    lastChange[analogInputIndex] = currentTime;
   }
 }
 
@@ -86,20 +86,20 @@ void loop()
   // is acceptable and saves a few calls to millis.
   currentTime = millis();
 
-  // Check volume knobs  
-  byte newVolume;
-  for (byte knobIndex = 0; knobIndex < KnobCount; knobIndex++)
+  // Check analog inputs
+  byte newAnalogValue;
+  for (byte analogInputIndex = 0; analogInputIndex < AnalogInputCount; analogInputIndex++)
   {
-    newVolume = getVolume(knobIndex);
+    newAnalogValue = getAnalogValue(analogInputIndex);
 
-    if (newVolume != volume[knobIndex] && (currentTime - lastChange[knobIndex] >= MinimumInterval))
+    if (newAnalogValue != analogValue[analogInputIndex] && (currentTime - lastChange[analogInputIndex] >= MinimumInterval))
     {
       if (active)
         // Send out new value
-        outputVolume(knobIndex, newVolume);
+        outputAnalogValue(analogInputIndex, newAnalogValue);
 
-      volume[knobIndex] = newVolume;
-      lastChange[knobIndex] = currentTime;
+      analogValue[analogInputIndex] = newAnalogValue;
+      lastChange[analogInputIndex] = currentTime;
     }
   }
 
@@ -170,13 +170,16 @@ void processHandshakeMessage()
   {
     case Binary:
       Serial.write('H');
-      Serial.write(KnobCount);
+      Serial.write(AnalogInputCount);
+      Serial.write((byte)0);
+      Serial.write((byte)0);
+      Serial.write((byte)0);
       break;
 
     case PlainText:
       Serial.print("Hello! I have ");
-      Serial.print(KnobCount);
-      Serial.println(" knobs.");
+      Serial.print(AnalogInputCount);
+      Serial.println(" analog inputs and no support yet for everything else.");
       break;
   }
 
@@ -198,35 +201,35 @@ void processQuitMessage()
 }
 
 
-byte getVolume(byte knobIndex)
+byte getAnalogValue(byte analogInputIndex)
 {
-  analogRead(KnobPin[knobIndex]);
+  analogRead(AnalogInputPin[analogInputIndex]);
   
   // Give the ADC some time to stabilize
   delay(10);
   
-  analogReadValue[knobIndex] = analogRead(KnobPin[knobIndex]);
-  emaValue[knobIndex] = (EMAAlpha * analogReadValue[knobIndex]) + ((1 - EMAAlpha) * emaValue[knobIndex]);
+  analogReadValue[analogInputIndex] = analogRead(AnalogInputPin[analogInputIndex]);
+  emaValue[analogInputIndex] = (EMAAlpha * analogReadValue[analogInputIndex]) + ((1 - EMAAlpha) * emaValue[analogInputIndex]);
   
-  return map(emaValue[knobIndex], 0, 1023, 0, 100);
+  return map(emaValue[analogInputIndex], 0, 1023, 0, 100);
 }
 
 
-void outputVolume(byte knobIndex, byte newVolume)
+void outputAnalogValue(byte analogInputIndex, byte newValue)
 {
   switch (outputMode)
   {
     case Binary:
       Serial.write('V');
-      Serial.write(knobIndex);
-      Serial.write(newVolume);    
+      Serial.write(analogInputIndex);
+      Serial.write(newValue);
       break;
 
     case PlainText:
-      Serial.print("Volume #");
-      Serial.print(knobIndex);
+      Serial.print("Analog value #");
+      Serial.print(analogInputIndex);
       Serial.print(" = ");
-      Serial.println(newVolume);
+      Serial.println(newValue);
       break;
   }
 }
@@ -234,7 +237,7 @@ void outputVolume(byte knobIndex, byte newVolume)
 
 void outputPlotter()
 {
-  for (byte i = 0; i < KnobCount; i++)
+  for (byte i = 0; i < AnalogInputCount; i++)
   {
     if (i > 0)
       Serial.print('\t');
@@ -243,7 +246,7 @@ void outputPlotter()
     Serial.print('\t');
     Serial.print(emaValue[i]);
     Serial.print('\t');
-    Serial.print(volume[i]);
+    Serial.print(analogValue[i]);
   }
 
   Serial.println();

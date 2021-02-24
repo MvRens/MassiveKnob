@@ -174,13 +174,9 @@ namespace MassiveKnob.Plugin.SerialDevice.Worker
 
                 if ((char) response == 'H')
                 {
-                    // TODO support multiple I/O's
-                    var knobCount = serialPort.ReadByte();
-                    if (knobCount > -1)
-                    {
-                        specs = new DeviceSpecs(knobCount, 0, 0, 0);
+                    specs = new DeviceSpecs(serialPort.ReadByte(), serialPort.ReadByte(), serialPort.ReadByte(), serialPort.ReadByte());
+                    if (specs.AnalogInputCount > -1 && specs.DigitalInputCount > -1 && specs.AnalogOutputCount > -1 && specs.DigitalOutputCount > -1)
                         return true;
-                    }
                 }
                 else
                     CheckForError(serialPort, (char)response);
