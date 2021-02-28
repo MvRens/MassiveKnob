@@ -1,6 +1,4 @@
-﻿using MassiveKnob.Plugin.CoreAudio.SetMuted;
-
-namespace MassiveKnob.Plugin.CoreAudio.GetVolume
+﻿namespace MassiveKnob.Plugin.CoreAudio.GetVolume
 {
     /// <summary>
     /// Interaction logic for DeviceGetVolumeActionSettingsView.xaml

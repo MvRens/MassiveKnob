@@ -4,6 +4,5 @@ namespace MassiveKnob.Plugin.CoreAudio.SetVolume
 {
     public class DeviceSetVolumeActionSettings : BaseDeviceSettings
     {
-        // TODO OSD
     }
 }

@@ -10,7 +10,6 @@ namespace MassiveKnob.ViewModel
 {
     public class InputOutputViewModel : INotifyPropertyChanged
     {
-        private readonly SettingsViewModel settingsViewModel;
         private readonly IMassiveKnobOrchestrator orchestrator;
         private readonly MassiveKnobActionType actionType;
         private readonly int index;
@@ -61,7 +60,6 @@ namespace MassiveKnob.ViewModel
 
         public InputOutputViewModel(SettingsViewModel settingsViewModel, IMassiveKnobOrchestrator orchestrator, MassiveKnobActionType actionType, int index)
         {
-            this.settingsViewModel = settingsViewModel;
             this.orchestrator = orchestrator;
             this.actionType = actionType;
             this.index = index;

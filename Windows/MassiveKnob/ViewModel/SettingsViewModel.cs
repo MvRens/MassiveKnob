@@ -10,7 +10,7 @@ using MassiveKnob.Plugin;
 
 namespace MassiveKnob.ViewModel
 {
-    // TODO better design-time version
+    // TODO (nice to have) better design-time version
     public class SettingsViewModel : INotifyPropertyChanged
     {
         private readonly IMassiveKnobOrchestrator orchestrator;

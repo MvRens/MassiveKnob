@@ -4,6 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using MassiveKnob.Plugin;
+using Serilog;
+using Serilog.Extensions.Logging;
 
 namespace MassiveKnob.Model
 {
@@ -29,8 +31,15 @@ namespace MassiveKnob.Model
     
     public class PluginManager : IPluginManager
     {
+        private readonly ILogger logger;
         private readonly List<IMassiveKnobPlugin> plugins = new List<IMassiveKnobPlugin>();
 
+
+        public PluginManager(ILogger logger)
+        {
+            this.logger = logger;
+        }
+        
 
         public IEnumerable<IMassiveKnobDevicePlugin> GetDevicePlugins()
         {
@@ -101,7 +110,7 @@ namespace MassiveKnob.Model
         }
 
 
-        private static void ValidateRegistration(string filename, IMassiveKnobPlugin plugin, RegisteredIds registeredIds)
+        private void ValidateRegistration(string filename, IMassiveKnobPlugin plugin, RegisteredIds registeredIds)
         {
             // Make sure all GUIDs are actually unique and someone has not copy/pasted a plugin without
             // modifying the values. This way we can safely make that assumption in other code.
@@ -133,9 +142,38 @@ namespace MassiveKnob.Model
                         throw new MassiveKnobPluginIdConflictException(action.ActionId, conflictingActionFilename, filename);
 
                     registeredIds.ActionById.Add(action.ActionId, filename);
-                    
-                    // TODO check ActionType vs. implemented interfaces
+                    ValidateActionType(action);
                 }
+            }
+        }
+        
+        
+        private void ValidateActionType(IMassiveKnobAction action)
+        {
+            var instance = action.Create(new SerilogLoggerProvider(logger).CreateLogger(null));
+            if (instance == null)
+                throw new NullReferenceException("Create method must not return null");
+            
+            switch (action.ActionType)
+            {
+                case MassiveKnobActionType.InputAnalog:
+                    if (!(instance is IMassiveKnobAnalogAction))
+                        throw new InvalidCastException("InputAnalog action must implement IMassiveKnobAnalogAction");
+                            
+                    break;
+                
+                case MassiveKnobActionType.InputDigital:
+                    if (!(instance is IMassiveKnobDigitalAction))
+                        throw new InvalidCastException("InputDigital action must implement IMassiveKnobDigitalAction");
+
+                    break;
+                
+                case MassiveKnobActionType.OutputAnalog:
+                case MassiveKnobActionType.OutputDigital:
+                    break;
+                
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(action.ActionType), action.ActionType, @"Unsupported action type: " + (int)action.ActionType);
             }
         }
 

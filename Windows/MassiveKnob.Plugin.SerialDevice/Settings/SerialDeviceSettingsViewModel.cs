@@ -73,7 +73,7 @@ namespace MassiveKnob.Plugin.SerialDevice.Settings
 
             serialPorts = SerialPort.GetPortNames();
             
-            // TODO subscribe to device notification to refresh list
+            // TODO (must have - port from old source) subscribe to device notification to refresh list
         }
 
 

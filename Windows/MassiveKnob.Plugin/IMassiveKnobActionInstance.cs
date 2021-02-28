@@ -12,6 +12,10 @@ namespace MassiveKnob.Plugin
         /// <summary>
         /// Called right after this instance is created.
         /// </summary>
+        /// <remarks>
+        /// Do not perform anything but basic initialization until this method is called, as the action
+        /// instance will be created temporarily at startup to verify it is correctly implemented!
+        /// </remarks>
         /// <param name="context">Provides an interface to the Massive Knob settings and device. Can be stored until the action instance is disposed.</param>
         void Initialize(IMassiveKnobActionContext context);
 

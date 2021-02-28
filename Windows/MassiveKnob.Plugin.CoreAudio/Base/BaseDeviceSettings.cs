@@ -6,7 +6,7 @@ namespace MassiveKnob.Plugin.CoreAudio.Base
     {
         public Guid? DeviceId { get; set; }
         
-        // TODO more options, like positioning and style
+        // TODO (nice to have) more options, like positioning and style
         public bool OSD { get; set; } = true;
     }
 }

@@ -21,7 +21,7 @@ namespace MassiveKnob
         [STAThread]
         public static int Main()
         {
-            // TODO make configurable
+            // TODO (should have) make configurable
             var loggingLevelSwitch = new LoggingLevelSwitch();
             //var loggingLevelSwitch = new LoggingLevelSwitch(LogEventLevel.Verbose);
 
@@ -35,7 +35,7 @@ namespace MassiveKnob
                 .CreateLogger();
             
             
-            var pluginManager = new PluginManager();
+            var pluginManager = new PluginManager(logger);
 
             var messages = new StringBuilder();
             pluginManager.Load((exception, filename) =>

@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using System.Security.RightsManagement;
 using System.Windows;
 using AudioSwitcher.AudioApi;
 

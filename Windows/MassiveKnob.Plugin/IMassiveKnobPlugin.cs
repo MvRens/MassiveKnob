@@ -1,5 +1,7 @@
 ﻿using System;
 
+// ReSharper disable UnusedMember.Global - public API
+
 namespace MassiveKnob.Plugin
 {
     /// <summary>
