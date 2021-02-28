@@ -10,5 +10,7 @@
              d:DataContext="{d:DesignInstance getMuted:DeviceGetMutedActionSettingsViewModel}">
     <StackPanel Orientation="Vertical">
         <base:BaseDeviceSettingsView />
+
+        <!-- TODO Inverted -->
     </StackPanel>
 </UserControl>

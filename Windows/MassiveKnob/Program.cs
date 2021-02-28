@@ -10,6 +10,7 @@ using Serilog.Core;
 using Serilog.Events;
 using SimpleInjector;
 
+
 namespace MassiveKnob
 {
     public static class Program

@@ -6,6 +6,8 @@ using Microsoft.Extensions.Logging;
 
 namespace MassiveKnob.Plugin.CoreAudio.GetVolume
 {
+    // TODO send out initial volume after proper initialization
+    
     public class DeviceGetVolumeAction : IMassiveKnobAction
     {
         public Guid ActionId { get; } = new Guid("6ebf91af-8240-4a75-9729-c6a1eb60dcba");

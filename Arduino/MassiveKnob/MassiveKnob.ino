@@ -7,18 +7,39 @@
 // Set this to the number of potentiometers you have connected
 const byte AnalogInputCount = 1;
 
-// For each potentiometer, specify the port
+// Set this to the number of buttons you have connected
+const byte DigitalInputCount = 1;
+
+// Not supported yet - maybe PWM and/or other means of analog output?
+const byte AnalogOutputCount = 0;
+
+// Set this to the number of digital outputs you have connected
+const byte DigitalOutputCount = 1;
+
+
+// For each potentiometer, specify the pin
 const byte AnalogInputPin[AnalogInputCount] = {
   A0
 };
 
-// Minimum time between reporting changing values, reduces serial traffic
+// For each button, specify the pin. Assumes pull-up.
+const byte DigitalInputPin[DigitalInputCount] = {
+  3
+};
+
+// For each digital output, specify the pin
+const byte DigitalOutputPin[DigitalOutputCount] = {
+  2
+};
+
+
+// Minimum time between reporting changing values, reduces serial traffic and debounces digital inputs
 const unsigned long MinimumInterval = 50;
 
-// Alpha value of the Exponential Moving Average (EMA) to reduce noise
+// Alpha value of the Exponential Moving Average (EMA) for analog inputs to reduce noise
 const float EMAAlpha = 0.6;
 
-// How many measurements to take at boot time to seed the EMA
+// How many measurements to take at boot time for analog inputs to seed the EMA
 const byte EMASeedCount = 5;
 
 
@@ -34,6 +55,7 @@ const byte EMASeedCount = 5;
 #include "./min.c"
 
 
+// MIN protocol context and callbacks
 struct min_context minContext;
 
 uint16_t min_tx_space(uint8_t port) { return 512U; }
@@ -46,6 +68,7 @@ void min_application_handler(uint8_t min_id, uint8_t *min_payload, uint8_t len_p
 void min_tx_start(uint8_t port) {}
 void min_tx_finished(uint8_t port) {}
 
+
 const uint8_t FrameIDHandshake = 42;
 const uint8_t FrameIDHandshakeResponse = 43;
 const uint8_t FrameIDAnalogInput = 1;
@@ -56,13 +79,24 @@ const uint8_t FrameIDQuit = 62;
 const uint8_t FrameIDError = 63;
 
 
-bool active = false;
+struct AnalogInputStatus
+{
+  byte Value;
+  unsigned long LastChange;
+  int ReadValue;
+  float EMAValue;
+};
 
-byte analogValue[AnalogInputCount];
-unsigned long lastChange[AnalogInputCount];
-int analogReadValue[AnalogInputCount];
-float emaValue[AnalogInputCount];
-unsigned long lastPlot;
+struct DigitalInputStatus
+{
+  bool Value;
+  unsigned long LastChange;
+};
+
+
+bool active = false;
+struct AnalogInputStatus analogInputStatus[AnalogInputCount];
+struct DigitalInputStatus digitalInputStatus[AnalogInputCount];
 
 
 void setup() 
@@ -77,23 +111,38 @@ void setup()
   min_init_context(&minContext, 0);
 
 
-  // Seed the moving average
-  for (byte analogInputIndex = 0; analogInputIndex < AnalogInputCount; analogInputIndex++)
+  // Seed the moving average for analog inputs
+  for (byte i = 0; i < AnalogInputCount; i++)
   {
-    pinMode(AnalogInputPin[analogInputIndex], INPUT);
-    emaValue[analogInputIndex] = analogRead(AnalogInputPin[analogInputIndex]);
+    pinMode(AnalogInputPin[i], INPUT);
+    analogInputStatus[i].EMAValue = analogRead(AnalogInputPin[i]);
   }
 
-  for (byte analogInputIndex = 0; analogInputIndex < AnalogInputCount; analogInputIndex++)
+  for (byte i = 0; i < AnalogInputCount; i++)
     for (byte seed = 1; seed < EMASeedCount - 1; seed++)
-      getAnalogValue(analogInputIndex);
+      getAnalogValue(i);
 
 
-  // Read the initial values
-  for (byte analogInputIndex = 0; analogInputIndex < AnalogInputCount; analogInputIndex++)
+  // Read the initial stabilized values
+  for (byte i = 0; i < AnalogInputCount; i++)
   {
-    analogValue[analogInputIndex] = getAnalogValue(analogInputIndex);
-    lastChange[analogInputIndex] = millis();
+    analogInputStatus[i].Value = getAnalogValue(i);
+    analogInputStatus[i].LastChange = millis();
+  }
+
+
+  // Set up digital inputs and outputs
+  for (byte i = 0; i < DigitalInputCount; i++)
+  {
+    pinMode(DigitalInputPin[i], INPUT_PULLUP);
+    digitalInputStatus[i].Value = getDigitalValue(i);
+    digitalInputStatus[i].LastChange = millis();
+  }
+
+  for (byte i = 0; i < DigitalOutputCount; i++)
+  {
+    pinMode(DigitalOutputPin[i], OUTPUT);
+    digitalWrite(DigitalOutputPin[i], LOW);
   }
 }
 
@@ -108,18 +157,36 @@ void loop()
  
   // Check analog inputs
   byte newAnalogValue;
-  for (byte analogInputIndex = 0; analogInputIndex < AnalogInputCount; analogInputIndex++)
+  for (byte i = 0; i < AnalogInputCount; i++)
   {
-    newAnalogValue = getAnalogValue(analogInputIndex);
+    newAnalogValue = getAnalogValue(i);
 
-    if (newAnalogValue != analogValue[analogInputIndex] && (millis() - lastChange[analogInputIndex] >= MinimumInterval))
+    if (newAnalogValue != analogInputStatus[i].Value && (millis() - analogInputStatus[i].LastChange >= MinimumInterval))
     {
       if (active)
         // Send out new value
-        outputAnalogValue(analogInputIndex, newAnalogValue);
+        outputAnalogValue(i, newAnalogValue);
 
-      analogValue[analogInputIndex] = newAnalogValue;
-      lastChange[analogInputIndex] = millis();
+      analogInputStatus[i].Value = newAnalogValue;
+      analogInputStatus[i].LastChange = millis();
+    }
+  }
+
+
+  // Check digital inputs
+  bool newDigitalValue;
+  for (byte i = 0; i < DigitalInputCount; i++)
+  {
+    newDigitalValue = getDigitalValue(i);
+
+    if (newDigitalValue != digitalInputStatus[i].Value && (millis() - digitalInputStatus[i].LastChange >= MinimumInterval))
+    {
+      if (active)
+        // Send out new value
+        outputDigitalValue(i, newDigitalValue);
+
+      digitalInputStatus[i].Value = newDigitalValue;
+      digitalInputStatus[i].LastChange = millis();
     }
   }
 }
@@ -138,7 +205,7 @@ void min_application_handler(uint8_t min_id, uint8_t *min_payload, uint8_t len_p
       break;
       
     case FrameIDDigitalOutput:
-      //processDigitalOutputMessage();
+      processDigitalOutputMessage(min_payload, len_payload);
       break;
       
     case FrameIDQuit:
@@ -165,9 +232,25 @@ void processHandshakeMessage(uint8_t *min_payload, uint8_t len_payload)
     return;
   }
 
-  byte payload[4] { AnalogInputCount, 0, 0, 0 };
+  byte payload[4] { AnalogInputCount, DigitalInputCount, AnalogOutputCount, DigitalOutputCount };
   if (min_queue_frame(&minContext, FrameIDHandshakeResponse, (uint8_t *)payload, 4))
     active = true;
+}
+
+
+void processDigitalOutputMessage(uint8_t *min_payload, uint8_t len_payload)
+{
+  if (len_payload < 2)
+  {
+    outputError("Invalid digital output payload length");
+    return;
+  }
+
+  byte outputIndex = min_payload[0];
+  if (outputIndex < DigitalOutputCount)
+    digitalWrite(DigitalOutputPin[min_payload[0]], min_payload[1] == 0 ? LOW : HIGH);
+  else
+    outputError("Invalid digital output index: " + String(outputIndex));
 }
 
 
@@ -184,10 +267,19 @@ byte getAnalogValue(byte analogInputIndex)
   // Give the ADC some time to stabilize
   delay(10);
   
-  analogReadValue[analogInputIndex] = analogRead(AnalogInputPin[analogInputIndex]);
-  emaValue[analogInputIndex] = (EMAAlpha * analogReadValue[analogInputIndex]) + ((1 - EMAAlpha) * emaValue[analogInputIndex]);
+  int readValue = analogRead(AnalogInputPin[analogInputIndex]);
+  analogInputStatus[analogInputIndex].ReadValue = readValue;
   
-  return map(emaValue[analogInputIndex], 0, 1023, 0, 100);
+  int newEMAValue = (EMAAlpha * readValue) + ((1 - EMAAlpha) * analogInputStatus[analogInputIndex].EMAValue);
+  analogInputStatus[analogInputIndex].EMAValue = newEMAValue;
+  
+  return map(newEMAValue, 0, 1023, 0, 100);
+}
+
+
+bool getDigitalValue(byte digitalInputIndex)
+{
+  return digitalRead(DigitalInputPin[digitalInputIndex]) == LOW;
 }
 
 
@@ -195,6 +287,13 @@ void outputAnalogValue(byte analogInputIndex, byte newValue)
 {
   byte payload[2] = { analogInputIndex, newValue };
   min_send_frame(&minContext, FrameIDAnalogInput, (uint8_t *)payload, 2);
+}
+
+
+void outputDigitalValue(byte digitalInputIndex, bool newValue)
+{
+  byte payload[2] = { digitalInputIndex, newValue ? 1 : 0 };
+  min_send_frame(&minContext, FrameIDDigitalInput, (uint8_t *)payload, 2);
 }
 
 

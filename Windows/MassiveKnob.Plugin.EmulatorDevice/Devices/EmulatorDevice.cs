@@ -85,7 +85,7 @@ namespace MassiveKnob.Plugin.EmulatorDevice.Devices
             }
 
             
-            public void SetDigitalOutput(int digitalOutputIndex, bool @on)
+            public void SetDigitalOutput(int digitalOutputIndex, bool on)
             {
                 if (digitalOutputIndex >= windowViewModel.DigitalOutputCount)
                     return;

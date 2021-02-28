@@ -272,6 +272,8 @@ namespace MassiveKnob.Model
         }
 
 
+        // TODO store output values for when the device connects and should receive initial values
+
         protected void AnalogChanged(IMassiveKnobDeviceContext context, int analogInputIndex, byte value)
         {
             if (context != activeDeviceContext)
@@ -525,6 +527,7 @@ namespace MassiveKnob.Model
             public void Connected(DeviceSpecs specs)
             {
                 // TODO update status ?
+                // TODO send out initial values for outputs
 
                 owner.UpdateActiveDeviceSpecs(this, specs);
             }

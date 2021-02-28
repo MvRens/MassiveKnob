@@ -72,12 +72,12 @@ namespace MassiveKnob.Plugin.SerialDevice.Devices
             
             public void SetAnalogOutput(int analogOutputIndex, byte value)
             {
-                // TODO Support SetAnalogOutput
+                worker.SetAnalogOutput(analogOutputIndex, value);
             }
 
-            public void SetDigitalOutput(int digitalOutputIndex, bool @on)
+            public void SetDigitalOutput(int digitalOutputIndex, bool on)
             {
-                // TODO Support SetDigitalOutput
+                worker.SetDigitalOutput(digitalOutputIndex, on);
             }
         }
     }

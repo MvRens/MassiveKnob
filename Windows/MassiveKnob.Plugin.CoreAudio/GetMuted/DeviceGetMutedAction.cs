@@ -6,6 +6,8 @@ using Microsoft.Extensions.Logging;
 
 namespace MassiveKnob.Plugin.CoreAudio.GetMuted
 {
+    // TODO send out initial muted state after proper initialization
+    
     public class DeviceGetMutedAction : IMassiveKnobAction
     {
         public Guid ActionId { get; } = new Guid("86646ca7-f472-4c5a-8d0f-7e5d2d162ab9");

@@ -19,6 +19,21 @@ namespace MassiveKnob.Plugin.SerialDevice.Worker
         private int lastBaudRate;
         private bool lastDtrEnable;
 
+
+        private enum MassiveKnobFrameID
+        {
+            Handshake = 42,
+            HandshakeResponse = 43,
+            AnalogInput = 1,
+            DigitalInput = 2,
+            AnalogOutput = 3,
+            DigitalOutput = 4,
+            Quit = 62,
+            Error = 63
+        }
+
+
+        
         public SerialWorker(IMassiveKnobDeviceContext context, ILogger logger)
         {
             this.context = context;
@@ -58,17 +73,19 @@ namespace MassiveKnob.Plugin.SerialDevice.Worker
         }
 
 
-        private enum MassiveKnobFrameID
+        public void SetAnalogOutput(int analogOutputIndex, byte value)
         {
-            Handshake = 42,
-            HandshakeResponse = 43,
-            AnalogInput = 1,
-            DigitalInput = 2,
-            AnalogOutput = 3,
-            DigitalOutput = 4,
-            Quit = 62,
-            Error = 63
-        }   
+            minProtocol?.QueueFrame(
+                (byte)MassiveKnobFrameID.AnalogOutput, 
+                new [] { (byte)analogOutputIndex, value });
+        }
+
+        public void SetDigitalOutput(int digitalOutputIndex, bool on)
+        {
+            minProtocol?.QueueFrame(
+                (byte)MassiveKnobFrameID.DigitalOutput,
+                new [] { (byte)digitalOutputIndex, on ? (byte)1 : (byte)0 });
+        }
 
 
         private void MinProtocolOnOnConnected(object sender, EventArgs e)
