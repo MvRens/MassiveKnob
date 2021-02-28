@@ -5,15 +5,35 @@ namespace MassiveKnob.Plugin.CoreAudio.SetMuted
     public class DeviceSetMutedActionSettingsViewModel : BaseDeviceSettingsViewModel<DeviceSetMutedActionSettings>
     {
         // ReSharper disable UnusedMember.Global - used by WPF Binding
-        public bool Toggle
+        public bool ToggleTrue
         {
             get => Settings.Toggle;
             set
             {
-                if (value == Settings.Toggle)
+                if (!value)
+                    return;
+                
+                if (Settings.Toggle)
                     return;
 
-                Settings.Toggle = value;
+                Settings.Toggle = true;
+                OnPropertyChanged();
+            }
+        }
+
+
+        public bool ToggleFalse
+        {
+            get => !Settings.Toggle;
+            set
+            {
+                if (!value)
+                    return;
+                
+                if (!Settings.Toggle)
+                    return;
+
+                Settings.Toggle = false;
                 OnPropertyChanged();
             }
         }

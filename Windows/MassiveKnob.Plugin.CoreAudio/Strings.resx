@@ -157,7 +157,7 @@
     <value>Mute / unmute</value>
   </data>
   <data name="SettingGetMutedInverted" xml:space="preserve">
-    <value>Inverted (muted is off)</value>
+    <value>Inverted (off when muted)</value>
   </data>
   <data name="SettingOSD" xml:space="preserve">
     <value>Show On-Screen Display</value>
@@ -166,7 +166,7 @@
     <value>Playback device</value>
   </data>
   <data name="SettingSetMutedSetInverted" xml:space="preserve">
-    <value>Inverted (off is muted)</value>
+    <value>Inverted (muted when off)</value>
   </data>
   <data name="SettingSetMutedToggleFalse" xml:space="preserve">
     <value>Set mute depending on value (eg. switch)</value>

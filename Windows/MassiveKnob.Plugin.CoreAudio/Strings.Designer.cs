@@ -178,7 +178,7 @@ namespace MassiveKnob.Plugin.CoreAudio {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Inverted (muted is off).
+        ///   Looks up a localized string similar to Inverted (off when muted).
         /// </summary>
         public static string SettingGetMutedInverted {
             get {
@@ -205,7 +205,7 @@ namespace MassiveKnob.Plugin.CoreAudio {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Inverted (off is muted).
+        ///   Looks up a localized string similar to Inverted (muted when off).
         /// </summary>
         public static string SettingSetMutedSetInverted {
             get {

@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Windows;
 using AudioSwitcher.AudioApi;
 
@@ -20,6 +21,7 @@ namespace MassiveKnob.Plugin.CoreAudio.OSD
                 {
                     windowViewModel = new OSDWindowViewModel();
                     window = new OSDWindow(windowViewModel);
+                    window.Closed += WindowOnClosed;
                     
                     hideTimer = new Timer(state =>
                     {
@@ -34,9 +36,17 @@ namespace MassiveKnob.Plugin.CoreAudio.OSD
             });
         }
 
+        
+        private static void WindowOnClosed(object sender, EventArgs e)
+        {
+            hideTimer?.Dispose();
+            hideTimer = null;
+        }
+
+        
         private static void Hide()
         {
-            Application.Current.Dispatcher.Invoke(() =>
+            Application.Current?.Dispatcher.Invoke(() =>
             {
                 window?.Close();
                 window = null;
