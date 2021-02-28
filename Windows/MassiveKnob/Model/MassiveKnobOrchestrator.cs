@@ -5,13 +5,17 @@ using System.Reactive.Subjects;
 using MassiveKnob.Helpers;
 using MassiveKnob.Plugin;
 using MassiveKnob.Settings;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
+using Serilog.Extensions.Logging;
+using ILogger = Serilog.ILogger;
 
 namespace MassiveKnob.Model
 {
     public class MassiveKnobOrchestrator : IMassiveKnobOrchestrator
     {
         private readonly IPluginManager pluginManager;
+        private readonly ILogger logger;
 
         private readonly object settingsLock = new object();
         private Settings.Settings settings;
@@ -43,9 +47,10 @@ namespace MassiveKnob.Model
         public IObservable<MassiveKnobDeviceInfo> ActiveDeviceSubject => activeDeviceInfoSubject;
 
 
-        public MassiveKnobOrchestrator(IPluginManager pluginManager)
+        public MassiveKnobOrchestrator(IPluginManager pluginManager, ILogger logger)
         {
             this.pluginManager = pluginManager;
+            this.logger = logger;
         }
 
 
@@ -170,7 +175,7 @@ namespace MassiveKnob.Model
 
             if (device != null)
             {
-                var instance = device.Create();
+                var instance = device.Create(new SerilogLoggerProvider(logger.ForContext("Device", device.DeviceId)).CreateLogger(null));
                 ActiveDevice = new MassiveKnobDeviceInfo(device, instance, null);
 
                 activeDeviceContext = new DeviceContext(this, device);
@@ -456,8 +461,13 @@ namespace MassiveKnob.Model
         {
             if (action == null)
                 return null;
+
+            var actionLogger = logger
+                .ForContext("Action", action.ActionId)
+                .ForContext("ActionType", action.ActionType)
+                .ForContext("Index", index);
             
-            var instance = action.Create();
+            var instance = action.Create(new SerilogLoggerProvider(actionLogger).CreateLogger(null));
             var context = new ActionContext(this, action, index);
 
             var mapping = new ActionMapping(new MassiveKnobActionInfo(action, instance), context);

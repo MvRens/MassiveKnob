@@ -2,6 +2,7 @@
 using System.Windows.Controls;
 using MassiveKnob.Plugin.SerialDevice.Settings;
 using MassiveKnob.Plugin.SerialDevice.Worker;
+using Microsoft.Extensions.Logging;
 
 namespace MassiveKnob.Plugin.SerialDevice.Devices
 {
@@ -11,24 +12,32 @@ namespace MassiveKnob.Plugin.SerialDevice.Devices
         public string Name { get; } = "Serial device";
         public string Description { get; } = "A Serial (USB) device which implements the Massive Knob Protocol.";
 
-        public IMassiveKnobDeviceInstance Create()
+        public IMassiveKnobDeviceInstance Create(ILogger logger)
         {
-            return new Instance();
+            return new Instance(logger);
         }
 
 
         private class Instance : IMassiveKnobDeviceInstance
         {
+            private readonly ILogger logger;
             private IMassiveKnobDeviceContext deviceContext;
             private SerialDeviceSettings settings;
             private SerialWorker worker;
+            
+            
+            public Instance(ILogger logger)
+            {
+                this.logger = logger;
+            }
+            
 
             public void Initialize(IMassiveKnobDeviceContext context)
             {
                 deviceContext = context;
                 settings = deviceContext.GetSettings<SerialDeviceSettings>();
 
-                worker = new SerialWorker(context);
+                worker = new SerialWorker(context, logger);
                 ApplySettings();
             }
 
@@ -41,7 +50,7 @@ namespace MassiveKnob.Plugin.SerialDevice.Devices
 
             private void ApplySettings()
             {
-                worker.Connect(settings.PortName, settings.BaudRate);
+                worker.Connect(settings.PortName, settings.BaudRate, settings.DtrEnable);
             }
 
             

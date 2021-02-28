@@ -1,24 +1,28 @@
 ﻿using System;
-using System.Diagnostics;
-using System.IO.Ports;
 using System.Text;
-using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using MIN;
+using MIN.Abstractions;
+using MIN.SerialPort;
 
 namespace MassiveKnob.Plugin.SerialDevice.Worker
 {
     public class SerialWorker : IDisposable
     {
         private readonly IMassiveKnobDeviceContext context;
+        private readonly ILogger logger;
 
-        private readonly object workerLock = new object();
+        private readonly object minProtocolLock = new object();
+        private IMINProtocol minProtocol;
         private string lastPortName;
         private int lastBaudRate;
-        private Thread workerThread;
-        private CancellationTokenSource workerThreadCancellation = new CancellationTokenSource();
+        private bool lastDtrEnable;
 
-        public SerialWorker(IMassiveKnobDeviceContext context)
+        public SerialWorker(IMassiveKnobDeviceContext context, ILogger logger)
         {
             this.context = context;
+            this.logger = logger;
         }
         
         
@@ -28,15 +32,16 @@ namespace MassiveKnob.Plugin.SerialDevice.Worker
         }
         
         
-        public void Connect(string portName, int baudRate)
+        public void Connect(string portName, int baudRate, bool dtrEnable)
         {
-            lock (workerLock)
+            lock (minProtocolLock)
             {
-                if (portName == lastPortName && baudRate == lastBaudRate)
+                if (portName == lastPortName && baudRate == lastBaudRate && dtrEnable == lastDtrEnable)
                     return;
 
                 lastPortName = portName;
                 lastBaudRate = baudRate;
+                lastDtrEnable = dtrEnable;
 
                 Disconnect();
 
@@ -44,37 +49,99 @@ namespace MassiveKnob.Plugin.SerialDevice.Worker
                     return;
 
 
-                workerThreadCancellation = new CancellationTokenSource();
-                workerThread = new Thread(() => RunWorker(workerThreadCancellation.Token, portName, baudRate))
-                {
-                    Name = "MassiveKnobSerialDevice Worker"
-                };
-                workerThread.Start();
+                minProtocol?.Dispose();
+                minProtocol = new MINProtocol(new MINSerialTransport(portName, baudRate, dtrEnable: dtrEnable), logger);
+                minProtocol.OnConnected += MinProtocolOnOnConnected;
+                minProtocol.OnFrame += MinProtocolOnOnFrame;
+                minProtocol.Start();
+            }
+        }
+
+
+        private enum MassiveKnobFrameID
+        {
+            Handshake = 42,
+            HandshakeResponse = 43,
+            AnalogInput = 1,
+            DigitalInput = 2,
+            AnalogOutput = 3,
+            DigitalOutput = 4,
+            Quit = 62,
+            Error = 63
+        }   
+
+
+        private void MinProtocolOnOnConnected(object sender, EventArgs e)
+        {
+            Task.Run(async () =>
+            {
+                await minProtocol.Reset();
+                await minProtocol.QueueFrame((byte)MassiveKnobFrameID.Handshake, new[] { (byte)'M', (byte)'K' });
+            });
+        }
+        
+
+        private void MinProtocolOnOnFrame(object sender, MINFrameEventArgs e)
+        {
+            // ReSharper disable once SwitchStatementHandlesSomeKnownEnumValuesWithDefault - by design
+            switch ((MassiveKnobFrameID)e.Id)
+            {
+                case MassiveKnobFrameID.HandshakeResponse:
+                    if (e.Payload.Length < 4)
+                    {
+                        logger.LogError("Invalid handshake response length, expected 4, got {length}: {payload}",
+                            e.Payload.Length, BitConverter.ToString(e.Payload));
+                        return;
+                    }
+
+                    var specs = new DeviceSpecs(e.Payload[0], e.Payload[1], e.Payload[2], e.Payload[3]);
+                    context.Connected(specs);
+                    break;
+                
+                case MassiveKnobFrameID.AnalogInput:
+                    if (e.Payload.Length < 2)
+                    {
+                        logger.LogError("Invalid analog input payload length, expected 2, got {length}: {payload}",
+                            e.Payload.Length, BitConverter.ToString(e.Payload));
+                        return;
+                    }
+
+                    context.AnalogChanged(e.Payload[0], e.Payload[1]);
+                    break;
+                
+                case MassiveKnobFrameID.DigitalInput:
+                    if (e.Payload.Length < 2)
+                    {
+                        logger.LogError("Invalid digital input payload length, expected 2, got {length}: {payload}",
+                            e.Payload.Length, BitConverter.ToString(e.Payload));
+                        return;
+                    }
+
+                    context.DigitalChanged(e.Payload[0], e.Payload[1] != 0);
+                    break;
+
+                case MassiveKnobFrameID.Error:
+                    logger.LogError("Error message received from device: {message}", Encoding.ASCII.GetString(e.Payload));
+                    break;
+
+                default:
+                    logger.LogWarning("Unknown frame ID received: {frameId}", e.Id);
+                    break;
             }
         }
 
 
         private void Disconnect()
         {
-            lock (workerLock)
+            lock (minProtocolLock)
             {
-                workerThreadCancellation?.Cancel();
-
-                workerThreadCancellation = null;
-                workerThread = null;
+                minProtocol?.Dispose();
             }
         }
 
 
 
-        private void RunWorker(CancellationToken cancellationToken, string portName, int baudRate)
-        {
-            context.Connecting();
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                SerialPort serialPort = null;
-                DeviceSpecs specs = default;
-
+        /*
                 void SafeCloseSerialPort()
                 {
                     try
@@ -93,7 +160,7 @@ namespace MassiveKnob.Plugin.SerialDevice.Worker
 
                 while (serialPort == null && !cancellationToken.IsCancellationRequested)
                 {
-                    if (!TryConnect(ref serialPort, portName, baudRate, out specs))
+                    if (!TryConnect(ref serialPort, settings, out specs))
                     {
                         SafeCloseSerialPort();
                         Thread.Sleep(500);
@@ -153,16 +220,16 @@ namespace MassiveKnob.Plugin.SerialDevice.Worker
         }
 
 
-        private static bool TryConnect(ref SerialPort serialPort, string portName, int baudRate, out DeviceSpecs specs)
+        private static bool TryConnect(ref SerialPort serialPort, ConnectionSettings settings, out DeviceSpecs specs)
         {
             try
             {
-                serialPort = new SerialPort(portName, baudRate)
+                serialPort = new SerialPort(settings.PortName, settings.BaudRate)
                 {
                     Encoding = Encoding.ASCII,
                     ReadTimeout = 1000, 
                     WriteTimeout = 1000,
-                    DtrEnable = true // TODO make setting
+                    DtrEnable = settings.DtrEnable
                 };
                 serialPort.Open();
 
@@ -226,5 +293,21 @@ namespace MassiveKnob.Plugin.SerialDevice.Worker
             var errorMessage = Encoding.ASCII.GetString(buffer);
             Debug.Print(errorMessage);
         }
+
+
+        private readonly struct ConnectionSettings
+        {
+            public readonly string PortName;
+            public readonly int BaudRate;
+            public readonly bool DtrEnable;
+
+            public ConnectionSettings(string portName, int baudRate, bool dtrEnable)
+            {
+                PortName = portName;
+                BaudRate = baudRate;
+                DtrEnable = dtrEnable;
+            }
+        }
+        */
     }
 }

@@ -1,9 +1,13 @@
 ﻿using System;
+using System.IO;
 using System.Text;
 using System.Windows;
 using MassiveKnob.Model;
 using MassiveKnob.View;
 using MassiveKnob.ViewModel;
+using Serilog;
+using Serilog.Core;
+using Serilog.Events;
 using SimpleInjector;
 
 namespace MassiveKnob
@@ -16,6 +20,20 @@ namespace MassiveKnob
         [STAThread]
         public static int Main()
         {
+            // TODO make configurable
+            var loggingLevelSwitch = new LoggingLevelSwitch();
+            //var loggingLevelSwitch = new LoggingLevelSwitch(LogEventLevel.Verbose);
+
+            var logger = new LoggerConfiguration()
+                //.MinimumLevel.Verbose()
+                .MinimumLevel.ControlledBy(loggingLevelSwitch)
+                .Enrich.FromLogContext()
+                .WriteTo.File(
+                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"MassiveKnob", @"Logs", @".log"),
+                    LogEventLevel.Verbose, rollingInterval: RollingInterval.Day)                  
+                .CreateLogger();
+            
+            
             var pluginManager = new PluginManager();
 
             var messages = new StringBuilder();
@@ -30,13 +48,15 @@ namespace MassiveKnob
                 return 1;
             }
             
-            var orchestrator = new MassiveKnobOrchestrator(pluginManager);
+            var orchestrator = new MassiveKnobOrchestrator(pluginManager, logger);
             orchestrator.Load();
 
 
             var container = new Container();
             container.Options.EnableAutoVerification = false;
 
+            container.RegisterInstance(logger);
+            container.RegisterInstance(loggingLevelSwitch);
             container.RegisterInstance<IPluginManager>(pluginManager);
             container.RegisterInstance<IMassiveKnobOrchestrator>(orchestrator);
 

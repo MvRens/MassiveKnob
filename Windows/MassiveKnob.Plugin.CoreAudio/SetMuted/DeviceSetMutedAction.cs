@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using System.Windows.Controls;
 using AudioSwitcher.AudioApi;
 using MassiveKnob.Plugin.CoreAudio.OSD;
+using Microsoft.Extensions.Logging;
 
 namespace MassiveKnob.Plugin.CoreAudio.SetMuted
 {
@@ -14,7 +15,7 @@ namespace MassiveKnob.Plugin.CoreAudio.SetMuted
         public string Description { get; } = Strings.SetMutedDescription;
         
         
-        public IMassiveKnobActionInstance Create()
+        public IMassiveKnobActionInstance Create(ILogger logger)
         {
             return new Instance();
         }

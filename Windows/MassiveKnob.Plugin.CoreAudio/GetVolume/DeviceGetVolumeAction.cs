@@ -2,6 +2,7 @@
 using System.Windows.Controls;
 using AudioSwitcher.AudioApi;
 using MassiveKnob.Plugin.CoreAudio.OSD;
+using Microsoft.Extensions.Logging;
 
 namespace MassiveKnob.Plugin.CoreAudio.GetVolume
 {
@@ -13,7 +14,7 @@ namespace MassiveKnob.Plugin.CoreAudio.GetVolume
         public string Description { get; } = Strings.GetVolumeDescription;
         
         
-        public IMassiveKnobActionInstance Create()
+        public IMassiveKnobActionInstance Create(ILogger logger)
         {
             return new Instance();
         }

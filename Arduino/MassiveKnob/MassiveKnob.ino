@@ -9,7 +9,7 @@ const byte AnalogInputCount = 1;
 
 // For each potentiometer, specify the port
 const byte AnalogInputPin[AnalogInputCount] = {
-  A2 
+  A0
 };
 
 // Minimum time between reporting changing values, reduces serial traffic
@@ -30,19 +30,38 @@ const byte EMASeedCount = 5;
  *   Here be dragons.
  * 
  */
+#include "./min.h"
+#include "./min.c"
+
+
+struct min_context minContext;
+
+uint16_t min_tx_space(uint8_t port) { return 512U; }
+void min_tx_byte(uint8_t port, uint8_t byte) 
+{
+  while (Serial.write(&byte, 1U) == 0) { }
+}
+uint32_t min_time_ms(void) { return millis(); }
+void min_application_handler(uint8_t min_id, uint8_t *min_payload, uint8_t len_payload, uint8_t port);
+void min_tx_start(uint8_t port) {}
+void min_tx_finished(uint8_t port) {}
+
+const uint8_t FrameIDHandshake = 42;
+const uint8_t FrameIDHandshakeResponse = 43;
+const uint8_t FrameIDAnalogInput = 1;
+const uint8_t FrameIDDigitalInput = 2;
+const uint8_t FrameIDAnalogOutput = 3;
+const uint8_t FrameIDDigitalOutput = 4;
+const uint8_t FrameIDQuit = 62;
+const uint8_t FrameIDError = 63;
+
+
 bool active = false;
-enum OutputMode {
-  Binary,     // Communication with the desktop application
-  PlainText,  // Plain text, useful for the Arduino Serial Monitor
-  Plotter     // Graph values, for the Arduino Serial Plotter
-};
-OutputMode outputMode = Binary;
 
 byte analogValue[AnalogInputCount];
 unsigned long lastChange[AnalogInputCount];
 int analogReadValue[AnalogInputCount];
 float emaValue[AnalogInputCount];
-unsigned long currentTime;
 unsigned long lastPlot;
 
 
@@ -54,6 +73,10 @@ void setup()
   while (!Serial) {}  
 
 
+  // Set up the MIN protocol (http://github.com/min-protocol/min)
+  min_init_context(&minContext, 0);
+
+
   // Seed the moving average
   for (byte analogInputIndex = 0; analogInputIndex < AnalogInputCount; analogInputIndex++)
   {
@@ -61,142 +84,95 @@ void setup()
     emaValue[analogInputIndex] = analogRead(AnalogInputPin[analogInputIndex]);
   }
 
-  for (byte seed = 1; seed < EMASeedCount - 1; seed++)
-    for (byte analogInputIndex = 0; analogInputIndex < AnalogInputCount; analogInputIndex++)
+  for (byte analogInputIndex = 0; analogInputIndex < AnalogInputCount; analogInputIndex++)
+    for (byte seed = 1; seed < EMASeedCount - 1; seed++)
       getAnalogValue(analogInputIndex);
 
 
   // Read the initial values
-  currentTime = millis();  
   for (byte analogInputIndex = 0; analogInputIndex < AnalogInputCount; analogInputIndex++)
   {
     analogValue[analogInputIndex] = getAnalogValue(analogInputIndex);
-    lastChange[analogInputIndex] = currentTime;
+    lastChange[analogInputIndex] = millis();
   }
 }
 
 
 void loop() 
 {
-  if (Serial.available())
-    processMessage(Serial.read());
+  char readBuffer[32];
+  size_t readBufferSize = Serial.available() > 0 ? Serial.readBytes(readBuffer, 32U) : 0;
+  
+  min_poll(&minContext, (uint8_t*)readBuffer, (uint8_t)readBufferSize);
 
-  // Not that due to ADC checking and Serial communication, currentTime will not be
-  // accurate throughout the loop. But since we don't need exact timing for the interval this
-  // is acceptable and saves a few calls to millis.
-  currentTime = millis();
-
+ 
   // Check analog inputs
   byte newAnalogValue;
   for (byte analogInputIndex = 0; analogInputIndex < AnalogInputCount; analogInputIndex++)
   {
     newAnalogValue = getAnalogValue(analogInputIndex);
 
-    if (newAnalogValue != analogValue[analogInputIndex] && (currentTime - lastChange[analogInputIndex] >= MinimumInterval))
+    if (newAnalogValue != analogValue[analogInputIndex] && (millis() - lastChange[analogInputIndex] >= MinimumInterval))
     {
       if (active)
         // Send out new value
         outputAnalogValue(analogInputIndex, newAnalogValue);
 
       analogValue[analogInputIndex] = newAnalogValue;
-      lastChange[analogInputIndex] = currentTime;
+      lastChange[analogInputIndex] = millis();
     }
-  }
-
-  if (outputMode == Plotter && (currentTime - lastPlot) >= 50)
-  {
-    outputPlotter();
-    lastPlot = currentTime;
   }
 }
 
 
-void processMessage(byte message)
+void min_application_handler(uint8_t min_id, uint8_t *min_payload, uint8_t len_payload, uint8_t port)
 {
-  switch (message)
+  switch (min_id)
   {
-    case 'H':   // Handshake
-      processHandshakeMessage();
+    case FrameIDHandshake:
+      processHandshakeMessage(min_payload, len_payload);
       break;
-
-    case 'Q':   // Quit
+      
+    case FrameIDAnalogOutput:
+      //processAnalogOutputMessage();
+      break;
+      
+    case FrameIDDigitalOutput:
+      //processDigitalOutputMessage();
+      break;
+      
+    case FrameIDQuit:
       processQuitMessage();
       break;
 
     default:
-      outputError("Unknown message: " + (char)message);
-      break;
+      outputError("Unknown frame ID: " + String(min_id));
+      break;      
   }
 }
 
-
-void processHandshakeMessage()
+void processHandshakeMessage(uint8_t *min_payload, uint8_t len_payload)
 {
-  byte buffer[3];
-  if (Serial.readBytes(buffer, 3) < 3)
+  if (len_payload < 2)
   {
     outputError("Invalid handshake length");
     return;
   }
   
-  if (buffer[0] != 'M' || buffer[1] != 'K')
+  if (min_payload[0] != 'M' || min_payload[1] != 'K')
   {
-    outputError("Invalid handshake: " + String((char)buffer[0]) + String((char)buffer[1]) + String((char)buffer[2]));
+    outputError("Invalid handshake: " + String((char)min_payload[0]) + String((char)min_payload[1]));
     return;
   }
 
-  switch (buffer[2])
-  {
-    case 'B':
-      outputMode = Binary;
-      break;
-
-    case 'P':
-      outputMode = PlainText;
-      break;
-
-    case 'G':
-      outputMode = Plotter;
-      break;
-
-    default:
-      outputMode = PlainText;
-      outputError("Unknown output mode: " + String((char)buffer[2]));
-      return;
-  }
-
-
-  switch (outputMode)
-  {
-    case Binary:
-      Serial.write('H');
-      Serial.write(AnalogInputCount);
-      Serial.write((byte)0);
-      Serial.write((byte)0);
-      Serial.write((byte)0);
-      break;
-
-    case PlainText:
-      Serial.print("Hello! I have ");
-      Serial.print(AnalogInputCount);
-      Serial.println(" analog inputs and no support yet for everything else.");
-      break;
-  }
-
-  active = true;
+  byte payload[4] { AnalogInputCount, 0, 0, 0 };
+  if (min_queue_frame(&minContext, FrameIDHandshakeResponse, (uint8_t *)payload, 4))
+    active = true;
 }
 
 
 void processQuitMessage()
-{
-  switch (outputMode)
-  {
-    case Binary:
-    case PlainText:
-      Serial.write('Q');
-      break;
-  }
-  
+{ 
   active = false;
 }
 
@@ -217,55 +193,12 @@ byte getAnalogValue(byte analogInputIndex)
 
 void outputAnalogValue(byte analogInputIndex, byte newValue)
 {
-  switch (outputMode)
-  {
-    case Binary:
-      Serial.write('V');
-      Serial.write(analogInputIndex);
-      Serial.write(newValue);
-      break;
-
-    case PlainText:
-      Serial.print("Analog value #");
-      Serial.print(analogInputIndex);
-      Serial.print(" = ");
-      Serial.println(newValue);
-      break;
-  }
-}
-
-
-void outputPlotter()
-{
-  for (byte i = 0; i < AnalogInputCount; i++)
-  {
-    if (i > 0)
-      Serial.print('\t');
-
-    Serial.print(analogReadValue[i]);
-    Serial.print('\t');
-    Serial.print(emaValue[i]);
-    Serial.print('\t');
-    Serial.print(analogValue[i]);
-  }
-
-  Serial.println();
+  byte payload[2] = { analogInputIndex, newValue };
+  min_send_frame(&minContext, FrameIDAnalogInput, (uint8_t *)payload, 2);
 }
 
 
 void outputError(String message)
 {
-  switch (outputMode)
-  {   
-    case Binary:
-      Serial.write('E');
-      Serial.write((byte)message.length());
-      Serial.print(message);
-      break;
-    
-    case PlainText:
-      Serial.print("Error: ");
-      Serial.println(message);
-      break;
-  }
+  min_send_frame(&minContext, FrameIDError, (uint8_t *)message.c_str(), message.length());
 }

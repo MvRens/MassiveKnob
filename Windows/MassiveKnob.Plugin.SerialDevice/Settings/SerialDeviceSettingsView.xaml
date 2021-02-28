@@ -16,6 +16,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <TextBlock Grid.Row="0" Grid.Column="0" Margin="4">Serial port</TextBlock>
@@ -23,5 +24,10 @@
 
         <TextBlock Grid.Row="1" Grid.Column="0" Margin="4">Baud rate</TextBlock>
         <TextBox Grid.Row="1" Grid.Column="1" Margin="4" Width="150" HorizontalAlignment="Left" Text="{Binding BaudRate}" />
+
+        
+        <CheckBox Grid.Row="2" Grid.Column="1" Margin="4" HorizontalAlignment="Left" IsChecked="{Binding DtrEnable}">
+            <TextBlock>Enable DTR (may be required on some Arduino's like Leonardo / Pro Micro)</TextBlock>
+        </CheckBox>
     </Grid>
 </UserControl>

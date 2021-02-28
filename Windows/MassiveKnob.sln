@@ -13,6 +13,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MassiveKnob.Plugin.Emulator
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MassiveKnob.Plugin.SerialDevice", "MassiveKnob.Plugin.SerialDevice\MassiveKnob.Plugin.SerialDevice.csproj", "{FC0D22D8-5F1B-4D85-8269-FA4837CDE3A2}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MIN", "min.NET\MIN\MIN.csproj", "{FC1C9CB5-8B71-4039-9636-90E578A71061}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MIN.SerialPort", "min.NET\MIN.SerialPort\MIN.SerialPort.csproj", "{DB8819EB-D2B7-4AAE-A699-BD200F2C113A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +43,14 @@ Global
 		{FC0D22D8-5F1B-4D85-8269-FA4837CDE3A2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FC0D22D8-5F1B-4D85-8269-FA4837CDE3A2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FC0D22D8-5F1B-4D85-8269-FA4837CDE3A2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FC1C9CB5-8B71-4039-9636-90E578A71061}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FC1C9CB5-8B71-4039-9636-90E578A71061}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FC1C9CB5-8B71-4039-9636-90E578A71061}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FC1C9CB5-8B71-4039-9636-90E578A71061}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DB8819EB-D2B7-4AAE-A699-BD200F2C113A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DB8819EB-D2B7-4AAE-A699-BD200F2C113A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DB8819EB-D2B7-4AAE-A699-BD200F2C113A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DB8819EB-D2B7-4AAE-A699-BD200F2C113A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

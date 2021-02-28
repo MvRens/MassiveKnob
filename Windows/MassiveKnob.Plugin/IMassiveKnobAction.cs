@@ -1,4 +1,5 @@
 ﻿using System;
+using Microsoft.Extensions.Logging;
 
 namespace MassiveKnob.Plugin
 {
@@ -58,6 +59,6 @@ namespace MassiveKnob.Plugin
         /// <summary>
         /// Called when an action is bound to a knob or button to create an instance of the action.
         /// </summary>
-        IMassiveKnobActionInstance Create();
+        IMassiveKnobActionInstance Create(ILogger logger);
     }
 }

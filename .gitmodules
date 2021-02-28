@@ -1,0 +1,3 @@
+[submodule "Windows/min.NET"]
+  path = Windows/min.NET
+  url = https://github.com/MvRens/min.NET

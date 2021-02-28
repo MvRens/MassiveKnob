@@ -1,4 +1,5 @@
 ﻿using System;
+using Microsoft.Extensions.Logging;
 
 namespace MassiveKnob.Plugin
 {
@@ -25,6 +26,6 @@ namespace MassiveKnob.Plugin
         /// <summary>
         /// Called when the device is selected.
         /// </summary>
-        IMassiveKnobDeviceInstance Create();
+        IMassiveKnobDeviceInstance Create(ILogger logger);
     }
 }

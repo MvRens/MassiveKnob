@@ -50,6 +50,20 @@ namespace MassiveKnob.Plugin.SerialDevice.Settings
                 OnPropertyChanged();
             }
         }
+
+
+        public bool DtrEnable
+        {
+            get => settings.DtrEnable;
+            set
+            {
+                if (value == settings.DtrEnable)
+                    return;
+
+                settings.DtrEnable = value;
+                OnPropertyChanged();
+            }
+        }
         // ReSharper restore UnusedMember.Global
 
 

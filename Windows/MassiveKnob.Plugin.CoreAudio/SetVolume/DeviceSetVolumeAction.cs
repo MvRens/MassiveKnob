@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using System.Windows.Controls;
 using AudioSwitcher.AudioApi;
 using MassiveKnob.Plugin.CoreAudio.OSD;
+using Microsoft.Extensions.Logging;
 
 namespace MassiveKnob.Plugin.CoreAudio.SetVolume
 {
@@ -14,7 +15,7 @@ namespace MassiveKnob.Plugin.CoreAudio.SetVolume
         public string Description { get; } = Strings.SetVolumeDescription;
         
         
-        public IMassiveKnobActionInstance Create()
+        public IMassiveKnobActionInstance Create(ILogger logger)
         {
             return new Instance();
         }
@@ -26,7 +27,7 @@ namespace MassiveKnob.Plugin.CoreAudio.SetVolume
             private DeviceSetVolumeActionSettings settings;
             private IDevice playbackDevice;
 
-
+            
             public void Initialize(IMassiveKnobActionContext context)
             {
                 actionContext = context;

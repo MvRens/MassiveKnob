@@ -1,7 +1,7 @@
 ﻿using System;
-using System.Threading;
 using System.Windows.Controls;
 using MassiveKnob.Plugin.EmulatorDevice.Settings;
+using Microsoft.Extensions.Logging;
 
 namespace MassiveKnob.Plugin.EmulatorDevice.Devices
 {
@@ -11,7 +11,7 @@ namespace MassiveKnob.Plugin.EmulatorDevice.Devices
         public string Name { get; } = "Mock device";
         public string Description { get; } = "Emulates the actual device but does not communicate with anything.";
 
-        public IMassiveKnobDeviceInstance Create()
+        public IMassiveKnobDeviceInstance Create(ILogger logger)
         {
             return new Instance();
         }
