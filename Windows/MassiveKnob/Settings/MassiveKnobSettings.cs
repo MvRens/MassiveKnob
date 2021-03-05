@@ -2,16 +2,45 @@
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json.Linq;
+using Serilog.Events;
 
 namespace MassiveKnob.Settings
 {
-    public class Settings
+    public enum SettingsMenuItem
+    {
+        None,
+        Device,
+        AnalogInputs,
+        DigitalInputs,
+        AnalogOutputs,
+        DigitalOutputs,
+        Logging,
+        Startup
+    }
+
+
+    
+    public class MassiveKnobSettings
     {
         public DeviceSettings Device { get; set; }
         public List<ActionSettings> AnalogInput { get; set; }
         public List<ActionSettings> DigitalInput { get; set; }
         public List<ActionSettings> AnalogOutput { get; set; }
         public List<ActionSettings> DigitalOutput { get; set; }
+
+        private UISettings ui;
+        public UISettings UI
+        {
+            get => ui ?? (ui = new UISettings());
+            set => ui = value ?? new UISettings();
+        }
+
+        private LogSettings log;
+        public LogSettings Log
+        {
+            get => log ?? (log = new LogSettings());
+            set => log = value ?? new LogSettings();
+        }
 
 
         public void Verify()
@@ -23,15 +52,17 @@ namespace MassiveKnob.Settings
         }
         
         
-        public Settings Clone()
+        public MassiveKnobSettings Clone()
         {
-            return new Settings
+            return new MassiveKnobSettings
             {
                 Device = Device?.Clone(),
                 AnalogInput = AnalogInput.Select(a => a?.Clone()).ToList(),
                 DigitalInput = DigitalInput.Select(a => a?.Clone()).ToList(),
                 AnalogOutput = AnalogOutput.Select(a => a?.Clone()).ToList(),
-                DigitalOutput = DigitalOutput.Select(a => a?.Clone()).ToList()
+                DigitalOutput = DigitalOutput.Select(a => a?.Clone()).ToList(),
+                UI = UI.Clone(),
+                Log = Log.Clone()
             };
         }
 
@@ -67,6 +98,36 @@ namespace MassiveKnob.Settings
 
                     // This is safe, as the JObject itself is never manipulated, only replaced
                     Settings = Settings
+                };
+            }
+        }
+
+
+        public class UISettings
+        {
+            public SettingsMenuItem ActiveMenuItem { get; set; } = SettingsMenuItem.None;
+
+            public UISettings Clone()
+            {
+                return new UISettings
+                {
+                    ActiveMenuItem = ActiveMenuItem
+                };
+            }
+        }
+
+
+        public class LogSettings
+        {
+            public bool Enabled { get; set; } = true;
+            public LogEventLevel Level { get; set; } = LogEventLevel.Information;
+
+            public LogSettings Clone()
+            {
+                return new LogSettings
+                {
+                    Enabled = Enabled,
+                    Level = Level
                 };
             }
         }

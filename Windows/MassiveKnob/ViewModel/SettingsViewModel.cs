@@ -1,20 +1,42 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
-using MassiveKnob.Model;
+using MassiveKnob.Core;
 using MassiveKnob.Plugin;
+using MassiveKnob.Settings;
+using MassiveKnob.View.Settings;
+using Microsoft.Win32;
+using Serilog.Events;
 
 namespace MassiveKnob.ViewModel
 {
-    // TODO (nice to have) better design-time version
-    public class SettingsViewModel : INotifyPropertyChanged
+    public class SettingsViewModel : IDisposable, INotifyPropertyChanged
     {
+        private readonly Dictionary<SettingsMenuItem, Type> menuItemControls = new Dictionary<SettingsMenuItem, Type>
+        {
+            { SettingsMenuItem.Device, typeof(DeviceView) },
+            { SettingsMenuItem.AnalogInputs, typeof(AnalogInputsView) },
+            { SettingsMenuItem.DigitalInputs, typeof(DigitalInputsView) },
+            { SettingsMenuItem.AnalogOutputs, typeof(AnalogOutputsView) },
+            { SettingsMenuItem.DigitalOutputs, typeof(DigitalOutputsView) },
+            { SettingsMenuItem.Logging, typeof(LoggingView) },
+            { SettingsMenuItem.Startup, typeof(StartupView) }
+        };
+
+
+
         private readonly IMassiveKnobOrchestrator orchestrator;
+        private readonly ILoggingSwitch loggingSwitch;
         private DeviceViewModel selectedDevice;
+        private UserControl selectedView;
+        private SettingsMenuItem selectedMenuItem;
         private UserControl settingsControl;
 
         private DeviceSpecs? specs;
@@ -25,10 +47,46 @@ namespace MassiveKnob.ViewModel
 
 
         // ReSharper disable UnusedMember.Global - used by WPF Binding
+        public SettingsMenuItem SelectedMenuItem
+        {
+            get => selectedMenuItem;
+            set
+            {
+                if (value == selectedMenuItem)
+                    return;
+
+                selectedMenuItem = value;
+                OnPropertyChanged();
+
+                if (menuItemControls.TryGetValue(selectedMenuItem, out var viewType))
+                    SelectedView = (UserControl) Activator.CreateInstance(viewType);
+
+                orchestrator?.UpdateSettings(settings =>
+                {
+                    settings.UI.ActiveMenuItem = selectedMenuItem;
+                });
+            }
+        }
+
+        public UserControl SelectedView
+        {
+            get => selectedView;
+            set
+            {
+                if (value == selectedView)
+                    return;
+                
+                selectedView = value;
+                OnPropertyChanged();
+            }
+        }
+        
+        
+
         public IList<DeviceViewModel> Devices { get; }
         public IList<ActionViewModel> Actions { get; }
 
-
+        
         public DeviceViewModel SelectedDevice
         {
             get => selectedDevice;
@@ -38,7 +96,7 @@ namespace MassiveKnob.ViewModel
                     return;
 
                 selectedDevice = value;
-                var deviceInfo = orchestrator.SetActiveDevice(value?.Device);
+                var deviceInfo = orchestrator?.SetActiveDevice(value?.Device);
 
                 OnPropertyChanged();
 
@@ -53,6 +111,9 @@ namespace MassiveKnob.ViewModel
             {
                 if (value == settingsControl)
                     return;
+
+                if (settingsControl is IDisposable disposable)
+                    disposable.Dispose();
 
                 settingsControl = value;
                 OnPropertyChanged();
@@ -70,6 +131,11 @@ namespace MassiveKnob.ViewModel
                 OnDependantPropertyChanged("DigitalInputVisibility");
                 OnDependantPropertyChanged("AnalogOutputVisibility");
                 OnDependantPropertyChanged("DigitalOutputVisibility");
+
+                DisposeInputOutputViewModels(AnalogInputs);
+                DisposeInputOutputViewModels(DigitalInputs);
+                DisposeInputOutputViewModels(AnalogOutputs);
+                DisposeInputOutputViewModels(DigitalOutputs);
 
                 AnalogInputs = Enumerable
                     .Range(0, specs?.AnalogInputCount ?? 0)
@@ -89,6 +155,7 @@ namespace MassiveKnob.ViewModel
             }
         }
 
+        
         public Visibility AnalogInputVisibility => specs.HasValue && specs.Value.AnalogInputCount > 0
             ? Visibility.Visible
             : Visibility.Collapsed;
@@ -144,13 +211,80 @@ namespace MassiveKnob.ViewModel
                 OnPropertyChanged();
             }
         }
+        
+        
+        public IList<LoggingLevelViewModel> LoggingLevels { get; }
+        
+        private LoggingLevelViewModel selectedLoggingLevel;
+        public LoggingLevelViewModel SelectedLoggingLevel
+        {
+            get => selectedLoggingLevel;
+            set
+            {
+                if (value == selectedLoggingLevel)
+                    return;
+                
+                selectedLoggingLevel = value;
+                OnPropertyChanged();
+
+                ApplyLoggingSettings();
+            }
+        }
+
+
+        private bool loggingEnabled;
+        public bool LoggingEnabled
+        {
+            get => loggingEnabled;
+            set
+            {
+                if (value == loggingEnabled)
+                    return;
+
+                loggingEnabled = value;
+                OnPropertyChanged();
+                
+                ApplyLoggingSettings();
+            }
+        }
+
+
+        // TODO (code quality) do not hardcode path here
+        public string LoggingOutputPath { get; } = string.Format(Strings.LoggingOutputPath, Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"MassiveKnob", @"Logs"));
+
+
+        private bool runAtStartup;
+        public bool RunAtStartup
+        {
+            get => runAtStartup;
+            set
+            {
+                if (value == runAtStartup)
+                    return;
+
+                runAtStartup = value;
+                OnPropertyChanged();
+
+                ApplyRunAtStartup();
+            }
+        }
         // ReSharper restore UnusedMember.Global
 
 
-
-        public SettingsViewModel(IPluginManager pluginManager, IMassiveKnobOrchestrator orchestrator)
+        public SettingsViewModel(IPluginManager pluginManager, IMassiveKnobOrchestrator orchestrator, ILoggingSwitch loggingSwitch)
         {
             this.orchestrator = orchestrator;
+            this.loggingSwitch = loggingSwitch;
+            
+            // For design-time support
+            if (orchestrator == null)
+                return;
+
+            var activeMenuItem = orchestrator.GetSettings().UI.ActiveMenuItem;
+            if (activeMenuItem == SettingsMenuItem.None)
+                activeMenuItem = SettingsMenuItem.Device;
+            
+            SelectedMenuItem = activeMenuItem;
 
             orchestrator.ActiveDeviceSubject.Subscribe(info => { Specs = info.Specs; });
 
@@ -170,12 +304,83 @@ namespace MassiveKnob.ViewModel
             
             Actions = allActions;
 
-            if (orchestrator.ActiveDevice == null)
-                return;
+            if (orchestrator.ActiveDevice != null)
+            {
+                selectedDevice = Devices.Single(d => d.Device.DeviceId == orchestrator.ActiveDevice.Info.DeviceId);
+                SettingsControl = orchestrator.ActiveDevice.Instance.CreateSettingsControl();
+                Specs = orchestrator.ActiveDevice.Specs;
+            }
 
-            selectedDevice = Devices.Single(d => d.Device.DeviceId == orchestrator.ActiveDevice.Info.DeviceId);
-            SettingsControl = orchestrator.ActiveDevice.Instance.CreateSettingsControl();
-            Specs = orchestrator.ActiveDevice.Specs;
+
+            var logSettings = orchestrator.GetSettings().Log;
+            LoggingLevels = new List<LoggingLevelViewModel>
+            {
+                new LoggingLevelViewModel(LogEventLevel.Error, Strings.LoggingLevelError, Strings.LoggingLevelErrorDescription),
+                new LoggingLevelViewModel(LogEventLevel.Warning, Strings.LoggingLevelWarning, Strings.LoggingLevelWarningDescription),
+                new LoggingLevelViewModel(LogEventLevel.Information, Strings.LoggingLevelInformation, Strings.LoggingLevelInformationDescription),
+                new LoggingLevelViewModel(LogEventLevel.Verbose, Strings.LoggingLevelVerbose, Strings.LoggingLevelVerboseDescription),
+            };
+
+            selectedLoggingLevel = LoggingLevels.SingleOrDefault(l => l.Level == logSettings.Level)
+                                   ?? LoggingLevels.Single(l => l.Level == LogEventLevel.Information);
+            loggingEnabled = logSettings.Enabled;
+
+
+            var runKey = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", false);
+            runAtStartup = runKey?.GetValue("MassiveKnob") != null;
+        }
+
+
+        public void Dispose()
+        {
+            if (SettingsControl is IDisposable disposable)
+                disposable.Dispose();
+
+            DisposeInputOutputViewModels(AnalogInputs);
+            DisposeInputOutputViewModels(DigitalInputs);
+            DisposeInputOutputViewModels(AnalogOutputs);
+            DisposeInputOutputViewModels(DigitalOutputs);
+        }
+
+
+        private void ApplyLoggingSettings()
+        {
+            orchestrator?.UpdateSettings(settings =>
+            {
+                settings.Log.Enabled = LoggingEnabled;
+                settings.Log.Level = SelectedLoggingLevel.Level;
+            });
+            
+            loggingSwitch?.SetLogging(LoggingEnabled, selectedLoggingLevel.Level);
+        }
+
+
+        private void ApplyRunAtStartup()
+        {
+            var runKey = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
+            Debug.Assert(runKey != null, nameof(runKey) + " != null");
+
+            if (RunAtStartup)
+            {
+                var entryAssembly = Assembly.GetEntryAssembly();
+                Debug.Assert(entryAssembly != null, nameof(entryAssembly) + " != null");
+
+                runKey.SetValue("MassiveKnob", new Uri(entryAssembly.CodeBase).LocalPath);
+            }
+            else
+            {
+                runKey.DeleteValue("MassiveKnob", false);
+            }
+        }
+
+
+        private static void DisposeInputOutputViewModels(IEnumerable<InputOutputViewModel> viewModels)
+        {
+            if (viewModels == null)
+                return;
+            
+            foreach (var viewModel in viewModels)
+                viewModel.Dispose();
         }
 
 
@@ -189,6 +394,15 @@ namespace MassiveKnob.ViewModel
         protected virtual void OnDependantPropertyChanged(string propertyName)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+    }
+
+
+    public class SettingsViewModelDesignTime : SettingsViewModel
+    {
+        public SettingsViewModelDesignTime() : base(null, null, null)
+        {
+            Specs = new DeviceSpecs(2, 2, 2, 2);
         }
     }
 }

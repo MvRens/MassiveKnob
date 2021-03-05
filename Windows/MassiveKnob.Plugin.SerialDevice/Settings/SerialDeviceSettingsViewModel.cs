@@ -1,19 +1,23 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO.Ports;
 using System.Runtime.CompilerServices;
+using Dapplo.Windows.Devices;
+using Dapplo.Windows.Devices.Enums;
 
 namespace MassiveKnob.Plugin.SerialDevice.Settings
 {
-    public class SerialDeviceSettingsViewModel : INotifyPropertyChanged
+    public class SerialDeviceSettingsViewModel : IDisposable, INotifyPropertyChanged, IObserver<DeviceNotificationEvent>
     {
         private readonly SerialDeviceSettings settings;
-        private IEnumerable<string> serialPorts;
+        private IList<string> serialPorts;
+        private readonly IDisposable deviceSubscription;
         public event PropertyChangedEventHandler PropertyChanged;
 
 
         // ReSharper disable UnusedMember.Global - used by WPF Binding
-        public IEnumerable<string> SerialPorts
+        public IList<string> SerialPorts
         {
             get => serialPorts;
             set
@@ -29,7 +33,7 @@ namespace MassiveKnob.Plugin.SerialDevice.Settings
             get => settings.PortName;
             set
             {
-                if (value == settings.PortName)
+                if (value == settings.PortName || value == null)
                     return;
 
                 settings.PortName = value;
@@ -72,8 +76,13 @@ namespace MassiveKnob.Plugin.SerialDevice.Settings
             this.settings = settings;
 
             serialPorts = SerialPort.GetPortNames();
-            
-            // TODO (must have - port from old source) subscribe to device notification to refresh list
+            deviceSubscription = DeviceNotification.OnNotification.Subscribe(this);
+        }
+
+
+        public void Dispose()
+        {
+            deviceSubscription.Dispose();
         }
 
 
@@ -86,6 +95,32 @@ namespace MassiveKnob.Plugin.SerialDevice.Settings
         protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+
+        protected virtual void OnOtherPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+
+        
+        public void OnNext(DeviceNotificationEvent value)
+        {
+            if ((value.EventType == DeviceChangeEvent.DeviceArrival ||
+                 value.EventType == DeviceChangeEvent.DeviceRemoveComplete) &&
+                value.Is(DeviceBroadcastDeviceType.DeviceInterface))
+            {
+                SerialPorts = SerialPort.GetPortNames();
+            }
+        }
+
+        public void OnError(Exception error)
+        {
+        }
+
+        public void OnCompleted()
+        {
         }
     }
 }

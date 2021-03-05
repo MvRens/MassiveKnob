@@ -1,7 +1,7 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Style TargetType="Window" x:Key="DefaultWindow">
-        <Setter Property="Background" Value="#f0f0f0" />
+        <Setter Property="Background" Value="White" />
     </Style>
 
     <Style TargetType="MenuItem" x:Key="DefaultMenuItem">
@@ -31,6 +31,14 @@
     </Style>
 
     <Style TargetType="TextBlock" x:Key="ComboBoxDescription">
-        <Setter Property="Foreground" Value="{x:Static SystemColors.GrayTextBrush}" />
+        <Setter Property="Foreground" Value="#808080" />
+    </Style>
+
+    <Style TargetType="TextBlock" x:Key="Label">
+        <Setter Property="Margin" Value="0,0,0,4" />
+    </Style>
+
+    <Style TargetType="TextBlock" x:Key="SubLabel">
+        <Setter Property="Foreground" Value="#808080" />
     </Style>
 </ResourceDictionary>

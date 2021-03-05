@@ -1,7 +1,8 @@
 ﻿using System;
 using MassiveKnob.Plugin;
+using MassiveKnob.Settings;
 
-namespace MassiveKnob.Model
+namespace MassiveKnob.Core
 {
     public interface IMassiveKnobOrchestrator : IDisposable
     {
@@ -12,6 +13,9 @@ namespace MassiveKnob.Model
 
         MassiveKnobActionInfo GetAction(MassiveKnobActionType actionType, int index);
         MassiveKnobActionInfo SetAction(MassiveKnobActionType actionType, int index, IMassiveKnobAction action);
+
+        MassiveKnobSettings GetSettings();
+        void UpdateSettings(Action<MassiveKnobSettings> applyChanges);
     }
     
     

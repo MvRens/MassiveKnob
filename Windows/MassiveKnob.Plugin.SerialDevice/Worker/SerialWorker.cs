@@ -49,6 +49,8 @@ namespace MassiveKnob.Plugin.SerialDevice.Worker
         
         public void Connect(string portName, int baudRate, bool dtrEnable)
         {
+            context.Connecting();
+            
             lock (minProtocolLock)
             {
                 if (portName == lastPortName && baudRate == lastBaudRate && dtrEnable == lastDtrEnable)
@@ -75,14 +77,28 @@ namespace MassiveKnob.Plugin.SerialDevice.Worker
 
         public void SetAnalogOutput(int analogOutputIndex, byte value)
         {
-            minProtocol?.QueueFrame(
+            IMINProtocol instance;
+            
+            lock (minProtocolLock)
+            {
+                instance = minProtocol;
+            }
+            
+            instance?.QueueFrame(
                 (byte)MassiveKnobFrameID.AnalogOutput, 
                 new [] { (byte)analogOutputIndex, value });
         }
 
         public void SetDigitalOutput(int digitalOutputIndex, bool on)
         {
-            minProtocol?.QueueFrame(
+            IMINProtocol instance;
+
+            lock (minProtocolLock)
+            {
+                instance = minProtocol;
+            }
+
+            instance?.QueueFrame(
                 (byte)MassiveKnobFrameID.DigitalOutput,
                 new [] { (byte)digitalOutputIndex, on ? (byte)1 : (byte)0 });
         }
@@ -90,16 +106,42 @@ namespace MassiveKnob.Plugin.SerialDevice.Worker
 
         private void MinProtocolOnOnConnected(object sender, EventArgs e)
         {
+            IMINProtocol instance;
+
+            lock (minProtocolLock)
+            {
+                if (minProtocol != sender as IMINProtocol)
+                    return;
+                
+                instance = minProtocol;
+            }
+            
+            if (instance == null)
+                return;
+
             Task.Run(async () =>
             {
-                await minProtocol.Reset();
-                await minProtocol.QueueFrame((byte)MassiveKnobFrameID.Handshake, new[] { (byte)'M', (byte)'K' });
+                await instance.Reset();
+                await instance.QueueFrame((byte)MassiveKnobFrameID.Handshake, new[] { (byte)'M', (byte)'K' });
             });
         }
         
 
         private void MinProtocolOnOnFrame(object sender, MINFrameEventArgs e)
         {
+            IMINProtocol instance;
+
+            lock (minProtocolLock)
+            {
+                if (minProtocol != sender as IMINProtocol)
+                    return;
+
+                instance = minProtocol;
+            }
+
+            if (instance == null)
+                return;
+
             // ReSharper disable once SwitchStatementHandlesSomeKnownEnumValuesWithDefault - by design
             switch ((MassiveKnobFrameID)e.Id)
             {
@@ -108,6 +150,8 @@ namespace MassiveKnob.Plugin.SerialDevice.Worker
                     {
                         logger.LogError("Invalid handshake response length, expected 4, got {length}: {payload}",
                             e.Payload.Length, BitConverter.ToString(e.Payload));
+                        
+                        Disconnect();
                         return;
                     }
 
@@ -153,7 +197,10 @@ namespace MassiveKnob.Plugin.SerialDevice.Worker
             lock (minProtocolLock)
             {
                 minProtocol?.Dispose();
+                minProtocol = null;
             }
+            
+            context.Disconnected();
         }
 
 

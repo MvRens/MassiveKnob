@@ -1,0 +1,10 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Style x:Key="IconStroke">
+        <Setter Property="Shape.StrokeThickness" Value="2" />
+        <Setter Property="Shape.Stroke" Value="Black" />
+        <Setter Property="Line.StrokeLineJoin" Value="Round" />
+        <Setter Property="Line.StrokeStartLineCap" Value="Round" />
+        <Setter Property="Line.StrokeEndLineCap" Value="Round" />
+    </Style>
+</ResourceDictionary>

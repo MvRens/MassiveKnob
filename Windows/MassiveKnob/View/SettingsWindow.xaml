@@ -3,118 +3,89 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:helpers="clr-namespace:MassiveKnob.Helpers"
         xmlns:viewModel="clr-namespace:MassiveKnob.ViewModel"
-        xmlns:view="clr-namespace:MassiveKnob.View"
+        xmlns:massiveKnob="clr-namespace:MassiveKnob"
+        xmlns:helpers="clr-namespace:MassiveKnob.Helpers"
+        xmlns:settings="clr-namespace:MassiveKnob.Settings"
         mc:Ignorable="d"
-        Title="Massive Knob - Settings" Height="555" Width="704.231"
+        Title="{x:Static massiveKnob:Strings.SettingsWindowTitle}" Height="555" Width="800"
         WindowStartupLocation="CenterScreen"
+        ResizeMode="CanMinimize"
         Style="{StaticResource DefaultWindow}"
-        d:DataContext="{d:DesignInstance Type=viewModel:SettingsViewModel}">
+        d:DataContext="{d:DesignInstance Type=viewModel:SettingsViewModelDesignTime, IsDesignTimeCreatable=True}">
     <Window.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="../Style.xaml" />
+                <ResourceDictionary Source="../Resources/Analog.xaml" />
+                <ResourceDictionary Source="../Resources/Device.xaml" />
+                <ResourceDictionary Source="../Resources/Digital.xaml" />
+                <ResourceDictionary Source="../Resources/Logging.xaml" />
+                <ResourceDictionary Source="../Resources/Device.xaml" />
+                <ResourceDictionary Source="../Resources/Startup.xaml" />
             </ResourceDictionary.MergedDictionaries>
 
-            <DataTemplate x:Key="DeviceDropdownItem">
-                <StackPanel Orientation="Vertical" d:DataContext="{d:DesignInstance Type=viewModel:DeviceViewModel}">
-                    <TextBlock Text="{Binding Name}" />
-                    <TextBlock Text="{Binding Description}" Style="{StaticResource ComboBoxDescription}" Visibility="{Binding DescriptionVisibility}" />
-                </StackPanel>
-            </DataTemplate>
+            <helpers:ComparisonConverter x:Key="ComparisonConverter" />
 
-            <DataTemplate x:Key="DeviceSelectedItem">
-                <TextBlock Text="{Binding Name}" d:DataContext="{d:DesignInstance Type=viewModel:DeviceViewModel}" />
-            </DataTemplate>
+            <Style TargetType="StackPanel" x:Key="Menu">
+                <Setter Property="Background" Value="#f0f0f0" />
+            </Style>
+
+            <Style TargetType="TextBlock" x:Key="MenuGroup">
+                <Setter Property="Background" Value="#e0e0e0" />
+                <Setter Property="Padding" Value="8,4,8,4" />
+                <Setter Property="FontWeight" Value="SemiBold" />
+            </Style>
+
+            <Style TargetType="RadioButton" x:Key="MenuItem">
+                <Setter Property="OverridesDefaultStyle" Value="True" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="RadioButton">
+                            <DockPanel x:Name="Root">
+                                <ContentControl DockPanel.Dock="Left" Content="{TemplateBinding viewModel:MenuItemProperties.Icon}" Height="16" Margin="8,0,0,0" />
+                                <TextBlock Padding="8,4,8,4" FontSize="14" Text="{TemplateBinding viewModel:MenuItemProperties.Text}" />
+                            </DockPanel>
+
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="#4081a9f1" TargetName="Root" />
+                                </Trigger>
+
+                                <Trigger Property="IsChecked" Value="True">
+                                    <Setter Property="Background" Value="#8081a9f1" TargetName="Root" />
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
         </ResourceDictionary>
     </Window.Resources>
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel Orientation="Vertical">
-            <!--
-            
-                Device
-            
-            -->
-            <TextBlock Style="{StaticResource Header}">Device</TextBlock>
-            
-            <StackPanel Orientation="Vertical" Style="{StaticResource Content}">
-                <ComboBox 
-                    ItemsSource="{Binding Devices}" 
-                    SelectedItem="{Binding SelectedDevice}"
-                    IsSynchronizedWithCurrentItem="False" 
-                    ItemTemplateSelector="{helpers:ComboBoxTemplateSelector 
-                        SelectedItemTemplate={StaticResource DeviceSelectedItem},
-                        DropdownItemsTemplate={StaticResource DeviceDropdownItem}}" />
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="250" />
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
 
+        <ScrollViewer Grid.Row="0" Grid.Column="0" VerticalScrollBarVisibility="Auto">
+            <StackPanel Style="{StaticResource Menu}" Orientation="Vertical" SnapsToDevicePixels="True" UseLayoutRounding="True"  TextOptions.TextFormattingMode="Display">
+                <TextBlock Style="{StaticResource MenuGroup}" Text="{x:Static massiveKnob:Strings.MenuGroupDevice}" />
+                <RadioButton Style="{StaticResource MenuItem}" viewModel:MenuItemProperties.Text="{x:Static massiveKnob:Strings.MenuItemDevice}" viewModel:MenuItemProperties.Icon="{StaticResource Device}" IsChecked="{Binding Path=SelectedMenuItem, Converter={StaticResource ComparisonConverter}, ConverterParameter={x:Static settings:SettingsMenuItem.Device}}"/>
+                <RadioButton Style="{StaticResource MenuItem}" viewModel:MenuItemProperties.Text="{x:Static massiveKnob:Strings.MenuItemAnalogInputs}" viewModel:MenuItemProperties.Icon="{StaticResource Analog}" Visibility="{Binding AnalogInputVisibility}" IsChecked="{Binding Path=SelectedMenuItem, Converter={StaticResource ComparisonConverter}, ConverterParameter={x:Static settings:SettingsMenuItem.AnalogInputs}}"/>
+                <RadioButton Style="{StaticResource MenuItem}" viewModel:MenuItemProperties.Text="{x:Static massiveKnob:Strings.MenuItemDigitalInputs}" viewModel:MenuItemProperties.Icon="{StaticResource Digital}" Visibility="{Binding DigitalInputVisibility}" IsChecked="{Binding Path=SelectedMenuItem, Converter={StaticResource ComparisonConverter}, ConverterParameter={x:Static settings:SettingsMenuItem.DigitalInputs}}"/>
+                <RadioButton Style="{StaticResource MenuItem}" viewModel:MenuItemProperties.Text="{x:Static massiveKnob:Strings.MenuItemAnalogOutputs}" viewModel:MenuItemProperties.Icon="{StaticResource Analog}" Visibility="{Binding AnalogOutputVisibility}" IsChecked="{Binding Path=SelectedMenuItem, Converter={StaticResource ComparisonConverter}, ConverterParameter={x:Static settings:SettingsMenuItem.AnalogOutputs}}"/>
+                <RadioButton Style="{StaticResource MenuItem}" viewModel:MenuItemProperties.Text="{x:Static massiveKnob:Strings.MenuItemDigitalOutputs}" viewModel:MenuItemProperties.Icon="{StaticResource Digital}" Visibility="{Binding DigitalOutputVisibility}" IsChecked="{Binding Path=SelectedMenuItem, Converter={StaticResource ComparisonConverter}, ConverterParameter={x:Static settings:SettingsMenuItem.DigitalOutputs}}"/>
 
-                <ContentControl Focusable="False" Content="{Binding SettingsControl}" Style="{StaticResource SettingsControl}" />
+                <TextBlock Style="{StaticResource MenuGroup}" Text="{x:Static massiveKnob:Strings.MenuGroupSettings}" />
+                <RadioButton Style="{StaticResource MenuItem}" viewModel:MenuItemProperties.Text="{x:Static massiveKnob:Strings.MenuItemLogging}" viewModel:MenuItemProperties.Icon="{StaticResource Logging}" IsChecked="{Binding Path=SelectedMenuItem, Converter={StaticResource ComparisonConverter}, ConverterParameter={x:Static settings:SettingsMenuItem.Logging}}"/>
+                <RadioButton Style="{StaticResource MenuItem}" viewModel:MenuItemProperties.Text="{x:Static massiveKnob:Strings.MenuItemStartup}" viewModel:MenuItemProperties.Icon="{StaticResource Startup}" IsChecked="{Binding Path=SelectedMenuItem, Converter={StaticResource ComparisonConverter}, ConverterParameter={x:Static settings:SettingsMenuItem.Startup}}"/>
             </StackPanel>
+        </ScrollViewer>
 
-
-            <!--
-            
-                Analog inputs
-            
-            -->
-            <TextBlock Style="{StaticResource Header}" Visibility="{Binding AnalogInputVisibility}">Analog inputs</TextBlock>
-
-            <ItemsControl ItemsSource="{Binding AnalogInputs}">
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <view:InputOutputView />
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
-
-
-            <!--
-            
-                Digital inputs
-            
-            -->
-            <TextBlock Style="{StaticResource Header}" Visibility="{Binding DigitalInputVisibility}">Digital inputs</TextBlock>
-
-            <ItemsControl ItemsSource="{Binding DigitalInputs}">
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <view:InputOutputView />
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
-
-
-            <!--
-            
-                Analog outputs
-            
-            -->
-            <TextBlock Style="{StaticResource Header}" Visibility="{Binding AnalogOutputVisibility}">Analog outputs</TextBlock>
-
-            <ItemsControl ItemsSource="{Binding AnalogOutputs}">
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <view:InputOutputView />
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
-
-
-            <!--
-            
-                Digital outputs
-            
-            -->
-            <TextBlock Style="{StaticResource Header}" Visibility="{Binding DigitalOutputVisibility}">Digital outputs</TextBlock>
-
-            <ItemsControl ItemsSource="{Binding DigitalOutputs}">
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <view:InputOutputView />
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
-        </StackPanel>
-    </ScrollViewer>
+        <ScrollViewer Grid.Row="0" Grid.Column="1" VerticalScrollBarVisibility="Auto">
+            <ContentControl Content="{Binding SelectedView}" />
+        </ScrollViewer>
+    </Grid>
 </Window>

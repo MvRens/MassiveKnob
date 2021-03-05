@@ -1,14 +1,15 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows.Controls;
-using MassiveKnob.Model;
+using MassiveKnob.Core;
 using MassiveKnob.Plugin;
 
 namespace MassiveKnob.ViewModel
 {
-    public class InputOutputViewModel : INotifyPropertyChanged
+    public class InputOutputViewModel : IDisposable, INotifyPropertyChanged
     {
         private readonly IMassiveKnobOrchestrator orchestrator;
         private readonly MassiveKnobActionType actionType;
@@ -19,9 +20,11 @@ namespace MassiveKnob.ViewModel
 
 
         // ReSharper disable UnusedMember.Global - used by WPF Binding
-        public string DisplayName => actionType == MassiveKnobActionType.OutputAnalog || actionType == MassiveKnobActionType.OutputDigital
-            ? $"Output #{index + 1}"
-            : $"Input #{index + 1}";
+        public string DisplayName => string.Format(
+            actionType == MassiveKnobActionType.OutputAnalog || actionType == MassiveKnobActionType.OutputDigital
+                ? Strings.OutputHeader
+                : Strings.InputHeader, 
+            index + 1);
 
         public IList<ActionViewModel> Actions { get; }
 
@@ -51,6 +54,9 @@ namespace MassiveKnob.ViewModel
                 if (value == actionSettingsControl)
                     return;
 
+                if (actionSettingsControl is IDisposable disposable)
+                    disposable.Dispose();
+                
                 actionSettingsControl = value;
                 OnPropertyChanged();
             }
@@ -63,6 +69,11 @@ namespace MassiveKnob.ViewModel
             this.orchestrator = orchestrator;
             this.actionType = actionType;
             this.index = index;
+            
+            
+            // For design-time support
+            if (orchestrator == null)
+                return;
 
 
             Actions = settingsViewModel.Actions.Where(a => a.RepresentsNull || a.Action.ActionType == actionType).ToList();
@@ -74,6 +85,13 @@ namespace MassiveKnob.ViewModel
                 : Actions.Single(a => a.RepresentsNull);
 
             actionSettingsControl = actionInfo?.Instance.CreateSettingsControl();
+        }
+
+        
+        public void Dispose()
+        {
+            if (ActionSettingsControl is IDisposable disposable)
+                disposable.Dispose();
         }
 
 

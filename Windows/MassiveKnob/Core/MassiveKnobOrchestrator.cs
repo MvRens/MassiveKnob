@@ -9,7 +9,7 @@ using Newtonsoft.Json.Linq;
 using Serilog.Extensions.Logging;
 using ILogger = Serilog.ILogger;
 
-namespace MassiveKnob.Model
+namespace MassiveKnob.Core
 {
     public class MassiveKnobOrchestrator : IMassiveKnobOrchestrator
     {
@@ -17,7 +17,7 @@ namespace MassiveKnob.Model
         private readonly ILogger logger;
 
         private readonly object settingsLock = new object();
-        private Settings.Settings settings;
+        private MassiveKnobSettings massiveKnobSettings;
         private readonly SerialQueue flushSettingsQueue = new SerialQueue();
 
         private MassiveKnobDeviceInfo activeDevice;
@@ -49,15 +49,17 @@ namespace MassiveKnob.Model
         public IObservable<MassiveKnobDeviceInfo> ActiveDeviceSubject => activeDeviceInfoSubject;
 
 
-        public MassiveKnobOrchestrator(IPluginManager pluginManager, ILogger logger)
+        public MassiveKnobOrchestrator(IPluginManager pluginManager, ILogger logger, MassiveKnobSettings massiveKnobSettings)
         {
             this.pluginManager = pluginManager;
             this.logger = logger;
+            this.massiveKnobSettings = massiveKnobSettings;
         }
 
 
         public void Dispose()
         {
+            activeDeviceContext = null;
             activeDevice?.Instance?.Dispose();
 
             void DisposeMappings(ICollection<ActionMapping> mappings)
@@ -85,13 +87,11 @@ namespace MassiveKnob.Model
         {
             lock (settingsLock)
             {
-                settings = SettingsJsonSerializer.Deserialize();
-
-                if (settings.Device == null)
+                if (massiveKnobSettings.Device == null)
                     return;
 
                 var allDevices = pluginManager.GetDevicePlugins().SelectMany(dp => dp.Devices);
-                var device = allDevices.FirstOrDefault(d => d.DeviceId == settings.Device.DeviceId);
+                var device = allDevices.FirstOrDefault(d => d.DeviceId == massiveKnobSettings.Device.DeviceId);
                 
                 InternalSetActiveDevice(device, false);
             }
@@ -135,7 +135,7 @@ namespace MassiveKnob.Model
                 while (index >= settingsList.Count)
                     settingsList.Add(null);
 
-                settingsList[index] = action == null ? null : new Settings.Settings.ActionSettings
+                settingsList[index] = action == null ? null : new MassiveKnobSettings.ActionSettings
                 {
                     ActionId = action.ActionId,
                     Settings = null
@@ -161,6 +161,26 @@ namespace MassiveKnob.Model
             return mapping?.ActionInfo;
         }
 
+        
+        public MassiveKnobSettings GetSettings()
+        {
+            lock (settingsLock)
+            {
+                return massiveKnobSettings.Clone();
+            }
+        }
+
+
+        public void UpdateSettings(Action<MassiveKnobSettings> applyChanges)
+        {
+            lock (settingsLock)
+            {
+                applyChanges(massiveKnobSettings);
+            }
+            
+            FlushSettings();
+        }
+
 
         private MassiveKnobDeviceInfo InternalSetActiveDevice(IMassiveKnobDevice device, bool resetSettings)
         {
@@ -173,10 +193,10 @@ namespace MassiveKnob.Model
                 lock (settingsLock)
                 {
                     if (device == null)
-                        settings.Device = null;
+                        massiveKnobSettings.Device = null;
                     else
                     {
-                        settings.Device = new Settings.Settings.DeviceSettings
+                        massiveKnobSettings.Device = new MassiveKnobSettings.DeviceSettings
                         {
                             DeviceId = device.DeviceId,
                             Settings = null
@@ -191,7 +211,7 @@ namespace MassiveKnob.Model
 
             if (device != null)
             {
-                var instance = device.Create(new SerilogLoggerProvider(logger.ForContext("Device", device.DeviceId)).CreateLogger(null));
+                var instance = device.Create(new SerilogLoggerProvider(logger.ForContext("Context", new { Device = device.DeviceId })).CreateLogger(null));
                 ActiveDevice = new MassiveKnobDeviceInfo(device, instance, null);
 
                 activeDeviceContext = new DeviceContext(this, device);
@@ -210,11 +230,11 @@ namespace MassiveKnob.Model
         protected T GetDeviceSettings<T>(IMassiveKnobDeviceContext context) where T : class, new()
         {
             if (context != activeDeviceContext)
-                throw new InvalidOperationException("Caller must be the active device to retrieve the settings");
+                throw new InvalidOperationException("Caller must be the active device to retrieve the massiveKnobSettings");
 
             lock (settingsLock)
             {
-                return settings.Device.Settings?.ToObject<T>() ?? new T();
+                return massiveKnobSettings.Device.Settings?.ToObject<T>() ?? new T();
             }
         }
 
@@ -222,17 +242,17 @@ namespace MassiveKnob.Model
         protected void SetDeviceSettings<T>(IMassiveKnobDeviceContext context, IMassiveKnobDevice device, T deviceSettings) where T : class, new()
         {
             if (context != activeDeviceContext)
-                throw new InvalidOperationException("Caller must be the active device to update the settings");
+                throw new InvalidOperationException("Caller must be the active device to update the massiveKnobSettings");
 
             lock (settingsLock)
             {
-                if (settings.Device == null)
-                    settings.Device = new Settings.Settings.DeviceSettings
+                if (massiveKnobSettings.Device == null)
+                    massiveKnobSettings.Device = new MassiveKnobSettings.DeviceSettings
                     {
                         DeviceId = device.DeviceId
                     };
 
-                settings.Device.Settings = JObject.FromObject(deviceSettings);
+                massiveKnobSettings.Device.Settings = JObject.FromObject(deviceSettings);
             }
 
             FlushSettings();
@@ -248,7 +268,7 @@ namespace MassiveKnob.Model
                     return new T();
                 
                 if (list[index]?.Context != context)
-                    throw new InvalidOperationException("Caller must be the active action to retrieve the settings");
+                    throw new InvalidOperationException("Caller must be the active action to retrieve the massiveKnobSettings");
 
                 var settingsList = GetActionSettingsList(action.ActionType);
                 if (index >= settingsList.Count)
@@ -268,7 +288,7 @@ namespace MassiveKnob.Model
                     return;
 
                 if (list[index]?.Context != context)
-                    throw new InvalidOperationException("Caller must be the active action to retrieve the settings");
+                    throw new InvalidOperationException("Caller must be the active action to retrieve the massiveKnobSettings");
 
                 var settingsList = GetActionSettingsList(action.ActionType);
                 
@@ -276,7 +296,7 @@ namespace MassiveKnob.Model
                     settingsList.Add(null);
 
                 if (settingsList[index] == null)
-                    settingsList[index] = new Settings.Settings.ActionSettings
+                    settingsList[index] = new MassiveKnobSettings.ActionSettings
                     {
                         ActionId = action.ActionId
                     };
@@ -408,21 +428,21 @@ namespace MassiveKnob.Model
         }
 
         
-        private List<Settings.Settings.ActionSettings> GetActionSettingsList(MassiveKnobActionType actionType)
+        private List<MassiveKnobSettings.ActionSettings> GetActionSettingsList(MassiveKnobActionType actionType)
         {
             switch (actionType)
             {
                 case MassiveKnobActionType.InputAnalog:
-                    return settings.AnalogInput;
+                    return massiveKnobSettings.AnalogInput;
 
                 case MassiveKnobActionType.InputDigital:
-                    return settings.DigitalInput;
+                    return massiveKnobSettings.DigitalInput;
 
                 case MassiveKnobActionType.OutputAnalog:
-                    return settings.AnalogOutput;
+                    return massiveKnobSettings.AnalogOutput;
 
                 case MassiveKnobActionType.OutputDigital:
-                    return settings.DigitalOutput;
+                    return massiveKnobSettings.DigitalOutput;
 
                 default:
                     throw new ArgumentOutOfRangeException(nameof(actionType), actionType, null);
@@ -431,16 +451,16 @@ namespace MassiveKnob.Model
 
         private void FlushSettings()
         {
-            Settings.Settings settingsSnapshot;
+            MassiveKnobSettings massiveKnobSettingsSnapshot;
             
             lock (settingsLock)
             { 
-                settingsSnapshot = settings.Clone();
+                massiveKnobSettingsSnapshot = massiveKnobSettings.Clone();
             }
             
             flushSettingsQueue.Enqueue(async () =>
             {
-                await SettingsJsonSerializer.Serialize(settingsSnapshot);
+                await MassiveKnobSettingsJsonSerializer.Serialize(massiveKnobSettingsSnapshot);
             });
         }
 
@@ -462,10 +482,10 @@ namespace MassiveKnob.Model
             
             lock (settingsLock)
             {
-                UpdateMapping(analogInputs, specs.AnalogInputCount, settings.AnalogInput, DelayedInitialize);
-                UpdateMapping(digitalInputs, specs.DigitalInputCount, settings.DigitalInput, DelayedInitialize);
-                UpdateMapping(analogOutputs, specs.AnalogOutputCount, settings.AnalogOutput, DelayedInitialize);
-                UpdateMapping(digitalOutputs, specs.DigitalOutputCount, settings.DigitalOutput, DelayedInitialize);
+                UpdateMapping(analogInputs, specs.AnalogInputCount, massiveKnobSettings.AnalogInput, DelayedInitialize);
+                UpdateMapping(digitalInputs, specs.DigitalInputCount, massiveKnobSettings.DigitalInput, DelayedInitialize);
+                UpdateMapping(analogOutputs, specs.AnalogOutputCount, massiveKnobSettings.AnalogOutput, DelayedInitialize);
+                UpdateMapping(digitalOutputs, specs.DigitalOutputCount, massiveKnobSettings.DigitalOutput, DelayedInitialize);
             }
 
             foreach (var delayedInitializeAction in delayedInitializeActions)
@@ -487,7 +507,7 @@ namespace MassiveKnob.Model
         }
 
 
-        private void UpdateMapping(List<ActionMapping> mapping, int newCount, List<Settings.Settings.ActionSettings> actionSettings, Action<IMassiveKnobActionInstance, IMassiveKnobActionContext> initializeOutsideLock)
+        private void UpdateMapping(List<ActionMapping> mapping, int newCount, List<MassiveKnobSettings.ActionSettings> actionSettings, Action<IMassiveKnobActionInstance, IMassiveKnobActionContext> initializeOutsideLock)
         {
             if (mapping.Count > newCount)
             {
@@ -524,10 +544,13 @@ namespace MassiveKnob.Model
             if (action == null)
                 return null;
 
-            var actionLogger = logger
-                .ForContext("Action", action.ActionId)
-                .ForContext("ActionType", action.ActionType)
-                .ForContext("Index", index);
+            var actionLogger = logger.ForContext("Context", 
+                new
+                {
+                    Action = action.ActionId,
+                    action.ActionType,
+                    Index = index
+                });
             
             var instance = action.Create(new SerilogLoggerProvider(actionLogger).CreateLogger(null));
             var context = new ActionContext(this, action, index);

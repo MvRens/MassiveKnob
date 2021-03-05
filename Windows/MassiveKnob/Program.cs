@@ -2,39 +2,36 @@
 using System.IO;
 using System.Text;
 using System.Windows;
-using MassiveKnob.Model;
+using MassiveKnob.Core;
+using MassiveKnob.Settings;
 using MassiveKnob.View;
 using MassiveKnob.ViewModel;
 using Serilog;
-using Serilog.Core;
-using Serilog.Events;
 using SimpleInjector;
-
 
 namespace MassiveKnob
 {
     public static class Program
     {
-        /// <summary>
-        /// The main entry point for the application.
-        /// </summary>
         [STAThread]
         public static int Main()
         {
-            // TODO (should have) make configurable
-            var loggingLevelSwitch = new LoggingLevelSwitch();
-            //var loggingLevelSwitch = new LoggingLevelSwitch(LogEventLevel.Verbose);
+            var settings = MassiveKnobSettingsJsonSerializer.Deserialize();
+
+            var loggingSwitch = new LoggingSwitch();
+            loggingSwitch.SetLogging(settings.Log.Enabled, settings.Log.Level);
 
             var logger = new LoggerConfiguration()
-                //.MinimumLevel.Verbose()
-                .MinimumLevel.ControlledBy(loggingLevelSwitch)
+                .Filter.ByIncludingOnly(loggingSwitch.IsIncluded)
                 .Enrich.FromLogContext()
                 .WriteTo.File(
                     Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"MassiveKnob", @"Logs", @".log"),
-                    LogEventLevel.Verbose, rollingInterval: RollingInterval.Day)                  
+                    rollingInterval: RollingInterval.Day,
+                    outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{@Context}{NewLine}{Exception}")
                 .CreateLogger();
             
             
+            logger.Information("MassiveKnob starting");
             var pluginManager = new PluginManager(logger);
 
             var messages = new StringBuilder();
@@ -49,7 +46,7 @@ namespace MassiveKnob
                 return 1;
             }
             
-            var orchestrator = new MassiveKnobOrchestrator(pluginManager, logger);
+            var orchestrator = new MassiveKnobOrchestrator(pluginManager, logger, settings);
             orchestrator.Load();
 
 
@@ -57,7 +54,7 @@ namespace MassiveKnob
             container.Options.EnableAutoVerification = false;
 
             container.RegisterInstance(logger);
-            container.RegisterInstance(loggingLevelSwitch);
+            container.RegisterInstance<ILoggingSwitch>(loggingSwitch);
             container.RegisterInstance<IPluginManager>(pluginManager);
             container.RegisterInstance<IMassiveKnobOrchestrator>(orchestrator);
 
@@ -69,6 +66,7 @@ namespace MassiveKnob
             var app = container.GetInstance<App>();
             app.Run();
 
+            logger.Information("MassiveKnob shutting down");
             orchestrator.Dispose();
             return 0;
         }

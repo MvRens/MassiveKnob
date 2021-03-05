@@ -23,3 +23,6 @@ Because of the second requirement, a simple media keys HID device does not suffi
 The hardware side uses an Arduino sketch to communicate the hardware state over the serial port.
 
 The Windows software is written in C# using .NET Framework 4.7.2 and Visual Studio 2019.
+
+
+Some icons courtesy of https://feathericons.com/

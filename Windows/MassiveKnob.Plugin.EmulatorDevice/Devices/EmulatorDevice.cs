@@ -8,8 +8,8 @@ namespace MassiveKnob.Plugin.EmulatorDevice.Devices
     public class EmulatorDevice : IMassiveKnobDevice
     {
         public Guid DeviceId { get; } = new Guid("e1a4977a-abf4-4c75-a17d-fd8d3a8451ff");
-        public string Name { get; } = "Mock device";
-        public string Description { get; } = "Emulates the actual device but does not communicate with anything.";
+        public string Name { get; } = "Emulator";
+        public string Description { get; } = "Emulates an actual device but does not communicate with anything.";
 
         public IMassiveKnobDeviceInstance Create(ILogger logger)
         {

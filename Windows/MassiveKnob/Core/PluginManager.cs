@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using MassiveKnob.Plugin;
+using Newtonsoft.Json;
 using Serilog;
 using Serilog.Extensions.Logging;
 
-namespace MassiveKnob.Model
+namespace MassiveKnob.Core
 {
     public class MassiveKnobPluginIdConflictException : Exception
     {
@@ -75,23 +77,67 @@ namespace MassiveKnob.Model
 
         private void LoadPlugins(string path, RegisteredIds registeredIds, Action<Exception, string> onException)
         {
+            logger.Information("Checking {path} for plugins...", path);
             if (!Directory.Exists(path))
                 return;
             
-            var filenames = Directory.GetFiles(path, "*.dll");
-
-            foreach (var filename in filenames)
+            
+            var metadataFilenames = Directory.GetFiles(path, "MassiveKnobPlugin.json", SearchOption.AllDirectories);
+            
+            foreach (var metadataFilename in metadataFilenames)
             {
+                var pluginPath = Path.GetDirectoryName(metadataFilename);
+                if (string.IsNullOrEmpty(pluginPath))
+                    continue;
+                
+                PluginMetadata pluginMetadata;
                 try
                 {
-                    var pluginAssembly = Assembly.LoadFrom(filename);
-                    RegisterPlugins(filename, pluginAssembly, registeredIds);
+                    pluginMetadata = LoadMetadata(metadataFilename);
                 }
                 catch (Exception e)
                 {
-                    onException(e, filename);
+                    logger.Warning("Could not load plugin metadata from {metadataFilename}: {message}", metadataFilename, e.Message);
+                    continue;
+                }
+
+                var entryAssemblyFilename = Path.Combine(pluginPath, pluginMetadata.EntryAssembly);
+                if (!File.Exists(entryAssemblyFilename))
+                {
+                    logger.Warning("Entry assembly specified in {metadataFilename} does not exist: {entryAssemblyFilename}", entryAssemblyFilename);
+                    continue;
+                }
+                    
+                try
+                {
+                    logger.Information("Plugin found in {pluginPath}", pluginPath);
+
+                    var pluginAssembly = Assembly.LoadFrom(entryAssemblyFilename);
+                    RegisterPlugins(entryAssemblyFilename, pluginAssembly, registeredIds);
+                }
+                catch (Exception e)
+                {
+                    logger.Warning("Error while loading plugin {entryAssemblyFilename}: {message}", entryAssemblyFilename, e.Message);
+                    onException(e, entryAssemblyFilename);
                 }
             }
+        }
+
+
+        private static PluginMetadata LoadMetadata(string filename)
+        {
+            string json;
+
+            using (var stream = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 4096, true))
+            using (var streamReader = new StreamReader(stream, Encoding.UTF8))
+            {
+                json = streamReader.ReadToEnd();
+            }
+
+            if (string.IsNullOrEmpty(json))
+                throw new IOException("Metadata file is empty");
+                
+            return JsonConvert.DeserializeObject<PluginMetadata>(json);
         }
 
 
@@ -104,7 +150,10 @@ namespace MassiveKnob.Model
                 if (!(pluginInstance is IMassiveKnobPlugin))
                     throw new InvalidCastException($"Type {pluginType.FullName} claims to be a MassiveKnobPlugin but does not implement IMassiveKnobPlugin");
 
-                ValidateRegistration(filename, (IMassiveKnobPlugin)pluginInstance, registeredIds);
+                var plugin = (IMassiveKnobPlugin) pluginInstance;
+                logger.Information("Found plugin with Id {pluginId}: {name}", plugin.PluginId, plugin.Name);
+
+                ValidateRegistration(filename, plugin, registeredIds);
                 plugins.Add((IMassiveKnobPlugin)pluginInstance);
             }
         }
@@ -125,6 +174,8 @@ namespace MassiveKnob.Model
             {
                 foreach (var device in devicePlugin.Devices)
                 {
+                    logger.Information("- Device {deviceId}: {name}", device.DeviceId, device.Name);
+                    
                     if (registeredIds.DeviceById.TryGetValue(device.DeviceId, out var conflictingDeviceFilename))
                         throw new MassiveKnobPluginIdConflictException(device.DeviceId, conflictingDeviceFilename, filename);
                     
@@ -138,6 +189,8 @@ namespace MassiveKnob.Model
             {
                 foreach (var action in actionPlugin.Actions)
                 {
+                    logger.Information("- Action {actionId}: {name}", action.ActionId, action.Name);
+
                     if (registeredIds.ActionById.TryGetValue(action.ActionId, out var conflictingActionFilename))
                         throw new MassiveKnobPluginIdConflictException(action.ActionId, conflictingActionFilename, filename);
 
@@ -183,6 +236,12 @@ namespace MassiveKnob.Model
             public readonly Dictionary<Guid, string> PluginById = new Dictionary<Guid, string>();
             public readonly Dictionary<Guid, string> DeviceById = new Dictionary<Guid, string>();
             public readonly Dictionary<Guid, string> ActionById = new Dictionary<Guid, string>();
+        }
+
+
+        private class PluginMetadata
+        {
+            public string EntryAssembly { get; set; }
         }
     }
 }

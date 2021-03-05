@@ -8,7 +8,7 @@ using Newtonsoft.Json.Converters;
 
 namespace MassiveKnob.Settings
 {
-    public static class SettingsJsonSerializer
+    public static class MassiveKnobSettingsJsonSerializer
     {
         private static readonly JsonSerializerSettings DefaultSettings = new JsonSerializerSettings
         {
@@ -29,12 +29,12 @@ namespace MassiveKnob.Settings
         }
         
         
-        public static Task Serialize(Settings settings)
+        public static Task Serialize(MassiveKnobSettings settings)
         {
             return Serialize(settings, GetDefaultFilename());
         }
 
-        public static async Task Serialize(Settings settings, string filename)
+        public static async Task Serialize(MassiveKnobSettings settings, string filename)
         {
             var json = JsonConvert.SerializeObject(settings, DefaultSettings);
 
@@ -47,14 +47,14 @@ namespace MassiveKnob.Settings
         }
 
 
-        public static Settings Deserialize()
+        public static MassiveKnobSettings Deserialize()
         {
             return Deserialize(GetDefaultFilename());
         }
 
-        public static Settings Deserialize(string filename)
+        public static MassiveKnobSettings Deserialize(string filename)
         {
-            Settings settings = null;
+            MassiveKnobSettings settings = null;
 
             if (File.Exists(filename))
             {
@@ -67,11 +67,11 @@ namespace MassiveKnob.Settings
                 }
 
                 if (!string.IsNullOrEmpty(json))
-                    settings = JsonConvert.DeserializeObject<Settings>(json, DefaultSettings);
+                    settings = JsonConvert.DeserializeObject<MassiveKnobSettings>(json, DefaultSettings);
             }
             
             if (settings == null)
-                settings = new Settings();
+                settings = new MassiveKnobSettings();
 
             settings.Verify();
             return settings;

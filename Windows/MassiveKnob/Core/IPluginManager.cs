@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using MassiveKnob.Plugin;
 
-namespace MassiveKnob.Model
+namespace MassiveKnob.Core
 {
     public interface IPluginManager
     {

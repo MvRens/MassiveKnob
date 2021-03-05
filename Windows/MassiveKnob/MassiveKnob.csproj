@@ -36,7 +36,7 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>MainIcon.ico</ApplicationIcon>
+    <ApplicationIcon>Resources\MainIcon.ico</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup>
     <StartupObject>MassiveKnob.Program</StartupObject>
@@ -59,15 +59,19 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Helpers\ComboBoxTemplateSelector.cs" />
-    <Compile Include="Helpers\DelegateCommand.cs" />
+    <Compile Include="Helpers\ComparisonConverter.cs" />
     <Compile Include="Helpers\SerialQueue.cs" />
-    <Compile Include="Model\IMassiveKnobOrchestrator.cs" />
-    <Compile Include="Model\IPluginManager.cs" />
-    <Compile Include="Model\MassiveKnobOrchestrator.cs" />
-    <Compile Include="Model\PluginManager.cs" />
+    <Compile Include="Core\IMassiveKnobOrchestrator.cs" />
+    <Compile Include="Core\IPluginManager.cs" />
+    <Compile Include="Core\MassiveKnobOrchestrator.cs" />
+    <Compile Include="Core\PluginManager.cs" />
+    <Compile Include="Settings\ILoggingSwitch.cs" />
+    <Compile Include="Settings\LoggingSwitch.cs" />
+    <Compile Include="ViewModel\LoggingLevelViewModel.cs" />
     <Compile Include="ViewModel\ActionViewModel.cs" />
     <Compile Include="ViewModel\DeviceViewModel.cs" />
     <Compile Include="ViewModel\InputOutputViewModel.cs" />
+    <Compile Include="ViewModel\MenuItemProperties.cs" />
     <Compile Include="ViewModel\SettingsViewModel.cs" />
     <Compile Include="View\InputOutputView.xaml.cs">
       <DependentUpon>InputOutputView.xaml</DependentUpon>
@@ -77,16 +81,38 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Settings\Settings.cs" />
-    <Compile Include="Settings\SettingsJsonSerializer.cs" />
+    <Compile Include="Settings\MassiveKnobSettings.cs" />
+    <Compile Include="Settings\MassiveKnobSettingsJsonSerializer.cs" />
     <Compile Include="Strings.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Strings.resx</DependentUpon>
     </Compile>
+    <Compile Include="View\Settings\AnalogInputsView.xaml.cs">
+      <DependentUpon>AnalogInputsView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\Settings\AnalogOutputsView.xaml.cs">
+      <DependentUpon>AnalogOutputsView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\Settings\StartupView.xaml.cs">
+      <DependentUpon>StartupView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\Settings\LoggingView.xaml.cs">
+      <DependentUpon>LoggingView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\Settings\DigitalInputsView.xaml.cs">
+      <DependentUpon>DigitalInputsView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\Settings\DigitalOutputsView.xaml.cs">
+      <DependentUpon>DigitalOutputsView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\Settings\DeviceView.xaml.cs">
+      <DependentUpon>DeviceView.xaml</DependentUpon>
+    </Compile>
     <EmbeddedResource Include="Strings.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
+      <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>Strings.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
@@ -134,7 +160,7 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="MainIcon.ico" />
+    <Resource Include="Resources\MainIcon.ico" />
     <Resource Include="Resources\NotifyIcon.ico" />
   </ItemGroup>
   <ItemGroup>
@@ -146,6 +172,58 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="Resources\Analog.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Resources\Device.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Resources\Digital.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Resources\IconStyle.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Resources\Logging.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Resources\Startup.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="View\Settings\AnalogInputsView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\Settings\AnalogOutputsView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\Settings\StartupView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="View\Settings\LoggingView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="View\Settings\DigitalInputsView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\Settings\DigitalOutputsView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\Settings\DeviceView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Page Include="Style.xaml">

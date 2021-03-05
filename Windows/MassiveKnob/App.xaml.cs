@@ -51,7 +51,10 @@ namespace MassiveKnob
                 settingsWindow.Show();
             }
             else
+            {
+                settingsWindow.WindowState = WindowState.Normal;
                 settingsWindow.Activate();
+            }
         }
         
 

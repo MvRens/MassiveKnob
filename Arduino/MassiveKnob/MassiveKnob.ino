@@ -5,31 +5,31 @@
  * 
  */
 // Set this to the number of potentiometers you have connected
-const byte AnalogInputCount = 1;
+const byte AnalogInputCount = 3;
 
 // Set this to the number of buttons you have connected
-const byte DigitalInputCount = 1;
+const byte DigitalInputCount = 0;
 
 // Not supported yet - maybe PWM and/or other means of analog output?
 const byte AnalogOutputCount = 0;
 
 // Set this to the number of digital outputs you have connected
-const byte DigitalOutputCount = 1;
+const byte DigitalOutputCount = 0;
 
 
 // For each potentiometer, specify the pin
 const byte AnalogInputPin[AnalogInputCount] = {
-  A0
+  A0,
+  A1,
+  A2
 };
 
 // For each button, specify the pin. Assumes pull-up.
 const byte DigitalInputPin[DigitalInputCount] = {
-  3
 };
 
 // For each digital output, specify the pin
 const byte DigitalOutputPin[DigitalOutputCount] = {
-  2
 };
 
 
@@ -42,7 +42,12 @@ const float EMAAlpha = 0.6;
 // How many measurements to take at boot time for analog inputs to seed the EMA
 const byte EMASeedCount = 5;
 
+// Minimum treshold for reporting changes in analog values, reduces noise left over from the EMA. Note that once an analog value 
+// changes beyond the treshold, that input will report all changes until the FocusTimeout has expired to avoid losing accuracy.
+const byte AnalogTreshold = 2;
 
+// How long to ignore other inputs after an input changes. Reduces noise due voltage drops.
+const unsigned long FocusTimeout = 100;
 
 
 /*
@@ -51,6 +56,12 @@ const byte EMASeedCount = 5;
  *   Here be dragons.
  * 
  */
+
+// If defined, only outputs will be sent to the serial port as Arduino Plotter compatible data
+//#define DebugOutputPlotter
+
+
+#ifndef DebugOutputPlotter
 #include "./min.h"
 #include "./min.c"
 
@@ -77,6 +88,7 @@ const uint8_t FrameIDAnalogOutput = 3;
 const uint8_t FrameIDDigitalOutput = 4;
 const uint8_t FrameIDQuit = 62;
 const uint8_t FrameIDError = 63;
+#endif
 
 
 struct AnalogInputStatus
@@ -94,7 +106,6 @@ struct DigitalInputStatus
 };
 
 
-bool active = false;
 struct AnalogInputStatus analogInputStatus[AnalogInputCount];
 struct DigitalInputStatus digitalInputStatus[AnalogInputCount];
 
@@ -107,8 +118,10 @@ void setup()
   while (!Serial) {}  
 
 
+  #ifndef DebugOutputPlotter
   // Set up the MIN protocol (http://github.com/min-protocol/min)
   min_init_context(&minContext, 0);
+  #endif
 
 
   // Seed the moving average for analog inputs
@@ -147,12 +160,39 @@ void setup()
 }
 
 
+#ifdef DebugOutputPlotter
+unsigned long lastOutput = 0;
+#endif
+
+enum FocusType
+{
+  FocusTypeNone = 0,
+  FocusTypeAnalogInput = 1,
+  FocusTypeDigitalInput = 2,
+  FocusTypeOutput = 3
+};
+
+bool active = false;
+FocusType focusType = FocusTypeNone;
+byte focusInputIndex;
+unsigned long focusOutputTime;
+
+#define IsAnalogInputFocus(i) ((focusType == FocusInputType.AnalogInput) && (focusInputIndex == i))
+#define IsDigitalInputFocus(i) ((focusType == FocusInputType.DigitalInput) && (focusInputIndex == i))
+
+
 void loop() 
 {
+  #ifndef DebugOutputPlotter
   char readBuffer[32];
   size_t readBufferSize = Serial.available() > 0 ? Serial.readBytes(readBuffer, 32U) : 0;
   
   min_poll(&minContext, (uint8_t*)readBuffer, (uint8_t)readBufferSize);
+  #endif
+
+
+  if (focusType == FocusTypeOutput && millis() - focusOutputTime >= FocusTimeout)
+    focusType = FocusTypeNone;
 
  
   // Check analog inputs
@@ -160,8 +200,32 @@ void loop()
   for (byte i = 0; i < AnalogInputCount; i++)
   {
     newAnalogValue = getAnalogValue(i);
+    bool changed;
 
-    if (newAnalogValue != analogInputStatus[i].Value && (millis() - analogInputStatus[i].LastChange >= MinimumInterval))
+    switch (focusType)
+    {
+      case FocusTypeAnalogInput:
+        if (focusInputIndex != i)
+          continue;
+
+        if (millis() - analogInputStatus[i].LastChange < FocusTimeout)
+        {
+          changed = newAnalogValue != analogInputStatus[i].Value;
+          break;
+        }
+        else
+          focusType = FocusTypeNone;
+          // fall-through
+          
+      case FocusTypeNone:
+        changed = abs(analogInputStatus[i].Value - newAnalogValue) >= AnalogTreshold;
+        break;
+
+      default:
+        continue;
+    }
+
+    if (changed && (millis() - analogInputStatus[i].LastChange >= MinimumInterval))
     {
       if (active)
         // Send out new value
@@ -179,6 +243,23 @@ void loop()
   {
     newDigitalValue = getDigitalValue(i);
 
+    switch (focusType)
+    {
+      case FocusTypeAnalogInput:
+      case FocusTypeOutput:
+        continue;
+        
+      case FocusTypeDigitalInput:
+        if (focusInputIndex != i)
+          continue;
+
+        if (millis() - digitalInputStatus[i].LastChange >= FocusTimeout)
+          focusType = FocusTypeNone;
+
+        break;
+    }
+
+    
     if (newDigitalValue != digitalInputStatus[i].Value && (millis() - digitalInputStatus[i].LastChange >= MinimumInterval))
     {
       if (active)
@@ -189,9 +270,33 @@ void loop()
       digitalInputStatus[i].LastChange = millis();
     }
   }
+
+  #ifdef DebugOutputPlotter
+  if (millis() - lastOutput >= 100)
+  {
+    for (byte i = 0; i < AnalogInputCount; i++)
+    {
+      if (i > 0)
+        Serial.print("\t");
+
+      Serial.print(analogInputStatus[i].Value);
+    }
+    
+    for (byte i = 0; i < DigitalInputCount; i++)
+    {
+      if (i > 0 || AnalogInputCount > 0)
+        Serial.print("\t");
+
+      Serial.print(digitalInputStatus[i].Value ? 100 : 0);
+    }
+
+    Serial.println();
+  }
+  #endif
 }
 
 
+#ifndef DebugOutputPlotter
 void min_application_handler(uint8_t min_id, uint8_t *min_payload, uint8_t len_payload, uint8_t port)
 {
   switch (min_id)
@@ -248,7 +353,12 @@ void processDigitalOutputMessage(uint8_t *min_payload, uint8_t len_payload)
 
   byte outputIndex = min_payload[0];
   if (outputIndex < DigitalOutputCount)
+  {
     digitalWrite(DigitalOutputPin[min_payload[0]], min_payload[1] == 0 ? LOW : HIGH);
+
+    focusType = FocusTypeOutput;
+    focusOutputTime = millis();
+  }
   else
     outputError("Invalid digital output index: " + String(outputIndex));
 }
@@ -258,6 +368,7 @@ void processQuitMessage()
 { 
   active = false;
 }
+#endif
 
 
 byte getAnalogValue(byte analogInputIndex)
@@ -285,19 +396,25 @@ bool getDigitalValue(byte digitalInputIndex)
 
 void outputAnalogValue(byte analogInputIndex, byte newValue)
 {
+  #ifndef DebugOutputPlotter
   byte payload[2] = { analogInputIndex, newValue };
   min_send_frame(&minContext, FrameIDAnalogInput, (uint8_t *)payload, 2);
+  #endif
 }
 
 
 void outputDigitalValue(byte digitalInputIndex, bool newValue)
 {
+  #ifndef DebugOutputPlotter
   byte payload[2] = { digitalInputIndex, newValue ? 1 : 0 };
   min_send_frame(&minContext, FrameIDDigitalInput, (uint8_t *)payload, 2);
+  #endif
 }
 
 
 void outputError(String message)
 {
+  #ifndef DebugOutputPlotter
   min_send_frame(&minContext, FrameIDError, (uint8_t *)message.c_str(), message.length());
+  #endif
 }
