@@ -23,7 +23,7 @@ Because of these requirements, a simple media keys HID device does not suffice a
 Massive Knob is basically a host for plugins. A plugin can implement a device or actions which either process signals from the device to perform an action (for example, change the volume when a knob is turned) or send signals to the device based on the system state (for example, light up an LED to indicate the default device).
 
 ### Devices
-Devices can provide the following inputs and outputs, up to 255 for each type (unless you're Look Mum No Computer I assume this will be enough):
+A device can provide the following inputs and outputs, up to 255 for each type (unless you're Look Mum No Computer I assume this will be enough):
 
 1. Analog input (*e.g. a potentiometer*)
 2. Digital input (*e.g. a button or switch*)
