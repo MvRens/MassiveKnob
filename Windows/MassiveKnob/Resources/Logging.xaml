@@ -1,0 +1,20 @@
+<ResourceDictionary 
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+    <Viewbox Stretch="Uniform" x:Key="Logging" x:Shared="False">
+        <Canvas Width="24" Height="24">
+            <Path Name="path2" StrokeThickness="2" Stroke="Black" StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round">
+                <Path.Data>
+                    <PathGeometry Figures="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" FillRule="NonZero"/>
+                </Path.Data>
+            </Path>
+            <Polyline Points="14 2 14 8 20 8" Name="polyline4" FillRule="NonZero" StrokeThickness="2" Stroke="Black" StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+            <Line X1="16" Y1="13" X2="8" Y2="13" Name="line6" StrokeThickness="2" Stroke="Black" StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+            <Line X1="16" Y1="17" X2="8" Y2="17" Name="line8" StrokeThickness="2" Stroke="Black" StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+            <Polyline Points="10 9 9 9 8 9" Name="polyline10" FillRule="NonZero" StrokeThickness="2" Stroke="Black" StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+        </Canvas>
+    </Viewbox>
+</ResourceDictionary>

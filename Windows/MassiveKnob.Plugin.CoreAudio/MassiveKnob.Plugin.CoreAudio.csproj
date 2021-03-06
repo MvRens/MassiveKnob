@@ -1,0 +1,175 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{5BD5E2F2-9923-4F74-AC69-ACDA0B847937}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>MassiveKnob.Plugin.CoreAudio</RootNamespace>
+    <AssemblyName>MassiveKnob.Plugin.CoreAudio</AssemblyName>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Xaml" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+    <Reference Include="WindowsBase" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Base\BaseDeviceSettingsView.xaml.cs">
+      <DependentUpon>BaseDeviceSettingsView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="GetDefault\DeviceGetDefaultAction.cs" />
+    <Compile Include="GetDefault\DeviceGetDefaultActionSettings.cs" />
+    <Compile Include="GetDefault\DeviceGetDefaultActionSettingsView.xaml.cs">
+      <DependentUpon>DeviceGetDefaultActionSettingsView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="GetDefault\DeviceGetDefaultActionSettingsViewModel.cs" />
+    <Compile Include="GetMuted\DeviceGetMutedAction.cs" />
+    <Compile Include="GetMuted\DeviceGetMutedActionSettings.cs" />
+    <Compile Include="GetMuted\DeviceGetMutedActionSettingsView.xaml.cs">
+      <DependentUpon>DeviceGetMutedActionSettingsView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="GetMuted\DeviceGetMutedActionSettingsViewModel.cs" />
+    <Compile Include="GetVolume\DeviceGetVolumeAction.cs" />
+    <Compile Include="OSD\OSDWindow.xaml.cs">
+      <DependentUpon>OSDWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="OSD\OSDManager.cs" />
+    <Compile Include="OSD\OSDWindowViewModel.cs" />
+    <Compile Include="SetDefault\DeviceSetDefaultAction.cs" />
+    <Compile Include="SetDefault\DeviceSetDefaultActionSettings.cs" />
+    <Compile Include="SetDefault\DeviceSetDefaultActionSettingsView.xaml.cs">
+      <DependentUpon>DeviceSetDefaultActionSettingsView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="SetDefault\DeviceSetDefaultActionSettingsViewModel.cs" />
+    <Compile Include="SetMuted\DeviceSetMutedAction.cs" />
+    <Compile Include="SetMuted\DeviceSetMutedActionSettings.cs" />
+    <Compile Include="SetMuted\DeviceSetMutedActionSettingsView.xaml.cs">
+      <DependentUpon>DeviceSetMutedActionSettingsView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="SetMuted\DeviceSetMutedActionSettingsViewModel.cs" />
+    <Compile Include="SetVolume\DeviceSetVolumeAction.cs" />
+    <Compile Include="CoreAudioControllerInstance.cs" />
+    <Compile Include="GetVolume\DeviceGetVolumeActionSettingsViewModel.cs" />
+    <Compile Include="GetVolume\DeviceGetVolumeActionSettingsView.xaml.cs">
+      <DependentUpon>DeviceGetVolumeActionSettingsView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="MassiveKnobCoreAudioPlugin.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="GetVolume\DeviceGetVolumeActionSettings.cs" />
+    <Compile Include="SetVolume\DeviceSetVolumeActionSettings.cs" />
+    <Compile Include="SetVolume\DeviceSetVolumeActionSettingsView.xaml.cs">
+      <DependentUpon>DeviceSetVolumeActionSettingsView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Base\BaseDeviceSettings.cs" />
+    <Compile Include="Base\BaseDeviceSettingsViewModel.cs" />
+    <Compile Include="SetVolume\DeviceSetVolumeActionSettingsViewModel.cs" />
+    <Compile Include="Strings.Designer.cs">
+      <DependentUpon>Strings.resx</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\MassiveKnob.Plugin\MassiveKnob.Plugin.csproj">
+      <Project>{a1298be4-1d23-416c-8c56-fc9264487a95}</Project>
+      <Name>MassiveKnob.Plugin</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="AudioSwitcher.AudioApi.CoreAudio">
+      <Version>4.0.0-alpha5</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions">
+      <Version>5.0.0</Version>
+    </PackageReference>
+    <PackageReference Include="System.Reactive">
+      <Version>5.0.0</Version>
+    </PackageReference>
+    <PackageReference Include="System.Threading.Tasks.Extensions">
+      <Version>4.5.4</Version>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Strings.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>Strings.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="Base\BaseDeviceSettingsView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="GetDefault\DeviceGetDefaultActionSettingsView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="GetMuted\DeviceGetMutedActionSettingsView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="GetVolume\DeviceGetVolumeActionSettingsView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="OSD\OSDWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="OSD\SpeakerIcon.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="SetDefault\DeviceSetDefaultActionSettingsView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="SetMuted\DeviceSetMutedActionSettingsView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="SetVolume\DeviceSetVolumeActionSettingsView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="MassiveKnobPlugin.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

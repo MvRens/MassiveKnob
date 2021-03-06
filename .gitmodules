@@ -1,0 +1,7 @@
+[submodule "Windows/min.NET"]
+  path = Windows/min.NET
+  url = https://github.com/MvRens/min.NET
+
+[submodule "Windows/VoicemeeterRemote"]
+  path = Windows/VoicemeeterRemote
+  url = https://github.com/MvRens/VoicemeeterRemote

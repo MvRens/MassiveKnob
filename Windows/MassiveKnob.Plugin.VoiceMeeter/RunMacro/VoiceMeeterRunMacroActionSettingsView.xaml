@@ -1,0 +1,20 @@
+﻿<UserControl x:Class="MassiveKnob.Plugin.VoiceMeeter.RunMacro.VoiceMeeterRunMacroActionSettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:base="clr-namespace:MassiveKnob.Plugin.VoiceMeeter.Base"
+             xmlns:runMacro="clr-namespace:MassiveKnob.Plugin.VoiceMeeter.RunMacro"
+             xmlns:voiceMeeter="clr-namespace:MassiveKnob.Plugin.VoiceMeeter"
+             mc:Ignorable="d" 
+             d:DesignHeight="400" d:DesignWidth="800"
+             d:DataContext="{d:DesignInstance runMacro:VoiceMeeterRunMacroActionSettingsViewModel}">
+    <StackPanel Orientation="Vertical">
+        <base:BaseVoiceMeeterSettingsView />
+
+        <TextBlock Margin="0,24,0,0" Text="{x:Static voiceMeeter:Strings.SettingRunMacroScript}" />
+        <TextBox Margin="0,4,0,0" Text="{Binding Path=Script, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Height="200" TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Visible" />
+
+        <TextBlock Margin="0,4,0,0" Text="{x:Static voiceMeeter:Strings.SettingRunMacroScriptExample}" TextWrapping="Wrap" />
+    </StackPanel>
+</UserControl>

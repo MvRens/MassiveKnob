@@ -3,7 +3,23 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.31005.135
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MassiveKnob", "MassiveKnob.csproj", "{73130EC7-49B3-40AD-8367-1095C0F41905}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MassiveKnob", "MassiveKnob\MassiveKnob.csproj", "{73130EC7-49B3-40AD-8367-1095C0F41905}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MassiveKnob.Plugin", "MassiveKnob.Plugin\MassiveKnob.Plugin.csproj", "{A1298BE4-1D23-416C-8C56-FC9264487A95}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MassiveKnob.Plugin.CoreAudio", "MassiveKnob.Plugin.CoreAudio\MassiveKnob.Plugin.CoreAudio.csproj", "{5BD5E2F2-9923-4F74-AC69-ACDA0B847937}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MassiveKnob.Plugin.EmulatorDevice", "MassiveKnob.Plugin.EmulatorDevice\MassiveKnob.Plugin.EmulatorDevice.csproj", "{674DE974-B134-4DB5-BFAF-7BC3D05E16DE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MassiveKnob.Plugin.SerialDevice", "MassiveKnob.Plugin.SerialDevice\MassiveKnob.Plugin.SerialDevice.csproj", "{FC0D22D8-5F1B-4D85-8269-FA4837CDE3A2}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MIN", "min.NET\MIN\MIN.csproj", "{FC1C9CB5-8B71-4039-9636-90E578A71061}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MIN.SerialPort", "min.NET\MIN.SerialPort\MIN.SerialPort.csproj", "{DB8819EB-D2B7-4AAE-A699-BD200F2C113A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MassiveKnob.Plugin.VoiceMeeter", "MassiveKnob.Plugin.VoiceMeeter\MassiveKnob.Plugin.VoiceMeeter.csproj", "{19533600-D4F6-4BD4-82A3-C0234FDF044C}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Voicemeeter", "VoicemeeterRemote\Voicemeeter\Voicemeeter.csproj", "{F35DD8E5-91FA-403E-B6F6-8D2B4AE84198}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +31,38 @@ Global
 		{73130EC7-49B3-40AD-8367-1095C0F41905}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{73130EC7-49B3-40AD-8367-1095C0F41905}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{73130EC7-49B3-40AD-8367-1095C0F41905}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1298BE4-1D23-416C-8C56-FC9264487A95}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1298BE4-1D23-416C-8C56-FC9264487A95}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1298BE4-1D23-416C-8C56-FC9264487A95}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1298BE4-1D23-416C-8C56-FC9264487A95}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5BD5E2F2-9923-4F74-AC69-ACDA0B847937}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5BD5E2F2-9923-4F74-AC69-ACDA0B847937}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5BD5E2F2-9923-4F74-AC69-ACDA0B847937}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5BD5E2F2-9923-4F74-AC69-ACDA0B847937}.Release|Any CPU.Build.0 = Release|Any CPU
+		{674DE974-B134-4DB5-BFAF-7BC3D05E16DE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{674DE974-B134-4DB5-BFAF-7BC3D05E16DE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{674DE974-B134-4DB5-BFAF-7BC3D05E16DE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{674DE974-B134-4DB5-BFAF-7BC3D05E16DE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FC0D22D8-5F1B-4D85-8269-FA4837CDE3A2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FC0D22D8-5F1B-4D85-8269-FA4837CDE3A2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FC0D22D8-5F1B-4D85-8269-FA4837CDE3A2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FC0D22D8-5F1B-4D85-8269-FA4837CDE3A2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FC1C9CB5-8B71-4039-9636-90E578A71061}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FC1C9CB5-8B71-4039-9636-90E578A71061}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FC1C9CB5-8B71-4039-9636-90E578A71061}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FC1C9CB5-8B71-4039-9636-90E578A71061}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DB8819EB-D2B7-4AAE-A699-BD200F2C113A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DB8819EB-D2B7-4AAE-A699-BD200F2C113A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DB8819EB-D2B7-4AAE-A699-BD200F2C113A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DB8819EB-D2B7-4AAE-A699-BD200F2C113A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{19533600-D4F6-4BD4-82A3-C0234FDF044C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{19533600-D4F6-4BD4-82A3-C0234FDF044C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{19533600-D4F6-4BD4-82A3-C0234FDF044C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{19533600-D4F6-4BD4-82A3-C0234FDF044C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F35DD8E5-91FA-403E-B6F6-8D2B4AE84198}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F35DD8E5-91FA-403E-B6F6-8D2B4AE84198}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F35DD8E5-91FA-403E-B6F6-8D2B4AE84198}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F35DD8E5-91FA-403E-B6F6-8D2B4AE84198}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
