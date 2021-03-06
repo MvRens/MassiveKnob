@@ -17,6 +17,8 @@ using Serilog.Events;
 
 namespace MassiveKnob.ViewModel
 {
+    // TODO (code quality) split ViewModel for individual views, create viewmodel using container
+    // TODO (must have) show device status
     public class SettingsViewModel : IDisposable, INotifyPropertyChanged
     {
         private readonly Dictionary<SettingsMenuItem, Type> menuItemControls = new Dictionary<SettingsMenuItem, Type>

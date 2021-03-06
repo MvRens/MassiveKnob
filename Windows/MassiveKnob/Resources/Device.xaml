@@ -4,7 +4,7 @@
            xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
            mc:Ignorable="d">
-    <Viewbox Stretch="Uniform" x:Key="Device">
+    <Viewbox Stretch="Uniform" x:Key="Device" x:Shared="False">
         <Canvas Width="24" Height="24">
             <Canvas.Resources>
                 <ResourceDictionary Source="IconStyle.xaml" />

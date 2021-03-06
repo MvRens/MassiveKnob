@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -59,23 +60,56 @@ namespace MassiveKnob.Core
             var registeredIds = new RegisteredIds();
             
             var codeBase = Assembly.GetEntryAssembly()?.CodeBase;
-            if (!string.IsNullOrEmpty(codeBase))
+            if (string.IsNullOrEmpty(codeBase))
             {
-                var localPath = Path.GetDirectoryName(new Uri(codeBase).LocalPath);
-                if (!string.IsNullOrEmpty(localPath))
-                {
-                    var applicationPluginPath = Path.Combine(localPath, @"Plugins");
-                    LoadPlugins(applicationPluginPath, registeredIds, onException);
-                }
+                logger.Error("No known EntryAssembly, unable to load plugins");
+                return;
             }
 
+            var localPath = Path.GetDirectoryName(new Uri(codeBase).LocalPath);
+            if (string.IsNullOrEmpty(localPath))
+            {
+                logger.Error("EntryAssembly CodeBase does not resolve to a local path, unable to load plugins: {codeBase}", codeBase);
+                return;
+            }
 
-            var localPluginPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"MassiveKnob", @"Plugins");
+            var applicationPluginPath = Path.Combine(localPath, @"Plugins");
+            LoadPlugins(applicationPluginPath, registeredIds, onException);
+
+            #if DEBUG
+            // For debugging, load directly from the various bin folders
+            // ReSharper disable once InvertIf
+            if (IsInPath(localPath, "MassiveKnob", "bin", "Debug"))
+            {
+                // Go up three folders, filter out  lingering bin/Release builds
+                var solutionPath = Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(localPath)));
+                LoadPlugins(solutionPath, registeredIds, onException, pluginPath => IsInPath(pluginPath, "bin", "Debug"));
+            }
+            #endif
+
+            var localPluginPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MassiveKnob", "Plugins");
             LoadPlugins(localPluginPath, registeredIds, onException);
+        }
+        
+        
+        private static bool IsInPath(string actualPath, params string[] expectedPathComponents)
+        {
+            if (string.IsNullOrEmpty(actualPath) || expectedPathComponents.Length == 0)
+                return false;
+
+            var expectedPath = Path.Combine(expectedPathComponents);
+
+            if (!actualPath.EndsWith(Path.DirectorySeparatorChar.ToString()))
+                actualPath += Path.DirectorySeparatorChar;
+            
+            if (!expectedPath.EndsWith(Path.DirectorySeparatorChar.ToString()))
+                expectedPath += Path.DirectorySeparatorChar;
+
+            return actualPath.EndsWith(expectedPath, StringComparison.CurrentCultureIgnoreCase);
         }
 
 
-        private void LoadPlugins(string path, RegisteredIds registeredIds, Action<Exception, string> onException)
+        private void LoadPlugins(string path, RegisteredIds registeredIds, Action<Exception, string> onException, Func<string, bool> predicate = null)
         {
             logger.Information("Checking {path} for plugins...", path);
             if (!Directory.Exists(path))
@@ -88,6 +122,9 @@ namespace MassiveKnob.Core
             {
                 var pluginPath = Path.GetDirectoryName(metadataFilename);
                 if (string.IsNullOrEmpty(pluginPath))
+                    continue;
+
+                if (predicate != null && !predicate(pluginPath))
                     continue;
                 
                 PluginMetadata pluginMetadata;

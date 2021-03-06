@@ -117,97 +117,41 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="DeviceDisplayNameActive" xml:space="preserve">
-    <value>{0}</value>
+  <data name="GetParameterDescription" xml:space="preserve">
+    <value>Turns the output on if the specified parameter equals the specified value.</value>
   </data>
-  <data name="DeviceDisplayNameDisabled" xml:space="preserve">
-    <value>{0} (Disabled)</value>
-  </data>
-  <data name="DeviceDisplayNameInactive" xml:space="preserve">
-    <value>{0} (Inactive)</value>
-  </data>
-  <data name="DeviceDisplayNameNotPresent" xml:space="preserve">
-    <value>{0} (Not present)</value>
-  </data>
-  <data name="DeviceDisplayNameUnplugged" xml:space="preserve">
-    <value>{0} (Unplugged)</value>
-  </data>
-  <data name="GetDefaultDescription" xml:space="preserve">
-    <value>Sets the digital output depending on whether the selected device is the active playback or communications device.</value>
-  </data>
-  <data name="GetDefaultName" xml:space="preserve">
-    <value>Is default device</value>
-  </data>
-  <data name="GetMutedDescription" xml:space="preserve">
-    <value>Sets the digital output to the muted state for the selected device, regardless of the current default device.</value>
-  </data>
-  <data name="GetMutedName" xml:space="preserve">
-    <value>Muted / unmuted</value>
-  </data>
-  <data name="GetVolumeDescription" xml:space="preserve">
-    <value>Sets the analog output to the volume for the selected device, regardless of the current default device.</value>
-  </data>
-  <data name="GetVolumeName" xml:space="preserve">
-    <value>Volume</value>
+  <data name="GetParameterName" xml:space="preserve">
+    <value>Get parameter</value>
   </data>
   <data name="PluginDescription" xml:space="preserve">
-    <value>Included with Massive Knob by default. Provides volume control per device and default device switching.</value>
+    <value>Provides actions to run VoiceMeeter macros or check the current state.</value>
   </data>
   <data name="PluginName" xml:space="preserve">
-    <value>Windows Core Audio</value>
+    <value>VoiceMeeter Remote</value>
   </data>
-  <data name="SetDefaultDescription" xml:space="preserve">
-    <value>Changes the default playback and/or communications device when the input turns on.</value>
+  <data name="RunMacroDescription" xml:space="preserve">
+    <value>Runs a VoiceMeeter macro when the input turns on.</value>
   </data>
-  <data name="SetDefaultName" xml:space="preserve">
-    <value>Set default device</value>
+  <data name="RunMacroName" xml:space="preserve">
+    <value>Run macro</value>
   </data>
-  <data name="SetMutedDescription" xml:space="preserve">
-    <value>Toggles the muted state for the selected device, regardless of the current default device.</value>
+  <data name="SettingGetParameterInverted" xml:space="preserve">
+    <value>Inverted (on if the parameter does not equal the value)</value>
   </data>
-  <data name="SetMutedName" xml:space="preserve">
-    <value>Mute / unmute</value>
+  <data name="SettingGetParameterParameter" xml:space="preserve">
+    <value>Parameter name</value>
   </data>
-  <data name="SettingGetDefaultCommunications" xml:space="preserve">
-    <value>is the default communications device</value>
+  <data name="SettingGetParameterValue" xml:space="preserve">
+    <value>Expected value</value>
   </data>
-  <data name="SettingGetDefaultInverted" xml:space="preserve">
-    <value>Inverted (off when the device is the default)</value>
+  <data name="SettingRunMacroScript" xml:space="preserve">
+    <value>Script</value>
   </data>
-  <data name="SettingGetDefaultPlayback" xml:space="preserve">
-    <value>is the default playback device</value>
+  <data name="SettingRunMacroScriptExample" xml:space="preserve">
+    <value>Example: Strip[0].A1 = 1; Strip[0].A2 = 0;
+Use comma or semicolons to separate commands, or put each command on a separate line. For more information see the VoiceMeeter documentation on Macro Buttons.</value>
   </data>
-  <data name="SettingGetDefaultWhen" xml:space="preserve">
-    <value>Turn on when the selected device</value>
-  </data>
-  <data name="SettingGetMutedInverted" xml:space="preserve">
-    <value>Inverted (off when muted)</value>
-  </data>
-  <data name="SettingOSD" xml:space="preserve">
-    <value>Show On-Screen Display</value>
-  </data>
-  <data name="SettingPlaybackDevice" xml:space="preserve">
-    <value>Playback device</value>
-  </data>
-  <data name="SettingSetDefaultCommunications" xml:space="preserve">
-    <value>Set as the default communications device</value>
-  </data>
-  <data name="SettingSetDefaultPlayback" xml:space="preserve">
-    <value>Set as the default playback device</value>
-  </data>
-  <data name="SettingSetMutedSetInverted" xml:space="preserve">
-    <value>Inverted (muted when off)</value>
-  </data>
-  <data name="SettingSetMutedToggleFalse" xml:space="preserve">
-    <value>Set mute depending on value (eg. switch)</value>
-  </data>
-  <data name="SettingSetMutedToggleTrue" xml:space="preserve">
-    <value>Toggle mute when input turns on (eg. push button)</value>
-  </data>
-  <data name="SetVolumeDescription" xml:space="preserve">
-    <value>Sets the volume for the selected device to the value of the analog input, regardless of the current default device.</value>
-  </data>
-  <data name="SetVolumeName" xml:space="preserve">
-    <value>Volume</value>
+  <data name="SettingVoiceMeeterVersion" xml:space="preserve">
+    <value>VoiceMeeter version</value>
   </data>
 </root>

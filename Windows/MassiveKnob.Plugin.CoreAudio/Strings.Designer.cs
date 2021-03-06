@@ -106,6 +106,24 @@ namespace MassiveKnob.Plugin.CoreAudio {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Sets the digital output depending on whether the selected device is the active playback or communications device..
+        /// </summary>
+        public static string GetDefaultDescription {
+            get {
+                return ResourceManager.GetString("GetDefaultDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Is default device.
+        /// </summary>
+        public static string GetDefaultName {
+            get {
+                return ResourceManager.GetString("GetDefaultName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Sets the digital output to the muted state for the selected device, regardless of the current default device..
         /// </summary>
         public static string GetMutedDescription {
@@ -160,6 +178,24 @@ namespace MassiveKnob.Plugin.CoreAudio {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Changes the default playback and/or communications device when the input turns on..
+        /// </summary>
+        public static string SetDefaultDescription {
+            get {
+                return ResourceManager.GetString("SetDefaultDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Set default device.
+        /// </summary>
+        public static string SetDefaultName {
+            get {
+                return ResourceManager.GetString("SetDefaultName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Toggles the muted state for the selected device, regardless of the current default device..
         /// </summary>
         public static string SetMutedDescription {
@@ -174,6 +210,42 @@ namespace MassiveKnob.Plugin.CoreAudio {
         public static string SetMutedName {
             get {
                 return ResourceManager.GetString("SetMutedName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to is the default communications device.
+        /// </summary>
+        public static string SettingGetDefaultCommunications {
+            get {
+                return ResourceManager.GetString("SettingGetDefaultCommunications", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Inverted (off when the device is the default).
+        /// </summary>
+        public static string SettingGetDefaultInverted {
+            get {
+                return ResourceManager.GetString("SettingGetDefaultInverted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to is the default playback device.
+        /// </summary>
+        public static string SettingGetDefaultPlayback {
+            get {
+                return ResourceManager.GetString("SettingGetDefaultPlayback", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Turn on when the selected device.
+        /// </summary>
+        public static string SettingGetDefaultWhen {
+            get {
+                return ResourceManager.GetString("SettingGetDefaultWhen", resourceCulture);
             }
         }
         
@@ -201,6 +273,24 @@ namespace MassiveKnob.Plugin.CoreAudio {
         public static string SettingPlaybackDevice {
             get {
                 return ResourceManager.GetString("SettingPlaybackDevice", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Set as the default communications device.
+        /// </summary>
+        public static string SettingSetDefaultCommunications {
+            get {
+                return ResourceManager.GetString("SettingSetDefaultCommunications", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Set as the default playback device.
+        /// </summary>
+        public static string SettingSetDefaultPlayback {
+            get {
+                return ResourceManager.GetString("SettingSetDefaultPlayback", resourceCulture);
             }
         }
         

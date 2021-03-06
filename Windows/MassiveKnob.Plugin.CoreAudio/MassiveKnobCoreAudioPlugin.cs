@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using MassiveKnob.Plugin.CoreAudio.GetDefault;
 using MassiveKnob.Plugin.CoreAudio.GetMuted;
 using MassiveKnob.Plugin.CoreAudio.GetVolume;
+using MassiveKnob.Plugin.CoreAudio.SetDefault;
 using MassiveKnob.Plugin.CoreAudio.SetMuted;
 using MassiveKnob.Plugin.CoreAudio.SetVolume;
 
@@ -21,8 +23,12 @@ namespace MassiveKnob.Plugin.CoreAudio
         {
             new DeviceSetVolumeAction(),
             new DeviceGetVolumeAction(),
+            
             new DeviceSetMutedAction(),
-            new DeviceGetMutedAction()
+            new DeviceGetMutedAction(),
+            
+            new DeviceSetDefaultAction(),
+            new DeviceGetDefaultAction()
         };
 
 

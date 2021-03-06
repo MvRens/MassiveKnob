@@ -17,6 +17,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MIN", "min.NET\MIN\MIN.cspr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MIN.SerialPort", "min.NET\MIN.SerialPort\MIN.SerialPort.csproj", "{DB8819EB-D2B7-4AAE-A699-BD200F2C113A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MassiveKnob.Plugin.VoiceMeeter", "MassiveKnob.Plugin.VoiceMeeter\MassiveKnob.Plugin.VoiceMeeter.csproj", "{19533600-D4F6-4BD4-82A3-C0234FDF044C}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Voicemeeter", "VoicemeeterRemote\Voicemeeter\Voicemeeter.csproj", "{F35DD8E5-91FA-403E-B6F6-8D2B4AE84198}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -51,6 +55,14 @@ Global
 		{DB8819EB-D2B7-4AAE-A699-BD200F2C113A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DB8819EB-D2B7-4AAE-A699-BD200F2C113A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DB8819EB-D2B7-4AAE-A699-BD200F2C113A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{19533600-D4F6-4BD4-82A3-C0234FDF044C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{19533600-D4F6-4BD4-82A3-C0234FDF044C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{19533600-D4F6-4BD4-82A3-C0234FDF044C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{19533600-D4F6-4BD4-82A3-C0234FDF044C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F35DD8E5-91FA-403E-B6F6-8D2B4AE84198}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F35DD8E5-91FA-403E-B6F6-8D2B4AE84198}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F35DD8E5-91FA-403E-B6F6-8D2B4AE84198}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F35DD8E5-91FA-403E-B6F6-8D2B4AE84198}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

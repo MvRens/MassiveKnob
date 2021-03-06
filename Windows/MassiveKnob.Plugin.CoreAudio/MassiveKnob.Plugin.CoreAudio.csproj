@@ -17,7 +17,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>$(localappdata)\MassiveKnob\Plugins\CoreAudio\</OutputPath>
+    <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -49,6 +49,12 @@
     <Compile Include="Base\BaseDeviceSettingsView.xaml.cs">
       <DependentUpon>BaseDeviceSettingsView.xaml</DependentUpon>
     </Compile>
+    <Compile Include="GetDefault\DeviceGetDefaultAction.cs" />
+    <Compile Include="GetDefault\DeviceGetDefaultActionSettings.cs" />
+    <Compile Include="GetDefault\DeviceGetDefaultActionSettingsView.xaml.cs">
+      <DependentUpon>DeviceGetDefaultActionSettingsView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="GetDefault\DeviceGetDefaultActionSettingsViewModel.cs" />
     <Compile Include="GetMuted\DeviceGetMutedAction.cs" />
     <Compile Include="GetMuted\DeviceGetMutedActionSettings.cs" />
     <Compile Include="GetMuted\DeviceGetMutedActionSettingsView.xaml.cs">
@@ -61,6 +67,12 @@
     </Compile>
     <Compile Include="OSD\OSDManager.cs" />
     <Compile Include="OSD\OSDWindowViewModel.cs" />
+    <Compile Include="SetDefault\DeviceSetDefaultAction.cs" />
+    <Compile Include="SetDefault\DeviceSetDefaultActionSettings.cs" />
+    <Compile Include="SetDefault\DeviceSetDefaultActionSettingsView.xaml.cs">
+      <DependentUpon>DeviceSetDefaultActionSettingsView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="SetDefault\DeviceSetDefaultActionSettingsViewModel.cs" />
     <Compile Include="SetMuted\DeviceSetMutedAction.cs" />
     <Compile Include="SetMuted\DeviceSetMutedActionSettings.cs" />
     <Compile Include="SetMuted\DeviceSetMutedActionSettingsView.xaml.cs">
@@ -120,6 +132,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="GetDefault\DeviceGetDefaultActionSettingsView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="GetMuted\DeviceGetMutedActionSettingsView.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -133,6 +149,10 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="OSD\SpeakerIcon.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="SetDefault\DeviceSetDefaultActionSettingsView.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -150,5 +170,6 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
