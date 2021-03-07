@@ -98,12 +98,6 @@ namespace MassiveKnob.Plugin.SerialDevice.Settings
         }
 
 
-        protected virtual void OnOtherPropertyChanged(string propertyName)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-
-
         
         public void OnNext(DeviceNotificationEvent value)
         {

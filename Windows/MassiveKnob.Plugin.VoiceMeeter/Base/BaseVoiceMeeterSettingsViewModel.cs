@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using Voicemeeter;
 
@@ -16,10 +18,11 @@ namespace MassiveKnob.Plugin.VoiceMeeter.Base
 
 
 
-    public class BaseVoiceMeeterSettingsViewModel : INotifyPropertyChanged
+    public class BaseVoiceMeeterSettingsViewModel : INotifyPropertyChanged, IDisposable
     {
         protected readonly BaseVoiceMeeterSettings Settings;
         public event PropertyChangedEventHandler PropertyChanged;
+        public event EventHandler Disposed;
 
         // ReSharper disable UnusedMember.Global - used by WPF Binding
         public IList<VoiceMeeterVersionViewModel> Versions { get; }
@@ -52,6 +55,14 @@ namespace MassiveKnob.Plugin.VoiceMeeter.Base
                 new VoiceMeeterVersionViewModel(RunVoicemeeterParam.VoicemeeterBanana, "VoiceMeeter Banana"),
                 new VoiceMeeterVersionViewModel(RunVoicemeeterParam.VoicemeeterPotato, "VoiceMeeter Potato")
             };
+
+            UpdateSelectedVersion();
+        }
+
+        
+        private void UpdateSelectedVersion()
+        {
+            selectedVersion = Versions.SingleOrDefault(v => v.Version == Settings.Version) ?? Versions.First();
         }
 
 
@@ -63,9 +74,27 @@ namespace MassiveKnob.Plugin.VoiceMeeter.Base
         }
 
 
+        public virtual void VoiceMeeterVersionChanged()
+        {
+            UpdateSelectedVersion();
+            OnDependantPropertyChanged(nameof(SelectedVersion));
+        }
+
+
         protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        protected virtual void OnDependantPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        
+        public virtual void Dispose()
+        {
+            Disposed?.Invoke(this, EventArgs.Empty);
         }
     }
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Windows.Controls;
 using Microsoft.Extensions.Logging;
@@ -24,6 +25,7 @@ namespace MassiveKnob.Plugin.VoiceMeeter.RunMacro
         {
             private IMassiveKnobActionContext actionContext;
             private VoiceMeeterRunMacroActionSettings settings;
+            private VoiceMeeterRunMacroActionSettingsViewModel viewModel;
 
 
             public void Initialize(IMassiveKnobActionContext context)
@@ -43,13 +45,19 @@ namespace MassiveKnob.Plugin.VoiceMeeter.RunMacro
 
             public UserControl CreateSettingsControl()
             {
-                var viewModel = new VoiceMeeterRunMacroActionSettingsViewModel(settings);
+                viewModel = new VoiceMeeterRunMacroActionSettingsViewModel(settings);
                 viewModel.PropertyChanged += (sender, args) =>
                 {
                     if (!viewModel.IsSettingsProperty(args.PropertyName))
                         return;
                     
                     actionContext.SetSettings(settings);
+                };
+
+                viewModel.Disposed += (sender, args) =>
+                {
+                    if (sender == viewModel)
+                        viewModel = null;
                 };
 
                 return new VoiceMeeterRunMacroActionSettingsView(viewModel);
@@ -71,8 +79,7 @@ namespace MassiveKnob.Plugin.VoiceMeeter.RunMacro
             
             public void VoiceMeeterVersionChanged()
             {
-                // TODO update viewModel
-                
+                viewModel?.VoiceMeeterVersionChanged();
                 actionContext.SetSettings(settings);
             }
         }

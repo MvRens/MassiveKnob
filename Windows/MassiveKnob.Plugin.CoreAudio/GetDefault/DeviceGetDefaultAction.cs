@@ -80,7 +80,7 @@ namespace MassiveKnob.Plugin.CoreAudio.GetDefault
 
                 CheckActive();
                 
-                // TODO default OSD
+                // TODO (should have) OSD for changing default
                 //if (settings.OSD)
                     //OSDManager.Show(args.Device);
             }

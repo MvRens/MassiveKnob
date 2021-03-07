@@ -120,6 +120,15 @@
   <data name="ActionNotConfigured" xml:space="preserve">
     <value>Not configured</value>
   </data>
+  <data name="DeviceStatusConnected" xml:space="preserve">
+    <value>Connected</value>
+  </data>
+  <data name="DeviceStatusConnecting" xml:space="preserve">
+    <value>Connecting...</value>
+  </data>
+  <data name="DeviceStatusDisconnected" xml:space="preserve">
+    <value>Disconnected</value>
+  </data>
   <data name="InputHeader" xml:space="preserve">
     <value>Input #{0}</value>
   </data>

@@ -17,11 +17,12 @@ namespace MassiveKnob.Core
         private readonly ILogger logger;
 
         private readonly object settingsLock = new object();
-        private MassiveKnobSettings massiveKnobSettings;
+        private readonly MassiveKnobSettings settings;
         private readonly SerialQueue flushSettingsQueue = new SerialQueue();
 
         private MassiveKnobDeviceInfo activeDevice;
         private readonly Subject<MassiveKnobDeviceInfo> activeDeviceInfoSubject = new Subject<MassiveKnobDeviceInfo>();
+        private readonly Subject<MassiveKnobDeviceStatus> deviceStatusSubject = new Subject<MassiveKnobDeviceStatus>();
         private IMassiveKnobDeviceContext activeDeviceContext;
 
         private readonly List<ActionMapping> analogInputs = new List<ActionMapping>();
@@ -48,12 +49,15 @@ namespace MassiveKnob.Core
 
         public IObservable<MassiveKnobDeviceInfo> ActiveDeviceSubject => activeDeviceInfoSubject;
 
+        public MassiveKnobDeviceStatus DeviceStatus { get; private set; } = MassiveKnobDeviceStatus.Disconnected;
+        public IObservable<MassiveKnobDeviceStatus> DeviceStatusSubject => deviceStatusSubject;
 
-        public MassiveKnobOrchestrator(IPluginManager pluginManager, ILogger logger, MassiveKnobSettings massiveKnobSettings)
+
+        public MassiveKnobOrchestrator(IPluginManager pluginManager, ILogger logger, MassiveKnobSettings settings)
         {
             this.pluginManager = pluginManager;
             this.logger = logger;
-            this.massiveKnobSettings = massiveKnobSettings;
+            this.settings = settings;
         }
 
 
@@ -87,11 +91,11 @@ namespace MassiveKnob.Core
         {
             lock (settingsLock)
             {
-                if (massiveKnobSettings.Device == null)
+                if (settings.Device == null)
                     return;
 
                 var allDevices = pluginManager.GetDevicePlugins().SelectMany(dp => dp.Devices);
-                var device = allDevices.FirstOrDefault(d => d.DeviceId == massiveKnobSettings.Device.DeviceId);
+                var device = allDevices.FirstOrDefault(d => d.DeviceId == settings.Device.DeviceId);
                 
                 InternalSetActiveDevice(device, false);
             }
@@ -105,7 +109,7 @@ namespace MassiveKnob.Core
             return InternalSetActiveDevice(device, true);
         }
 
-        
+
         public MassiveKnobActionInfo GetAction(MassiveKnobActionType actionType, int index)
         {
             lock (settingsLock)
@@ -166,7 +170,7 @@ namespace MassiveKnob.Core
         {
             lock (settingsLock)
             {
-                return massiveKnobSettings.Clone();
+                return settings.Clone();
             }
         }
 
@@ -175,7 +179,7 @@ namespace MassiveKnob.Core
         {
             lock (settingsLock)
             {
-                applyChanges(massiveKnobSettings);
+                applyChanges(settings);
             }
             
             FlushSettings();
@@ -193,10 +197,10 @@ namespace MassiveKnob.Core
                 lock (settingsLock)
                 {
                     if (device == null)
-                        massiveKnobSettings.Device = null;
+                        settings.Device = null;
                     else
                     {
-                        massiveKnobSettings.Device = new MassiveKnobSettings.DeviceSettings
+                        settings.Device = new MassiveKnobSettings.DeviceSettings
                         {
                             DeviceId = device.DeviceId,
                             Settings = null
@@ -208,7 +212,10 @@ namespace MassiveKnob.Core
             }
 
             ActiveDevice?.Instance.Dispose();
+            SetDeviceStatus(null, MassiveKnobDeviceStatus.Disconnected);
 
+            // TODO (must have) move initialization to separate Task, to prevent issues at startup
+            // TODO (must have) exception handling!
             if (device != null)
             {
                 var instance = device.Create(new SerilogLoggerProvider(logger.ForContext("Context", new { Device = device.DeviceId })).CreateLogger(null));
@@ -230,11 +237,11 @@ namespace MassiveKnob.Core
         protected T GetDeviceSettings<T>(IMassiveKnobDeviceContext context) where T : class, new()
         {
             if (context != activeDeviceContext)
-                throw new InvalidOperationException("Caller must be the active device to retrieve the massiveKnobSettings");
+                throw new InvalidOperationException("Caller must be the active device to retrieve the settings");
 
             lock (settingsLock)
             {
-                return massiveKnobSettings.Device.Settings?.ToObject<T>() ?? new T();
+                return settings.Device.Settings?.ToObject<T>() ?? new T();
             }
         }
 
@@ -242,20 +249,37 @@ namespace MassiveKnob.Core
         protected void SetDeviceSettings<T>(IMassiveKnobDeviceContext context, IMassiveKnobDevice device, T deviceSettings) where T : class, new()
         {
             if (context != activeDeviceContext)
-                throw new InvalidOperationException("Caller must be the active device to update the massiveKnobSettings");
+                throw new InvalidOperationException("Caller must be the active device to update the settings");
 
             lock (settingsLock)
             {
-                if (massiveKnobSettings.Device == null)
-                    massiveKnobSettings.Device = new MassiveKnobSettings.DeviceSettings
+                if (settings.Device == null)
+                    settings.Device = new MassiveKnobSettings.DeviceSettings
                     {
                         DeviceId = device.DeviceId
                     };
 
-                massiveKnobSettings.Device.Settings = JObject.FromObject(deviceSettings);
+                settings.Device.Settings = JObject.FromObject(deviceSettings);
             }
 
             FlushSettings();
+        }
+
+
+        protected void SetDeviceStatus(IMassiveKnobDeviceContext context, MassiveKnobDeviceStatus status)
+        {
+            if (context != null && context != activeDeviceContext)
+                return;
+
+            lock (settingsLock)
+            {
+                if (status == DeviceStatus)
+                    return;
+
+                DeviceStatus = status;
+            }
+
+            deviceStatusSubject.OnNext(status);
         }
 
 
@@ -268,7 +292,7 @@ namespace MassiveKnob.Core
                     return new T();
                 
                 if (list[index]?.Context != context)
-                    throw new InvalidOperationException("Caller must be the active action to retrieve the massiveKnobSettings");
+                    throw new InvalidOperationException("Caller must be the active action to retrieve the settings");
 
                 var settingsList = GetActionSettingsList(action.ActionType);
                 if (index >= settingsList.Count)
@@ -288,7 +312,7 @@ namespace MassiveKnob.Core
                     return;
 
                 if (list[index]?.Context != context)
-                    throw new InvalidOperationException("Caller must be the active action to retrieve the massiveKnobSettings");
+                    throw new InvalidOperationException("Caller must be the active action to retrieve the settings");
 
                 var settingsList = GetActionSettingsList(action.ActionType);
                 
@@ -317,11 +341,6 @@ namespace MassiveKnob.Core
             
             lock (settingsLock)
             {
-                if (analogOutputValues.TryGetValue(analogInputIndex, out var currentValue) && currentValue == value)
-                    return;
-
-                analogOutputValues[analogInputIndex] = value;
-
                 var mapping = GetActionMappingList(MassiveKnobActionType.InputAnalog);
                 if (mapping == null || analogInputIndex >= mapping.Count || mapping[analogInputIndex] == null)
                     return;
@@ -343,12 +362,6 @@ namespace MassiveKnob.Core
 
             lock (settingsLock)
             {
-                if (digitalOutputValues.TryGetValue(digitalInputIndex, out var currentValue) && currentValue == on)
-                    return;
-
-                digitalOutputValues[digitalInputIndex] = on;
-
-                
                 var mapping = GetActionMappingList(MassiveKnobActionType.InputDigital);
                 if (mapping == null || digitalInputIndex >= mapping.Count || mapping[digitalInputIndex] == null)
                     return;
@@ -362,13 +375,19 @@ namespace MassiveKnob.Core
 
         public void SetAnalogOutput(IMassiveKnobActionContext context, int index, byte value)
         {
-            if (activeDevice == null)
-                return;
-
             IMassiveKnobDeviceInstance deviceInstance;
 
             lock (settingsLock)
             {
+                if (analogOutputValues.TryGetValue(index, out var currentValue) && currentValue == value)
+                    return;
+
+                analogOutputValues[index] = value;
+
+
+                if (activeDevice == null)
+                    return;
+
                 var list = GetActionMappingList(MassiveKnobActionType.OutputAnalog);
                 if (index >= list.Count)
                     return;
@@ -385,13 +404,19 @@ namespace MassiveKnob.Core
 
         public void SetDigitalOutput(IMassiveKnobActionContext context, int index, bool on)
         {
-            if (activeDevice == null)
-                return;
-
             IMassiveKnobDeviceInstance deviceInstance;
 
             lock (settingsLock)
             {
+                if (digitalOutputValues.TryGetValue(index, out var currentValue) && currentValue == on)
+                    return;
+
+                digitalOutputValues[index] = on;
+
+
+                if (activeDevice == null)
+                    return;
+
                 var list = GetActionMappingList(MassiveKnobActionType.OutputDigital);
                 if (index >= list.Count)
                     return;
@@ -433,16 +458,16 @@ namespace MassiveKnob.Core
             switch (actionType)
             {
                 case MassiveKnobActionType.InputAnalog:
-                    return massiveKnobSettings.AnalogInput;
+                    return settings.AnalogInput;
 
                 case MassiveKnobActionType.InputDigital:
-                    return massiveKnobSettings.DigitalInput;
+                    return settings.DigitalInput;
 
                 case MassiveKnobActionType.OutputAnalog:
-                    return massiveKnobSettings.AnalogOutput;
+                    return settings.AnalogOutput;
 
                 case MassiveKnobActionType.OutputDigital:
-                    return massiveKnobSettings.DigitalOutput;
+                    return settings.DigitalOutput;
 
                 default:
                     throw new ArgumentOutOfRangeException(nameof(actionType), actionType, null);
@@ -455,7 +480,7 @@ namespace MassiveKnob.Core
             
             lock (settingsLock)
             { 
-                massiveKnobSettingsSnapshot = massiveKnobSettings.Clone();
+                massiveKnobSettingsSnapshot = settings.Clone();
             }
             
             flushSettingsQueue.Enqueue(async () =>
@@ -482,10 +507,10 @@ namespace MassiveKnob.Core
             
             lock (settingsLock)
             {
-                UpdateMapping(analogInputs, specs.AnalogInputCount, massiveKnobSettings.AnalogInput, DelayedInitialize);
-                UpdateMapping(digitalInputs, specs.DigitalInputCount, massiveKnobSettings.DigitalInput, DelayedInitialize);
-                UpdateMapping(analogOutputs, specs.AnalogOutputCount, massiveKnobSettings.AnalogOutput, DelayedInitialize);
-                UpdateMapping(digitalOutputs, specs.DigitalOutputCount, massiveKnobSettings.DigitalOutput, DelayedInitialize);
+                UpdateMapping(analogInputs, specs.AnalogInputCount, settings.AnalogInput, DelayedInitialize);
+                UpdateMapping(digitalInputs, specs.DigitalInputCount, settings.DigitalInput, DelayedInitialize);
+                UpdateMapping(analogOutputs, specs.AnalogOutputCount, settings.AnalogOutput, DelayedInitialize);
+                UpdateMapping(digitalOutputs, specs.DigitalOutputCount, settings.DigitalOutput, DelayedInitialize);
             }
 
             foreach (var delayedInitializeAction in delayedInitializeActions)
@@ -603,21 +628,20 @@ namespace MassiveKnob.Core
             
             public void Connecting()
             {
-                // TODO (should have) update status ?
+                owner.SetDeviceStatus(this, MassiveKnobDeviceStatus.Connecting);
             }
 
 
             public void Connected(DeviceSpecs specs)
             {
-                // TODO (should have) update status ?
-
+                owner.SetDeviceStatus(this, MassiveKnobDeviceStatus.Connected);
                 owner.UpdateActiveDeviceSpecs(this, specs);
             }
 
 
             public void Disconnected()
             {
-                // TODO (should have) update status ?
+                owner.SetDeviceStatus(this, MassiveKnobDeviceStatus.Disconnected);
             }
 
 

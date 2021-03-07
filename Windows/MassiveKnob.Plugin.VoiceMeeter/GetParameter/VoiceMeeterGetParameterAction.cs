@@ -1,5 +1,6 @@
 ﻿using System;
-using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.Runtime.Remoting.Channels;
 using System.Windows.Controls;
 using Microsoft.Extensions.Logging;
 using Voicemeeter;
@@ -12,18 +13,19 @@ namespace MassiveKnob.Plugin.VoiceMeeter.GetParameter
         public MassiveKnobActionType ActionType { get; } = MassiveKnobActionType.OutputDigital;
         public string Name { get; } = Strings.GetParameterName;
         public string Description { get; } = Strings.GetParameterDescription;
-        
-        
+
+
         public IMassiveKnobActionInstance Create(ILogger logger)
         {
             return new Instance();
         }
-        
-        
+
+
         private class Instance : IMassiveKnobActionInstance, IVoiceMeeterAction
         {
             private IMassiveKnobActionContext actionContext;
             private VoiceMeeterGetParameterActionSettings settings;
+            private VoiceMeeterGetParameterActionSettingsViewModel viewModel;
             private Parameters parameters;
             private IDisposable parameterChanged;
 
@@ -48,51 +50,54 @@ namespace MassiveKnob.Plugin.VoiceMeeter.GetParameter
 
             private void ApplySettings()
             {
-                if (InstanceRegister.Version == RunVoicemeeterParam.None)
+                if (InstanceRegister.Version == RunVoicemeeterParam.None || string.IsNullOrEmpty(settings.Parameter))
+                {
+                    parameterChanged?.Dispose();
+                    parameterChanged = null;
+
+                    parameters?.Dispose();
+                    parameters = null;
                     return;
+                }
 
                 if (parameters == null)
                     parameters = new Parameters();
 
-                if (string.IsNullOrEmpty(settings.Parameter))
-                {
-                    parameterChanged?.Dispose();
-                    parameterChanged = null;
-                }
-
                 if (parameterChanged == null)
                     parameterChanged = parameters.Subscribe(x => ParametersChanged());
 
-                // TODO directly update output depending on value
-                /*
-                if (playbackDevice != null)
-                    actionContext.SetDigitalOutput(settings.Inverted ? !playbackDevice.IsMuted : playbackDevice.IsMuted);
-                */
+                ParametersChanged();
             }
 
 
             public UserControl CreateSettingsControl()
             {
-                var viewModel = new VoiceMeeterGetParameterActionSettingsViewModel(settings);
+                viewModel = new VoiceMeeterGetParameterActionSettingsViewModel(settings);
                 viewModel.PropertyChanged += (sender, args) =>
                 {
                     if (!viewModel.IsSettingsProperty(args.PropertyName))
                         return;
-                    
+
                     actionContext.SetSettings(settings);
                     ApplySettings();
                 };
 
+                viewModel.Disposed += (sender, args) =>
+                {
+                    if (sender == viewModel)
+                        viewModel = null;
+                };
+
                 return new VoiceMeeterGetParameterActionSettingsView(viewModel);
             }
-        
+
 
             public void VoiceMeeterVersionChanged()
             {
-                // TODO update viewModel
-                // TODO reset parameterChanged subscription
+                viewModel?.VoiceMeeterVersionChanged();
 
                 actionContext.SetSettings(settings);
+                ApplySettings();
             }
 
 
@@ -101,11 +106,8 @@ namespace MassiveKnob.Plugin.VoiceMeeter.GetParameter
                 if (InstanceRegister.Version == RunVoicemeeterParam.None || string.IsNullOrEmpty(settings.Parameter))
                     return;
 
-                // TODO if another task is already running, wait / chain
-                // TODO only start task if not yet initialized
-                Task.Run(async () =>
+                InstanceRegister.InitializeVoicemeeter().ContinueWith(t =>
                 {
-                    await InstanceRegister.InitializeVoicemeeter();
                     bool on;
 
                     if (float.TryParse(settings.Value, out var settingsFloatValue))
@@ -130,7 +132,6 @@ namespace MassiveKnob.Plugin.VoiceMeeter.GetParameter
                         on = string.Equals(value, settings.Value, StringComparison.InvariantCultureIgnoreCase);
                     }
 
-                    // TODO check specific parameter for changes, not just any parameter
                     actionContext.SetDigitalOutput(settings.Inverted ? !on : on);
                 });
             }

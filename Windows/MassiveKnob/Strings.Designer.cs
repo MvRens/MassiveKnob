@@ -70,6 +70,33 @@ namespace MassiveKnob {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Connected.
+        /// </summary>
+        public static string DeviceStatusConnected {
+            get {
+                return ResourceManager.GetString("DeviceStatusConnected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Connecting....
+        /// </summary>
+        public static string DeviceStatusConnecting {
+            get {
+                return ResourceManager.GetString("DeviceStatusConnecting", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Disconnected.
+        /// </summary>
+        public static string DeviceStatusDisconnected {
+            get {
+                return ResourceManager.GetString("DeviceStatusDisconnected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Input #{0}.
         /// </summary>
         public static string InputHeader {

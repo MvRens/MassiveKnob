@@ -11,11 +11,23 @@ namespace MassiveKnob.Core
 
         MassiveKnobDeviceInfo SetActiveDevice(IMassiveKnobDevice device);
 
+        MassiveKnobDeviceStatus DeviceStatus { get; }
+        IObservable<MassiveKnobDeviceStatus> DeviceStatusSubject { get; }
+
+
         MassiveKnobActionInfo GetAction(MassiveKnobActionType actionType, int index);
         MassiveKnobActionInfo SetAction(MassiveKnobActionType actionType, int index, IMassiveKnobAction action);
 
         MassiveKnobSettings GetSettings();
         void UpdateSettings(Action<MassiveKnobSettings> applyChanges);
+    }
+
+
+    public enum MassiveKnobDeviceStatus
+    {
+        Disconnected,
+        Connecting,
+        Connected
     }
     
     

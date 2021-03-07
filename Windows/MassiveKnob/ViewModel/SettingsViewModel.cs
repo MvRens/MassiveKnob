@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 using MassiveKnob.Core;
 using MassiveKnob.Plugin;
 using MassiveKnob.Settings;
@@ -18,7 +19,7 @@ using Serilog.Events;
 namespace MassiveKnob.ViewModel
 {
     // TODO (code quality) split ViewModel for individual views, create viewmodel using container
-    // TODO (must have) show device status
+    // TODO (nice to have) installed plugins list
     public class SettingsViewModel : IDisposable, INotifyPropertyChanged
     {
         private readonly Dictionary<SettingsMenuItem, Type> menuItemControls = new Dictionary<SettingsMenuItem, Type>
@@ -47,6 +48,8 @@ namespace MassiveKnob.ViewModel
         private IEnumerable<InputOutputViewModel> analogOutputs;
         private IEnumerable<InputOutputViewModel> digitalOutputs;
 
+        private IDisposable activeDeviceSubscription;
+        private IDisposable deviceStatusSubscription;
 
         // ReSharper disable UnusedMember.Global - used by WPF Binding
         public SettingsMenuItem SelectedMenuItem
@@ -77,18 +80,18 @@ namespace MassiveKnob.ViewModel
             {
                 if (value == selectedView)
                     return;
-                
+
                 selectedView = value;
                 OnPropertyChanged();
             }
         }
-        
-        
+
+
 
         public IList<DeviceViewModel> Devices { get; }
         public IList<ActionViewModel> Actions { get; }
 
-        
+
         public DeviceViewModel SelectedDevice
         {
             get => selectedDevice;
@@ -141,23 +144,27 @@ namespace MassiveKnob.ViewModel
 
                 AnalogInputs = Enumerable
                     .Range(0, specs?.AnalogInputCount ?? 0)
-                    .Select(i => new InputOutputViewModel(this, orchestrator, MassiveKnobActionType.InputAnalog, i));
+                    .Select(i => new InputOutputViewModel(this, orchestrator, MassiveKnobActionType.InputAnalog, i))
+                    .ToList();
 
                 DigitalInputs = Enumerable
                     .Range(0, specs?.DigitalInputCount ?? 0)
-                    .Select(i => new InputOutputViewModel(this, orchestrator, MassiveKnobActionType.InputDigital, i));
+                    .Select(i => new InputOutputViewModel(this, orchestrator, MassiveKnobActionType.InputDigital, i))
+                    .ToList();
 
                 AnalogOutputs = Enumerable
                     .Range(0, specs?.AnalogOutputCount ?? 0)
-                    .Select(i => new InputOutputViewModel(this, orchestrator, MassiveKnobActionType.OutputAnalog, i));
+                    .Select(i => new InputOutputViewModel(this, orchestrator, MassiveKnobActionType.OutputAnalog, i))
+                    .ToList();
 
                 DigitalOutputs = Enumerable
                     .Range(0, specs?.DigitalOutputCount ?? 0)
-                    .Select(i => new InputOutputViewModel(this, orchestrator, MassiveKnobActionType.OutputDigital, i));
+                    .Select(i => new InputOutputViewModel(this, orchestrator, MassiveKnobActionType.OutputDigital, i))
+                    .ToList();
             }
         }
 
-        
+
         public Visibility AnalogInputVisibility => specs.HasValue && specs.Value.AnalogInputCount > 0
             ? Visibility.Visible
             : Visibility.Collapsed;
@@ -213,11 +220,12 @@ namespace MassiveKnob.ViewModel
                 OnPropertyChanged();
             }
         }
-        
-        
+
+
         public IList<LoggingLevelViewModel> LoggingLevels { get; }
-        
+
         private LoggingLevelViewModel selectedLoggingLevel;
+
         public LoggingLevelViewModel SelectedLoggingLevel
         {
             get => selectedLoggingLevel;
@@ -225,7 +233,7 @@ namespace MassiveKnob.ViewModel
             {
                 if (value == selectedLoggingLevel)
                     return;
-                
+
                 selectedLoggingLevel = value;
                 OnPropertyChanged();
 
@@ -235,6 +243,7 @@ namespace MassiveKnob.ViewModel
 
 
         private bool loggingEnabled;
+
         public bool LoggingEnabled
         {
             get => loggingEnabled;
@@ -245,14 +254,16 @@ namespace MassiveKnob.ViewModel
 
                 loggingEnabled = value;
                 OnPropertyChanged();
-                
+
                 ApplyLoggingSettings();
             }
         }
 
 
         // TODO (code quality) do not hardcode path here
-        public string LoggingOutputPath { get; } = string.Format(Strings.LoggingOutputPath, Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"MassiveKnob", @"Logs"));
+        public string LoggingOutputPath { get; } = string.Format(Strings.LoggingOutputPath,
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"MassiveKnob",
+                @"Logs"));
 
 
         private bool runAtStartup;
@@ -268,6 +279,55 @@ namespace MassiveKnob.ViewModel
                 OnPropertyChanged();
 
                 ApplyRunAtStartup();
+            }
+        }
+
+
+        public string ConnectionStatusText
+        {
+            get
+            {
+                if (orchestrator == null)
+                    return "Design-time";
+
+                switch (orchestrator.DeviceStatus)
+                {
+                    case MassiveKnobDeviceStatus.Disconnected: 
+                        return Strings.DeviceStatusDisconnected;
+                    
+                    case MassiveKnobDeviceStatus.Connecting: 
+                        return Strings.DeviceStatusConnecting;
+
+                    case MassiveKnobDeviceStatus.Connected:
+                        return Strings.DeviceStatusConnected;
+                    
+                    default:
+                        return null;
+                }
+            }
+        }
+
+        public Brush ConnectionStatusColor
+        {
+            get
+            {
+                if (orchestrator == null)
+                    return Brushes.Fuchsia;
+
+                switch (orchestrator.DeviceStatus)
+                {
+                    case MassiveKnobDeviceStatus.Disconnected:
+                        return Brushes.DarkRed;
+
+                    case MassiveKnobDeviceStatus.Connecting:
+                        return Brushes.Orange;
+
+                    case MassiveKnobDeviceStatus.Connected:
+                        return Brushes.ForestGreen;
+
+                    default:
+                        return null;
+                }
             }
         }
         // ReSharper restore UnusedMember.Global
@@ -288,11 +348,17 @@ namespace MassiveKnob.ViewModel
             
             SelectedMenuItem = activeMenuItem;
 
-            orchestrator.ActiveDeviceSubject.Subscribe(info => { Specs = info.Specs; });
+            activeDeviceSubscription = orchestrator.ActiveDeviceSubject.Subscribe(info => { Specs = info.Specs; });
+            deviceStatusSubscription = orchestrator.DeviceStatusSubject.Subscribe(status =>
+            {
+                OnDependantPropertyChanged(nameof(ConnectionStatusColor));
+                OnDependantPropertyChanged(nameof(ConnectionStatusText));
+            });
 
 
             Devices = pluginManager.GetDevicePlugins()
                 .SelectMany(dp => dp.Devices.Select(d => new DeviceViewModel(dp, d)))
+                .OrderBy(d => d.Name.ToLower())
                 .ToList();
 
             var allActions = new List<ActionViewModel>
@@ -302,7 +368,8 @@ namespace MassiveKnob.ViewModel
 
             allActions.AddRange(
                 pluginManager.GetActionPlugins()
-                    .SelectMany(ap => ap.Actions.Select(a => new ActionViewModel(ap, a))));
+                    .SelectMany(ap => ap.Actions.Select(a => new ActionViewModel(ap, a)))
+                    .OrderBy(a => a.Name.ToLower()));
             
             Actions = allActions;
 

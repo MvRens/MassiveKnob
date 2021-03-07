@@ -39,6 +39,11 @@
 
 
             <ContentControl Focusable="False" Content="{Binding SettingsControl}" Style="{StaticResource SettingsControl}" />
+
+            <StackPanel Margin="0,24,0,0" Orientation="Horizontal">
+                <Ellipse Margin="0,0,4,0" Fill="{Binding ConnectionStatusColor}" Height="8" Width="8" />
+                <TextBlock Text="{Binding ConnectionStatusText}" />
+            </StackPanel>
         </StackPanel>
     </StackPanel>
 </UserControl>

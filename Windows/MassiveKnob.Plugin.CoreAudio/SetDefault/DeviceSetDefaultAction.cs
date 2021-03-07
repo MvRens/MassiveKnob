@@ -75,7 +75,7 @@ namespace MassiveKnob.Plugin.CoreAudio.SetDefault
                     await playbackDevice.SetAsDefaultCommunicationsAsync();
 
 
-                // TODO OSD for default device
+                // TODO (should have) OSD for changing default
                 //if (settings.OSD)
                     //OSDManager.Show(playbackDevice);
             }
