@@ -11,6 +11,7 @@ using SimpleInjector;
 
 namespace MassiveKnob
 {
+    // TODO (should have) global exception handler - AppDomain.CurrentDomain.UnhandledException
     public static class Program
     {
         [STAThread]
