@@ -132,7 +132,7 @@ namespace MassiveKnob.Core
                     return null;
 
                 if (list[index]?.ActionInfo.Info == action)
-                    return list[index].ActionInfo;
+                    return list[index]?.ActionInfo;
                 
                 list[index]?.ActionInfo.Instance?.Dispose();
 
@@ -175,7 +175,7 @@ namespace MassiveKnob.Core
                 if (analogOutputIndex  >= settingsList.Count)
                     return new MassiveKnobSettings.DigitalToAnalogSettings();
 
-                return settingsList[analogOutputIndex].DigitalToAnalog?.Clone() ?? new MassiveKnobSettings.DigitalToAnalogSettings();
+                return settingsList[analogOutputIndex]?.DigitalToAnalog?.Clone() ?? new MassiveKnobSettings.DigitalToAnalogSettings();
             }
         }
 
@@ -320,18 +320,18 @@ namespace MassiveKnob.Core
         }
 
 
-        protected T GetActionSettings<T>(IMassiveKnobActionContext context, IMassiveKnobAction action, int index) where T : class, new()
+        protected T GetActionSettings<T>(IMassiveKnobActionContext context, MassiveKnobActionType actionType, IMassiveKnobAction action, int index) where T : class, new()
         {
             lock (settingsLock)
             {
-                var list = GetActionMappingList(action.ActionType);
+                var list = GetActionMappingList(actionType);
                 if (index >= list.Count)
                     return new T();
                 
                 if (list[index]?.Context != context)
                     throw new InvalidOperationException("Caller must be the active action to retrieve the settings");
 
-                var settingsList = GetActionSettingsList(action.ActionType);
+                var settingsList = GetActionSettingsList(actionType);
                 if (index >= settingsList.Count)
                     return new T();
 
@@ -340,18 +340,18 @@ namespace MassiveKnob.Core
         }
 
 
-        protected void SetActionSettings<T>(IMassiveKnobActionContext context, IMassiveKnobAction action, int index, T actionSettings) where T : class, new()
+        protected void SetActionSettings<T>(IMassiveKnobActionContext context, MassiveKnobActionType actionType, IMassiveKnobAction action, int index, T actionSettings) where T : class, new()
         {
             lock (settingsLock)
             {
-                var list = GetActionMappingList(action.ActionType);
+                var list = GetActionMappingList(actionType);
                 if (index >= list.Count)
                     return;
 
                 if (list[index]?.Context != context)
                     throw new InvalidOperationException("Caller must be the active action to retrieve the settings");
 
-                var settingsList = GetActionSettingsList(action.ActionType);
+                var settingsList = GetActionSettingsList(actionType);
                 
                 while (index >= settingsList.Count)
                     settingsList.Add(null);
@@ -752,13 +752,13 @@ namespace MassiveKnob.Core
             
             public T GetSettings<T>() where T : class, new()
             {
-                return owner.GetActionSettings<T>(this, action, index);
+                return owner.GetActionSettings<T>(this, assignedActionType, action, index);
             }
 
             
             public void SetSettings<T>(T settings) where T : class, new()
             {
-                owner.SetActionSettings(this, action, index, settings);
+                owner.SetActionSettings(this, assignedActionType, action, index, settings);
             }
 
             

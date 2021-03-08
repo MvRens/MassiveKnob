@@ -26,7 +26,7 @@ namespace MassiveKnob.ViewModel
         public string DisplayName => string.Format(
             actionType == MassiveKnobActionType.OutputAnalog || actionType == MassiveKnobActionType.OutputDigital
                 ? Strings.OutputHeader
-                : Strings.InputHeader, 
+                : Strings.InputHeader,
             index + 1);
 
         public IList<ActionViewModel> Actions { get; }
@@ -40,7 +40,7 @@ namespace MassiveKnob.ViewModel
                 if (value == selectedAction)
                     return;
 
-                selectedAction = value == null || value.RepresentsNull ? null : value;
+                selectedAction = value == null || value.RepresentsNull ? Actions.Single(a => a.RepresentsNull) : value;
                 var actionInfo = orchestrator.SetAction(actionType, index, selectedAction?.Action);
 
                 OnPropertyChanged();
@@ -60,7 +60,7 @@ namespace MassiveKnob.ViewModel
 
                 if (actionSettingsControl is IDisposable disposable)
                     disposable.Dispose();
-                
+
                 actionSettingsControl = value;
                 OnPropertyChanged();
             }
@@ -91,6 +91,7 @@ namespace MassiveKnob.ViewModel
         private readonly IDisposable digitalToAnalogChangedSubscription;
 
         private byte digitalToAnalogOn;
+
         public byte DigitalToAnalogOn
         {
             get => digitalToAnalogOn;
@@ -107,6 +108,7 @@ namespace MassiveKnob.ViewModel
 
 
         private byte digitalToAnalogOff;
+
         public byte DigitalToAnalogOff
         {
             get => digitalToAnalogOff;
@@ -123,13 +125,14 @@ namespace MassiveKnob.ViewModel
         // ReSharper restore UnusedMember.Global            
 
 
-        public InputOutputViewModel(SettingsViewModel settingsViewModel, IMassiveKnobOrchestrator orchestrator, MassiveKnobActionType actionType, int index)
+        public InputOutputViewModel(SettingsViewModel settingsViewModel, IMassiveKnobOrchestrator orchestrator,
+            MassiveKnobActionType actionType, int index)
         {
             this.orchestrator = orchestrator;
             this.actionType = actionType;
             this.index = index;
-            
-            
+
+
             // For design-time support
             if (orchestrator == null)
             {
@@ -142,7 +145,7 @@ namespace MassiveKnob.ViewModel
             {
                 if (actionViewModel.RepresentsNull)
                     return true;
-                        
+
                 if (actionViewModel.Action.ActionType == actionType)
                     return true;
 
@@ -150,12 +153,12 @@ namespace MassiveKnob.ViewModel
                 return actionType == MassiveKnobActionType.OutputAnalog &&
                        actionViewModel.Action.ActionType == MassiveKnobActionType.OutputDigital;
             }
-            
-            
+
+
             Actions = settingsViewModel.Actions.Where(AllowAction).ToList();
 
             var actionInfo = orchestrator.GetAction(actionType, index);
-            
+
             selectedAction = actionInfo != null
                 ? Actions.SingleOrDefault(a => !a.RepresentsNull && a.Action.ActionId == actionInfo.Info.ActionId)
                 : Actions.Single(a => a.RepresentsNull);
@@ -163,9 +166,9 @@ namespace MassiveKnob.ViewModel
             actionSettingsControl = actionInfo?.Instance.CreateSettingsControl();
 
 
-            if (actionType != MassiveKnobActionType.OutputAnalog) 
+            if (actionType != MassiveKnobActionType.OutputAnalog)
                 return;
-            
+
             var digitalToAnalogSettings = orchestrator.GetDigitalToAnalogSettings(index);
             digitalToAnalogOn = digitalToAnalogSettings.OnValue;
             digitalToAnalogOff = digitalToAnalogSettings.OffValue;
