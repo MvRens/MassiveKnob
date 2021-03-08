@@ -1,0 +1,49 @@
+﻿<UserControl x:Class="MassiveKnob.View.Settings.DeviceView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:viewModel="clr-namespace:MassiveKnob.ViewModel"
+             xmlns:helpers="clr-namespace:MassiveKnob.Helpers"
+             mc:Ignorable="d" 
+             d:DesignHeight="200" d:DesignWidth="800"
+             d:DataContext="{d:DesignInstance Type=viewModel:SettingsViewModelDesignTime, IsDesignTimeCreatable=True}">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="../../Style.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <DataTemplate x:Key="DeviceDropdownItem">
+                <StackPanel Orientation="Vertical" d:DataContext="{d:DesignInstance Type=viewModel:DeviceViewModel}">
+                    <TextBlock Text="{Binding Name}" />
+                    <TextBlock Text="{Binding Description}" Style="{StaticResource ComboBoxDescription}" Visibility="{Binding DescriptionVisibility}" />
+                </StackPanel>
+            </DataTemplate>
+
+            <DataTemplate x:Key="DeviceSelectedItem">
+                <TextBlock Text="{Binding Name}" d:DataContext="{d:DesignInstance Type=viewModel:DeviceViewModel}" />
+            </DataTemplate>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <StackPanel Orientation="Vertical" SnapsToDevicePixels="True" UseLayoutRounding="True"  TextOptions.TextFormattingMode="Display">
+        <StackPanel Orientation="Vertical" Style="{StaticResource Content}">
+            <ComboBox 
+                ItemsSource="{Binding Devices}" 
+                SelectedItem="{Binding SelectedDevice}"
+                IsSynchronizedWithCurrentItem="False" 
+                ItemTemplateSelector="{helpers:ComboBoxTemplateSelector 
+                        SelectedItemTemplate={StaticResource DeviceSelectedItem},
+                        DropdownItemsTemplate={StaticResource DeviceDropdownItem}}" />
+
+
+            <ContentControl Focusable="False" Content="{Binding SettingsControl}" Style="{StaticResource SettingsControl}" />
+
+            <StackPanel Margin="0,24,0,0" Orientation="Horizontal">
+                <Ellipse Margin="0,0,4,0" Fill="{Binding ConnectionStatusColor}" Height="8" Width="8" />
+                <TextBlock Text="{Binding ConnectionStatusText}" />
+            </StackPanel>
+        </StackPanel>
+    </StackPanel>
+</UserControl>
