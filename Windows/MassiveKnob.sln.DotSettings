@@ -4,4 +4,6 @@
 	<s:String x:Key="/Default/CodeStyle/Naming/CSharpNaming/Abbreviations/=OSD/@EntryIndexedValue">OSD</s:String>
 	<s:String x:Key="/Default/CodeStyle/Naming/CSharpNaming/Abbreviations/=SOF/@EntryIndexedValue">SOF</s:String>
 	<s:String x:Key="/Default/CodeStyle/Naming/CSharpNaming/Abbreviations/=UI/@EntryIndexedValue">UI</s:String>
-	<s:String x:Key="/Default/CodeStyle/Naming/XamlNaming/Abbreviations/=OSD/@EntryIndexedValue">OSD</s:String></wpf:ResourceDictionary>
+	<s:String x:Key="/Default/CodeStyle/Naming/XamlNaming/Abbreviations/=OSD/@EntryIndexedValue">OSD</s:String>
+	<s:Boolean x:Key="/Default/Housekeeping/ExcludedProjects/ProjectMasksToIgnore/=Voicemeeter/@EntryIndexedValue">False</s:Boolean>
+	<s:Boolean x:Key="/Default/Housekeeping/ExcludedProjects/ProjectMasksToIgnore/=Voicemeeter_002Ecsproj/@EntryIndexedValue">True</s:Boolean></wpf:ResourceDictionary>

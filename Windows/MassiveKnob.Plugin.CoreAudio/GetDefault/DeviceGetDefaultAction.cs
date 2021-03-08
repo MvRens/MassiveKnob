@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Windows.Controls;
 using AudioSwitcher.AudioApi;
-using MassiveKnob.Plugin.CoreAudio.OSD;
 using Microsoft.Extensions.Logging;
 
 namespace MassiveKnob.Plugin.CoreAudio.GetDefault
@@ -93,9 +92,11 @@ namespace MassiveKnob.Plugin.CoreAudio.GetDefault
                 if (playbackDevice == null)
                     return;
 
+                // ReSharper disable ArrangeRedundantParentheses - maybe, but way easier to read
                 var isDefault = (settings.Playback && playbackDevice.IsDefaultDevice) ||
                                 (settings.Communications && playbackDevice.IsDefaultCommunicationsDevice);
-                
+                // ReSharper restore ArrangeRedundantParentheses
+
                 actionContext.SetDigitalOutput(settings.Inverted ? !isDefault : isDefault);
             }
         }

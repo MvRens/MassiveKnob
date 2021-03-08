@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Runtime.Remoting.Channels;
 using System.Windows.Controls;
 using Microsoft.Extensions.Logging;
 using Voicemeeter;

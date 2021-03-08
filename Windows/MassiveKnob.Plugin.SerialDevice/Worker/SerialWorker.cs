@@ -43,6 +43,16 @@ namespace MassiveKnob.Plugin.SerialDevice.Worker
         
         public void Dispose()
         {
+            IMINProtocol instance;
+
+            lock (minProtocolLock)
+            {
+                instance = minProtocol;
+            }
+
+            if (instance != null)
+                Task.WaitAny(new [] { instance.QueueFrame((byte) MassiveKnobFrameID.Quit, Array.Empty<byte>()) }, 500);
+
             Disconnect();
         }
         

@@ -48,8 +48,8 @@ namespace MassiveKnob.ViewModel
         private IEnumerable<InputOutputViewModel> analogOutputs;
         private IEnumerable<InputOutputViewModel> digitalOutputs;
 
-        private IDisposable activeDeviceSubscription;
-        private IDisposable deviceStatusSubscription;
+        private readonly IDisposable activeDeviceSubscription;
+        private readonly IDisposable deviceStatusSubscription;
 
         // ReSharper disable UnusedMember.Global - used by WPF Binding
         public SettingsMenuItem SelectedMenuItem
@@ -393,7 +393,7 @@ namespace MassiveKnob.ViewModel
                 new LoggingLevelViewModel(LogEventLevel.Error, Strings.LoggingLevelError, Strings.LoggingLevelErrorDescription),
                 new LoggingLevelViewModel(LogEventLevel.Warning, Strings.LoggingLevelWarning, Strings.LoggingLevelWarningDescription),
                 new LoggingLevelViewModel(LogEventLevel.Information, Strings.LoggingLevelInformation, Strings.LoggingLevelInformationDescription),
-                new LoggingLevelViewModel(LogEventLevel.Verbose, Strings.LoggingLevelVerbose, Strings.LoggingLevelVerboseDescription),
+                new LoggingLevelViewModel(LogEventLevel.Verbose, Strings.LoggingLevelVerbose, Strings.LoggingLevelVerboseDescription)
             };
 
             selectedLoggingLevel = LoggingLevels.SingleOrDefault(l => l.Level == logSettings.Level)
@@ -415,6 +415,9 @@ namespace MassiveKnob.ViewModel
             DisposeInputOutputViewModels(DigitalInputs);
             DisposeInputOutputViewModels(AnalogOutputs);
             DisposeInputOutputViewModels(DigitalOutputs);
+            
+            activeDeviceSubscription?.Dispose();
+            deviceStatusSubscription?.Dispose();
         }
 
 

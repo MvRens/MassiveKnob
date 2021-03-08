@@ -5,7 +5,7 @@ using MassiveKnob.Plugin.VoiceMeeter.Base;
 
 namespace MassiveKnob.Plugin.VoiceMeeter.RunMacro
 {
-    public class VoiceMeeterRunMacroActionSettingsViewModel : BaseVoiceMeeterSettingsViewModel<VoiceMeeterRunMacroActionSettings>, IDisposable
+    public class VoiceMeeterRunMacroActionSettingsViewModel : BaseVoiceMeeterSettingsViewModel<VoiceMeeterRunMacroActionSettings>
     {
         private readonly Subject<bool> throttledScriptChanged = new Subject<bool>();
         private readonly IDisposable scriptChangedSubscription;

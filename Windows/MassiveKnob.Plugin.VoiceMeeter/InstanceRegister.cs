@@ -142,7 +142,7 @@ namespace MassiveKnob.Plugin.VoiceMeeter
             
             public void Dispose()
             {
-                InstanceRegister.RemoveParameterSubscriber(action);
+                RemoveParameterSubscriber(action);
             }
         }
     }

@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace MassiveKnob.Plugin.VoiceMeeter.Base
+﻿namespace MassiveKnob.Plugin.VoiceMeeter.Base
 {
     /// <summary>
     /// Interaction logic for BaseVoiceMeeterSettingsView.xaml

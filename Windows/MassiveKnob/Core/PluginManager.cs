@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -278,6 +277,7 @@ namespace MassiveKnob.Core
 
         private class PluginMetadata
         {
+            // ReSharper disable once UnusedAutoPropertyAccessor.Local - for JSON deserialization
             public string EntryAssembly { get; set; }
         }
     }

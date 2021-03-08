@@ -174,7 +174,7 @@ namespace MassiveKnob.ViewModel
                 .Throttle(TimeSpan.FromMilliseconds(250))
                 .Subscribe(b =>
                 {
-                    orchestrator?.UpdateDigitalToAnalogSettings(index, settings =>
+                    orchestrator.UpdateDigitalToAnalogSettings(index, settings =>
                     {
                         settings.OnValue = digitalToAnalogOn;
                         settings.OffValue = digitalToAnalogOff;
