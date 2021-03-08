@@ -44,15 +44,17 @@ namespace MassiveKnob.Plugin.CoreAudio.GetVolume
 
             private void ApplySettings()
             {
-                if (playbackDevice != null && playbackDevice.Id == settings.DeviceId)
-                    return;
-                
-                var coreAudioController = CoreAudioControllerInstance.Acquire();
-                playbackDevice = settings.DeviceId.HasValue ? coreAudioController.GetDevice(settings.DeviceId.Value) : null;
+                if (playbackDevice == null || playbackDevice.Id != settings.DeviceId)
+                {
+                    var coreAudioController = CoreAudioControllerInstance.Acquire();
+                    playbackDevice = settings.DeviceId.HasValue
+                        ? coreAudioController.GetDevice(settings.DeviceId.Value)
+                        : null;
 
-                deviceChanged?.Dispose();
-                deviceChanged = playbackDevice?.VolumeChanged.Subscribe(VolumeChanged);
-                
+                    deviceChanged?.Dispose();
+                    deviceChanged = playbackDevice?.VolumeChanged.Subscribe(VolumeChanged);
+                }
+
                 if (playbackDevice != null)
                     actionContext.SetAnalogOutput((byte)playbackDevice.Volume);
             }

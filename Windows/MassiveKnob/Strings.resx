@@ -129,6 +129,15 @@
   <data name="DeviceStatusDisconnected" xml:space="preserve">
     <value>Disconnected</value>
   </data>
+  <data name="DigitalToAnalogDescription" xml:space="preserve">
+    <value>You are assigning a digital action to an analog output. Please specify how you want to represent the on and off values.</value>
+  </data>
+  <data name="DigitalToAnalogOff" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="DigitalToAnalogOn" xml:space="preserve">
+    <value>On</value>
+  </data>
   <data name="InputHeader" xml:space="preserve">
     <value>Input #{0}</value>
   </data>

@@ -26,7 +26,6 @@ namespace MassiveKnob.Plugin.VoiceMeeter.GetParameter
             private IMassiveKnobActionContext actionContext;
             private VoiceMeeterGetParameterActionSettings settings;
             private VoiceMeeterGetParameterActionSettingsViewModel viewModel;
-            private Parameters parameters;
             private IDisposable parameterChanged;
 
 
@@ -44,7 +43,6 @@ namespace MassiveKnob.Plugin.VoiceMeeter.GetParameter
             {
                 InstanceRegister.Unregister(this);
                 parameterChanged?.Dispose();
-                parameters?.Dispose();
             }
 
 
@@ -54,17 +52,11 @@ namespace MassiveKnob.Plugin.VoiceMeeter.GetParameter
                 {
                     parameterChanged?.Dispose();
                     parameterChanged = null;
-
-                    parameters?.Dispose();
-                    parameters = null;
                     return;
                 }
 
-                if (parameters == null)
-                    parameters = new Parameters();
-
                 if (parameterChanged == null)
-                    parameterChanged = parameters.Subscribe(x => ParametersChanged());
+                    parameterChanged = InstanceRegister.SubscribeToParameterChanges(ParametersChanged);
 
                 ParametersChanged();
             }

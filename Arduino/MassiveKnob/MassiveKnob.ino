@@ -5,13 +5,15 @@
  * 
  */
 // Set this to the number of potentiometers you have connected
-const byte AnalogInputCount = 3;
+const byte AnalogInputCount = 2;
 
 // Set this to the number of buttons you have connected
-const byte DigitalInputCount = 0;
+const byte DigitalInputCount = 3;
 
-// Not supported yet - maybe PWM and/or other means of analog output?
-const byte AnalogOutputCount = 0;
+// Set this to the number of PWM outputs you have connected
+// Note that this version of the sketch only does a simple analogWrite with the full range,
+// which is not compatible with servos. Modify as required.
+const byte AnalogOutputCount = 3;
 
 // Set this to the number of digital outputs you have connected
 const byte DigitalOutputCount = 0;
@@ -20,13 +22,26 @@ const byte DigitalOutputCount = 0;
 // For each potentiometer, specify the pin
 const byte AnalogInputPin[AnalogInputCount] = {
   A0,
-  A1,
-  A2
+  A1
 };
 
 // For each button, specify the pin. Assumes pull-up.
 const byte DigitalInputPin[DigitalInputCount] = {
+  7,
+  8,
+  9
 };
+
+// For each analog output, specify the PWM capable pin
+const byte AnalogOutputPin[AnalogOutputCount] = {
+  3,
+  5,
+  6
+};
+
+// Define this constant to apply a standard LED brightness curve to (all) analog outputs
+#define AnalogOutputGammaCorrection
+
 
 // For each digital output, specify the pin
 const byte DigitalOutputPin[DigitalOutputCount] = {
@@ -107,7 +122,7 @@ struct DigitalInputStatus
 
 
 struct AnalogInputStatus analogInputStatus[AnalogInputCount];
-struct DigitalInputStatus digitalInputStatus[AnalogInputCount];
+struct DigitalInputStatus digitalInputStatus[DigitalInputCount];
 
 
 void setup() 
@@ -141,6 +156,13 @@ void setup()
   {
     analogInputStatus[i].Value = getAnalogValue(i);
     analogInputStatus[i].LastChange = millis();
+  }
+
+  // Set up analog outputs
+  for (byte i = 0; i < AnalogOutputCount; i++)
+  {
+    pinMode(AnalogOutputPin[i], OUTPUT);
+    analogWrite(AnalogOutputPin[i], 0);
   }
 
 
@@ -179,6 +201,27 @@ unsigned long focusOutputTime;
 
 #define IsAnalogInputFocus(i) ((focusType == FocusInputType.AnalogInput) && (focusInputIndex == i))
 #define IsDigitalInputFocus(i) ((focusType == FocusInputType.DigitalInput) && (focusInputIndex == i))
+
+
+#ifdef AnalogOutputGammaCorrection
+const uint8_t PROGMEM gamma8[] = {
+    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  1,  1,  1,
+    1,  1,  1,  1,  1,  1,  1,  1,  1,  2,  2,  2,  2,  2,  2,  2,
+    2,  3,  3,  3,  3,  3,  3,  3,  4,  4,  4,  4,  4,  5,  5,  5,
+    5,  6,  6,  6,  6,  7,  7,  7,  7,  8,  8,  8,  9,  9,  9, 10,
+   10, 10, 11, 11, 11, 12, 12, 13, 13, 13, 14, 14, 15, 15, 16, 16,
+   17, 17, 18, 18, 19, 19, 20, 20, 21, 21, 22, 22, 23, 24, 24, 25,
+   25, 26, 27, 27, 28, 29, 29, 30, 31, 32, 32, 33, 34, 35, 35, 36,
+   37, 38, 39, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 50,
+   51, 52, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 66, 67, 68,
+   69, 70, 72, 73, 74, 75, 77, 78, 79, 81, 82, 83, 85, 86, 87, 89,
+   90, 92, 93, 95, 96, 98, 99,101,102,104,105,107,109,110,112,114,
+  115,117,119,120,122,124,126,127,129,131,133,135,137,138,140,142,
+  144,146,148,150,152,154,156,158,160,162,164,167,169,171,173,175,
+  177,180,182,184,186,189,191,193,196,198,200,203,205,208,210,213,
+  215,218,220,223,225,228,231,233,236,239,241,244,247,249,252,255 };
+#endif
 
 
 void loop() 
@@ -291,6 +334,8 @@ void loop()
     }
 
     Serial.println();
+
+    lastOutput = millis();
   }
   #endif
 }
@@ -306,7 +351,7 @@ void min_application_handler(uint8_t min_id, uint8_t *min_payload, uint8_t len_p
       break;
       
     case FrameIDAnalogOutput:
-      //processAnalogOutputMessage();
+      processAnalogOutputMessage(min_payload, len_payload);
       break;
       
     case FrameIDDigitalOutput:
@@ -363,6 +408,36 @@ void processDigitalOutputMessage(uint8_t *min_payload, uint8_t len_payload)
     outputError("Invalid digital output index: " + String(outputIndex));
 }
 
+
+void processAnalogOutputMessage(uint8_t *min_payload, uint8_t len_payload)
+{
+  if (len_payload < 2)
+  {
+    outputError("Invalid analog output payload length");
+    return;
+  }
+
+  byte outputIndex = min_payload[0];
+  if (outputIndex < AnalogOutputCount)
+  {
+    byte value = min_payload[1];
+    if (value > 100)
+      value = 100;
+
+    value = map(value, 0, 100, 0, 255);
+
+    #ifdef AnalogOutputGammaCorrection
+    value = pgm_read_byte(&gamma8[value]);
+    #endif
+    
+    analogWrite(AnalogOutputPin[min_payload[0]], value);
+
+    focusType = FocusTypeOutput;
+    focusOutputTime = millis();
+  }
+  else
+    outputError("Invalid analog output index: " + String(outputIndex));
+}
 
 void processQuitMessage()
 { 

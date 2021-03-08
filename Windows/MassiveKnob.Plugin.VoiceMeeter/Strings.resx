@@ -121,7 +121,7 @@
     <value>Turns the output on if the specified parameter equals the specified value.</value>
   </data>
   <data name="GetParameterName" xml:space="preserve">
-    <value>Get parameter</value>
+    <value>VoiceMeeter: Get parameter</value>
   </data>
   <data name="PluginDescription" xml:space="preserve">
     <value>Provides actions to run VoiceMeeter macros or check the current state.</value>
@@ -133,7 +133,7 @@
     <value>Runs a VoiceMeeter macro when the input turns on.</value>
   </data>
   <data name="RunMacroName" xml:space="preserve">
-    <value>Run macro</value>
+    <value>VoiceMeeter: Run macro</value>
   </data>
   <data name="SettingGetParameterInverted" xml:space="preserve">
     <value>Inverted (on if the parameter does not equal the value)</value>

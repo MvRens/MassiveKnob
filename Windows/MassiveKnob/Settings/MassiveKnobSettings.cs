@@ -89,6 +89,7 @@ namespace MassiveKnob.Settings
         {
             public Guid ActionId { get; set; }
             public JObject Settings { get; set; }
+            public DigitalToAnalogSettings DigitalToAnalog { get; set; }
 
             public ActionSettings Clone()
             {
@@ -97,7 +98,25 @@ namespace MassiveKnob.Settings
                     ActionId = ActionId,
 
                     // This is safe, as the JObject itself is never manipulated, only replaced
-                    Settings = Settings
+                    Settings = Settings,
+                    
+                    DigitalToAnalog = DigitalToAnalog?.Clone()
+                };
+            }
+        }
+
+
+        public class DigitalToAnalogSettings
+        {
+            public byte OffValue { get; set; }
+            public byte OnValue { get; set; } = 100;
+            
+            public DigitalToAnalogSettings Clone()
+            {
+                return new DigitalToAnalogSettings
+                {
+                    OffValue = OffValue,
+                    OnValue = OnValue
                 };
             }
         }

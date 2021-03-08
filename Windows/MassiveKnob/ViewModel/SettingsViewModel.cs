@@ -348,7 +348,13 @@ namespace MassiveKnob.ViewModel
             
             SelectedMenuItem = activeMenuItem;
 
-            activeDeviceSubscription = orchestrator.ActiveDeviceSubject.Subscribe(info => { Specs = info.Specs; });
+            activeDeviceSubscription = orchestrator.ActiveDeviceSubject.Subscribe(info =>
+            {
+                Application.Current?.Dispatcher.Invoke(() =>
+                {
+                    Specs = info.Specs;
+                });
+            });
             deviceStatusSubscription = orchestrator.DeviceStatusSubject.Subscribe(status =>
             {
                 OnDependantPropertyChanged(nameof(ConnectionStatusColor));

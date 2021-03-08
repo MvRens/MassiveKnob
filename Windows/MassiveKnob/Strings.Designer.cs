@@ -97,6 +97,33 @@ namespace MassiveKnob {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to You are assigning a digital action to an analog output. Please specify how you want to represent the on and off values..
+        /// </summary>
+        public static string DigitalToAnalogDescription {
+            get {
+                return ResourceManager.GetString("DigitalToAnalogDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Off.
+        /// </summary>
+        public static string DigitalToAnalogOff {
+            get {
+                return ResourceManager.GetString("DigitalToAnalogOff", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to On.
+        /// </summary>
+        public static string DigitalToAnalogOn {
+            get {
+                return ResourceManager.GetString("DigitalToAnalogOn", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Input #{0}.
         /// </summary>
         public static string InputHeader {

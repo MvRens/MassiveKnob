@@ -18,6 +18,9 @@ namespace MassiveKnob.Core
         MassiveKnobActionInfo GetAction(MassiveKnobActionType actionType, int index);
         MassiveKnobActionInfo SetAction(MassiveKnobActionType actionType, int index, IMassiveKnobAction action);
 
+        MassiveKnobSettings.DigitalToAnalogSettings GetDigitalToAnalogSettings(int analogOutputIndex);
+        void UpdateDigitalToAnalogSettings(int analogOutputIndex, Action<MassiveKnobSettings.DigitalToAnalogSettings> applyChanges);
+
         MassiveKnobSettings GetSettings();
         void UpdateSettings(Action<MassiveKnobSettings> applyChanges);
     }

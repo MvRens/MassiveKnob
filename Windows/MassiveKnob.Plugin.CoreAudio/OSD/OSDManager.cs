@@ -15,7 +15,7 @@ namespace MassiveKnob.Plugin.CoreAudio.OSD
 
         public static void Show(IDevice device)
         {
-            Application.Current.Dispatcher.Invoke(() =>
+            Application.Current?.Dispatcher.Invoke(() =>
             {
                 if (window == null)
                 {
@@ -41,9 +41,11 @@ namespace MassiveKnob.Plugin.CoreAudio.OSD
         {
             hideTimer?.Dispose();
             hideTimer = null;
+
+            window = null;
         }
 
-        
+
         private static void Hide()
         {
             Application.Current?.Dispatcher.Invoke(() =>

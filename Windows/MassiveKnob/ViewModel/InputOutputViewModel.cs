@@ -2,7 +2,10 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Runtime.CompilerServices;
+using System.Windows;
 using System.Windows.Controls;
 using MassiveKnob.Core;
 using MassiveKnob.Plugin;
@@ -41,6 +44,7 @@ namespace MassiveKnob.ViewModel
                 var actionInfo = orchestrator.SetAction(actionType, index, selectedAction?.Action);
 
                 OnPropertyChanged();
+                OnDependantPropertyChanged(nameof(DigitalToAnalogVisibility));
 
                 ActionSettingsControl = actionInfo?.Instance.CreateSettingsControl();
             }
@@ -61,6 +65,61 @@ namespace MassiveKnob.ViewModel
                 OnPropertyChanged();
             }
         }
+
+        public Visibility DigitalToAnalogVisibility
+        {
+            get
+            {
+                // Design-time support
+                if (orchestrator == null)
+                    return Visibility.Visible;
+
+                if (actionType != MassiveKnobActionType.OutputAnalog)
+                    return Visibility.Collapsed;
+
+                if (SelectedAction == null || SelectedAction.RepresentsNull)
+                    return Visibility.Collapsed;
+
+                return SelectedAction.Action.ActionType == MassiveKnobActionType.OutputDigital
+                    ? Visibility.Visible
+                    : Visibility.Collapsed;
+            }
+        }
+
+
+        private readonly Subject<bool> throttledDigitalToAnalogChanged = new Subject<bool>();
+        private readonly IDisposable digitalToAnalogChangedSubscription;
+
+        private byte digitalToAnalogOn;
+        public byte DigitalToAnalogOn
+        {
+            get => digitalToAnalogOn;
+            set
+            {
+                if (actionType != MassiveKnobActionType.OutputAnalog || value == digitalToAnalogOn)
+                    return;
+
+                digitalToAnalogOn = value;
+                OnPropertyChanged();
+                throttledDigitalToAnalogChanged.OnNext(true);
+            }
+        }
+
+
+        private byte digitalToAnalogOff;
+        public byte DigitalToAnalogOff
+        {
+            get => digitalToAnalogOff;
+            set
+            {
+                if (actionType != MassiveKnobActionType.OutputAnalog || value == digitalToAnalogOff)
+                    return;
+
+                digitalToAnalogOff = value;
+                OnPropertyChanged();
+                throttledDigitalToAnalogChanged.OnNext(true);
+            }
+        }
         // ReSharper restore UnusedMember.Global            
 
 
@@ -73,10 +132,27 @@ namespace MassiveKnob.ViewModel
             
             // For design-time support
             if (orchestrator == null)
+            {
+                DigitalToAnalogOn = 100;
                 return;
+            }
 
 
-            Actions = settingsViewModel.Actions.Where(a => a.RepresentsNull || a.Action.ActionType == actionType).ToList();
+            bool AllowAction(ActionViewModel actionViewModel)
+            {
+                if (actionViewModel.RepresentsNull)
+                    return true;
+                        
+                if (actionViewModel.Action.ActionType == actionType)
+                    return true;
+
+                // Allow digital actions to be assigned to analog outputs, extra conversion settings will be shown
+                return actionType == MassiveKnobActionType.OutputAnalog &&
+                       actionViewModel.Action.ActionType == MassiveKnobActionType.OutputDigital;
+            }
+            
+            
+            Actions = settingsViewModel.Actions.Where(AllowAction).ToList();
 
             var actionInfo = orchestrator.GetAction(actionType, index);
             
@@ -85,13 +161,35 @@ namespace MassiveKnob.ViewModel
                 : Actions.Single(a => a.RepresentsNull);
 
             actionSettingsControl = actionInfo?.Instance.CreateSettingsControl();
+
+
+            if (actionType != MassiveKnobActionType.OutputAnalog) 
+                return;
+            
+            var digitalToAnalogSettings = orchestrator.GetDigitalToAnalogSettings(index);
+            digitalToAnalogOn = digitalToAnalogSettings.OnValue;
+            digitalToAnalogOff = digitalToAnalogSettings.OffValue;
+
+            digitalToAnalogChangedSubscription = throttledDigitalToAnalogChanged
+                .Throttle(TimeSpan.FromMilliseconds(250))
+                .Subscribe(b =>
+                {
+                    orchestrator?.UpdateDigitalToAnalogSettings(index, settings =>
+                    {
+                        settings.OnValue = digitalToAnalogOn;
+                        settings.OffValue = digitalToAnalogOff;
+                    });
+                });
         }
 
-        
+
         public void Dispose()
         {
             if (ActionSettingsControl is IDisposable disposable)
                 disposable.Dispose();
+
+            digitalToAnalogChangedSubscription?.Dispose();
+            throttledDigitalToAnalogChanged.Dispose();
         }
 
 
@@ -100,6 +198,19 @@ namespace MassiveKnob.ViewModel
         protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        protected virtual void OnDependantPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+    }
+
+
+    public class InputOutputViewModelDesignTime : InputOutputViewModel
+    {
+        public InputOutputViewModelDesignTime() : base(null, null, MassiveKnobActionType.OutputAnalog, 0)
+        {
         }
     }
 }

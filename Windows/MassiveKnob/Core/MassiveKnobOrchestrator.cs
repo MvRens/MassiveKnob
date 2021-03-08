@@ -32,6 +32,7 @@ namespace MassiveKnob.Core
 
         private readonly Dictionary<int, byte> analogOutputValues = new Dictionary<int, byte>();
         private readonly Dictionary<int, bool> digitalOutputValues = new Dictionary<int, bool>();
+        private readonly Dictionary<int, bool> digitalToAnalogOutputValues = new Dictionary<int, bool>();
 
 
         public MassiveKnobDeviceInfo ActiveDevice
@@ -150,7 +151,7 @@ namespace MassiveKnob.Core
 
 
             Action initializeAfterRegistration = null;
-            var mapping = CreateActionMapping(action, index, (actionInstance, actionContext) =>
+            var mapping = CreateActionMapping(actionType, action, index, (actionInstance, actionContext) =>
             {
                 initializeAfterRegistration = () => actionInstance.Initialize(actionContext);
             });
@@ -165,7 +166,44 @@ namespace MassiveKnob.Core
             return mapping?.ActionInfo;
         }
 
+
+        public MassiveKnobSettings.DigitalToAnalogSettings GetDigitalToAnalogSettings(int analogOutputIndex)
+        {
+            lock (settingsLock)
+            {
+                var settingsList = GetActionSettingsList(MassiveKnobActionType.OutputAnalog);
+                if (analogOutputIndex  >= settingsList.Count)
+                    return new MassiveKnobSettings.DigitalToAnalogSettings();
+
+                return settingsList[analogOutputIndex].DigitalToAnalog?.Clone() ?? new MassiveKnobSettings.DigitalToAnalogSettings();
+            }
+        }
+
         
+        public void UpdateDigitalToAnalogSettings(int analogOutputIndex, Action<MassiveKnobSettings.DigitalToAnalogSettings> applyChanges)
+        {
+            lock (settingsLock)
+            {
+                var settingsList = GetActionSettingsList(MassiveKnobActionType.OutputAnalog);
+                while (analogOutputIndex >= settingsList.Count)
+                    settingsList.Add(null);
+
+                if (settingsList[analogOutputIndex] == null)
+                    settingsList[analogOutputIndex] = new MassiveKnobSettings.ActionSettings();
+
+                if (settingsList[analogOutputIndex].DigitalToAnalog == null)
+                    settingsList[analogOutputIndex].DigitalToAnalog = new MassiveKnobSettings.DigitalToAnalogSettings();
+
+                applyChanges(settingsList[analogOutputIndex].DigitalToAnalog);
+            }
+            
+            FlushSettings();
+            
+            if (digitalToAnalogOutputValues.TryGetValue(analogOutputIndex, out var on))
+                SetDigitalToAnalogOutput(null, analogOutputIndex, on, true);
+        }
+
+
         public MassiveKnobSettings GetSettings()
         {
             lock (settingsLock)
@@ -214,7 +252,6 @@ namespace MassiveKnob.Core
             ActiveDevice?.Instance.Dispose();
             SetDeviceStatus(null, MassiveKnobDeviceStatus.Disconnected);
 
-            // TODO (must have) move initialization to separate Task, to prevent issues at startup
             // TODO (must have) exception handling!
             if (device != null)
             {
@@ -373,13 +410,13 @@ namespace MassiveKnob.Core
         }
 
 
-        public void SetAnalogOutput(IMassiveKnobActionContext context, int index, byte value)
+        public void SetAnalogOutput(IMassiveKnobActionContext context, int index, byte value, bool force)
         {
             IMassiveKnobDeviceInstance deviceInstance;
 
             lock (settingsLock)
             {
-                if (analogOutputValues.TryGetValue(index, out var currentValue) && currentValue == value)
+                if (!force && analogOutputValues.TryGetValue(index, out var currentValue) && currentValue == value)
                     return;
 
                 analogOutputValues[index] = value;
@@ -402,13 +439,49 @@ namespace MassiveKnob.Core
         }
 
 
-        public void SetDigitalOutput(IMassiveKnobActionContext context, int index, bool on)
+        public void SetDigitalToAnalogOutput(IMassiveKnobActionContext context, int index, bool on, bool force)
+        {
+            IMassiveKnobDeviceInstance deviceInstance;
+            MassiveKnobSettings.DigitalToAnalogSettings digitalToAnalogSettings = null;
+
+            lock (settingsLock)
+            {
+                if (!force && digitalToAnalogOutputValues.TryGetValue(index, out var currentValue) && currentValue == on)
+                    return;
+
+                digitalToAnalogOutputValues[index] = on;
+
+
+                if (activeDevice == null)
+                    return;
+
+                var list = GetActionMappingList(MassiveKnobActionType.OutputAnalog);
+                if (index >= list.Count)
+                    return;
+
+                if (context != null && list[index]?.Context != context)
+                    return;
+
+                var settingsList = GetActionSettingsList(MassiveKnobActionType.OutputAnalog);
+                if (index < settingsList.Count)
+                    digitalToAnalogSettings = settingsList[index].DigitalToAnalog;
+
+                deviceInstance = activeDevice.Instance;
+            }
+
+            deviceInstance.SetAnalogOutput(index, on 
+                ? digitalToAnalogSettings?.OnValue ?? 100
+                : digitalToAnalogSettings?.OffValue ?? 0);
+        }
+        
+
+        public void SetDigitalOutput(IMassiveKnobActionContext context, int index, bool on, bool force)
         {
             IMassiveKnobDeviceInstance deviceInstance;
 
             lock (settingsLock)
             {
-                if (digitalOutputValues.TryGetValue(index, out var currentValue) && currentValue == on)
+                if (!force && digitalOutputValues.TryGetValue(index, out var currentValue) && currentValue == on)
                     return;
 
                 digitalOutputValues[index] = on;
@@ -426,7 +499,7 @@ namespace MassiveKnob.Core
 
                 deviceInstance = activeDevice.Instance;
             }
-            
+
             deviceInstance.SetDigitalOutput(index, on);
         }
 
@@ -507,10 +580,10 @@ namespace MassiveKnob.Core
             
             lock (settingsLock)
             {
-                UpdateMapping(analogInputs, specs.AnalogInputCount, settings.AnalogInput, DelayedInitialize);
-                UpdateMapping(digitalInputs, specs.DigitalInputCount, settings.DigitalInput, DelayedInitialize);
-                UpdateMapping(analogOutputs, specs.AnalogOutputCount, settings.AnalogOutput, DelayedInitialize);
-                UpdateMapping(digitalOutputs, specs.DigitalOutputCount, settings.DigitalOutput, DelayedInitialize);
+                UpdateMapping(analogInputs, specs.AnalogInputCount, MassiveKnobActionType.InputAnalog, settings.AnalogInput, DelayedInitialize);
+                UpdateMapping(digitalInputs, specs.DigitalInputCount, MassiveKnobActionType.InputDigital, settings.DigitalInput, DelayedInitialize);
+                UpdateMapping(analogOutputs, specs.AnalogOutputCount, MassiveKnobActionType.OutputAnalog, settings.AnalogOutput, DelayedInitialize);
+                UpdateMapping(digitalOutputs, specs.DigitalOutputCount, MassiveKnobActionType.OutputDigital, settings.DigitalOutput, DelayedInitialize);
             }
 
             foreach (var delayedInitializeAction in delayedInitializeActions)
@@ -525,14 +598,17 @@ namespace MassiveKnob.Core
 
             // Send out all cached values to initialize the device's outputs
             foreach (var pair in analogOutputValues.Where(pair => pair.Key < specs.AnalogOutputCount))
-                SetAnalogOutput(null, pair.Key, pair.Value);
+                SetAnalogOutput(null, pair.Key, pair.Value, true);
 
             foreach (var pair in digitalOutputValues.Where(pair => pair.Key < specs.DigitalOutputCount))
-                SetDigitalOutput(null, pair.Key, pair.Value);
+                SetDigitalOutput(null, pair.Key, pair.Value, true);
+
+            foreach (var pair in digitalToAnalogOutputValues.Where(pair => pair.Key < specs.AnalogOutputCount))
+                SetDigitalToAnalogOutput(null, pair.Key, pair.Value, true);
         }
 
 
-        private void UpdateMapping(List<ActionMapping> mapping, int newCount, List<MassiveKnobSettings.ActionSettings> actionSettings, Action<IMassiveKnobActionInstance, IMassiveKnobActionContext> initializeOutsideLock)
+        private void UpdateMapping(List<ActionMapping> mapping, int newCount, MassiveKnobActionType assignedActionType, List<MassiveKnobSettings.ActionSettings> actionSettings, Action<IMassiveKnobActionInstance, IMassiveKnobActionContext> initializeOutsideLock)
         {
             if (mapping.Count > newCount)
             {
@@ -555,7 +631,7 @@ namespace MassiveKnob.Core
                     if (actionIndex < actionSettings.Count && actionSettings[actionIndex] != null)
                     {
                         var action = allActions.FirstOrDefault(d => d.ActionId == actionSettings[actionIndex].ActionId);
-                        mapping.Add(CreateActionMapping(action, actionIndex, initializeOutsideLock));
+                        mapping.Add(CreateActionMapping(assignedActionType, action, actionIndex, initializeOutsideLock));
                     }
                     else
                         mapping.Add(null);
@@ -564,7 +640,7 @@ namespace MassiveKnob.Core
         }
 
 
-        private ActionMapping CreateActionMapping(IMassiveKnobAction action, int index, Action<IMassiveKnobActionInstance, IMassiveKnobActionContext> initialize)
+        private ActionMapping CreateActionMapping(MassiveKnobActionType assignedActionType, IMassiveKnobAction action, int index, Action<IMassiveKnobActionInstance, IMassiveKnobActionContext> initialize)
         {
             if (action == null)
                 return null;
@@ -573,12 +649,12 @@ namespace MassiveKnob.Core
                 new
                 {
                     Action = action.ActionId,
-                    action.ActionType,
+                    ActionType = assignedActionType,
                     Index = index
                 });
             
             var instance = action.Create(new SerilogLoggerProvider(actionLogger).CreateLogger(null));
-            var context = new ActionContext(this, action, index);
+            var context = new ActionContext(this, action, index, assignedActionType);
 
             var mapping = new ActionMapping(new MassiveKnobActionInfo(action, instance), context);
             initialize(instance, context);
@@ -663,13 +739,14 @@ namespace MassiveKnob.Core
             private readonly MassiveKnobOrchestrator owner;
             private readonly IMassiveKnobAction action;
             private readonly int index;
+            private readonly MassiveKnobActionType assignedActionType;
 
-
-            public ActionContext(MassiveKnobOrchestrator owner, IMassiveKnobAction action, int index)
+            public ActionContext(MassiveKnobOrchestrator owner, IMassiveKnobAction action, int index, MassiveKnobActionType assignedActionType)
             {
                 this.owner = owner;
                 this.action = action;
                 this.index = index;
+                this.assignedActionType = assignedActionType;
             }
 
             
@@ -687,13 +764,16 @@ namespace MassiveKnob.Core
             
             public void SetAnalogOutput(byte value)
             {
-                owner.SetAnalogOutput(this, index, value);
+                owner.SetAnalogOutput(this, index, value, false);
             }
             
             
             public void SetDigitalOutput(bool on)
             {
-                owner.SetDigitalOutput(this, index, on);
+                if (assignedActionType == MassiveKnobActionType.OutputAnalog)
+                    owner.SetDigitalToAnalogOutput(this, index, on, false);
+                else
+                    owner.SetDigitalOutput(this, index, on, false);
             }
         }
     }

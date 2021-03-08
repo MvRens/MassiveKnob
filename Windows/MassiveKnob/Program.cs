@@ -23,6 +23,7 @@ namespace MassiveKnob
             loggingSwitch.SetLogging(settings.Log.Enabled, settings.Log.Level);
 
             var logger = new LoggerConfiguration()
+                .MinimumLevel.Verbose()
                 .Filter.ByIncludingOnly(loggingSwitch.IsIncluded)
                 .Enrich.FromLogContext()
                 .WriteTo.File(

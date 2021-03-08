@@ -49,8 +49,6 @@ namespace MassiveKnob.Plugin.SerialDevice.Worker
         
         public void Connect(string portName, int baudRate, bool dtrEnable)
         {
-            context.Connecting();
-            
             lock (minProtocolLock)
             {
                 if (portName == lastPortName && baudRate == lastBaudRate && dtrEnable == lastDtrEnable)
@@ -61,11 +59,12 @@ namespace MassiveKnob.Plugin.SerialDevice.Worker
                 lastDtrEnable = dtrEnable;
 
                 Disconnect();
+                context.Connecting();
 
                 if (string.IsNullOrEmpty(portName) || baudRate == 0)
                     return;
 
-
+                 
                 minProtocol?.Dispose();
                 minProtocol = new MINProtocol(new MINSerialTransport(portName, baudRate, dtrEnable: dtrEnable), logger);
                 minProtocol.OnConnected += MinProtocolOnOnConnected;

@@ -82,7 +82,7 @@ namespace MassiveKnob.Plugin.CoreAudio.Base
                     .Select(PlaybackDeviceViewModel.FromDevice)
                     .ToList();
 
-                Application.Current.Dispatcher.Invoke(() =>
+                Application.Current?.Dispatcher.Invoke(() =>
                 {
                     PlaybackDevices = deviceViewModels;
                     SelectedDevice = deviceViewModels.SingleOrDefault(d => d.Id == settings.DeviceId);

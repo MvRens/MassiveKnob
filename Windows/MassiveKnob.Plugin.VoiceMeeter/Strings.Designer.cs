@@ -70,7 +70,7 @@ namespace MassiveKnob.Plugin.VoiceMeeter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Get parameter.
+        ///   Looks up a localized string similar to VoiceMeeter: Get parameter.
         /// </summary>
         public static string GetParameterName {
             get {
@@ -106,7 +106,7 @@ namespace MassiveKnob.Plugin.VoiceMeeter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Run macro.
+        ///   Looks up a localized string similar to VoiceMeeter: Run macro.
         /// </summary>
         public static string RunMacroName {
             get {
