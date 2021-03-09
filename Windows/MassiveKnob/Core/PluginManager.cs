@@ -34,23 +34,28 @@ namespace MassiveKnob.Core
     public class PluginManager : IPluginManager
     {
         private readonly ILogger logger;
-        private readonly List<IMassiveKnobPlugin> plugins = new List<IMassiveKnobPlugin>();
+        private readonly List<IMassiveKnobPluginInfo> plugins = new List<IMassiveKnobPluginInfo>();
 
 
         public PluginManager(ILogger logger)
         {
             this.logger = logger;
         }
-        
+
+
+        public IEnumerable<IMassiveKnobPluginInfo> GetPlugins()
+        {
+            return plugins;
+        }
 
         public IEnumerable<IMassiveKnobDevicePlugin> GetDevicePlugins()
         {
-            return plugins.Where(p => p is IMassiveKnobDevicePlugin).Cast<IMassiveKnobDevicePlugin>();
+            return plugins.Where(p => p.Plugin is IMassiveKnobDevicePlugin).Select(p => (IMassiveKnobDevicePlugin)p.Plugin);
         }
 
         public IEnumerable<IMassiveKnobActionPlugin> GetActionPlugins()
         {
-            return plugins.Where(p => p is IMassiveKnobActionPlugin).Cast<IMassiveKnobActionPlugin>();
+            return plugins.Where(p => p.Plugin is IMassiveKnobActionPlugin).Select(p => (IMassiveKnobActionPlugin)p.Plugin);
         }
 
 
@@ -190,7 +195,7 @@ namespace MassiveKnob.Core
                 logger.Information("Found plugin with Id {pluginId}: {name}", plugin.PluginId, plugin.Name);
 
                 ValidateRegistration(filename, plugin, registeredIds);
-                plugins.Add((IMassiveKnobPlugin)pluginInstance);
+                plugins.Add(new PluginInfo(filename, (IMassiveKnobPlugin)pluginInstance));
             }
         }
 
@@ -279,6 +284,20 @@ namespace MassiveKnob.Core
         {
             // ReSharper disable once UnusedAutoPropertyAccessor.Local - for JSON deserialization
             public string EntryAssembly { get; set; }
+        }
+
+
+        private class PluginInfo : IMassiveKnobPluginInfo
+        {
+            public string Filename { get; }
+            public IMassiveKnobPlugin Plugin { get; }
+
+            
+            public PluginInfo(string filename, IMassiveKnobPlugin plugin)
+            {
+                Filename = filename;
+                Plugin = plugin;
+            }
         }
     }
 }

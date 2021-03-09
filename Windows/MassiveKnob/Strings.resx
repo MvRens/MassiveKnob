@@ -198,6 +198,9 @@
   <data name="MenuItemLogging" xml:space="preserve">
     <value>Logging</value>
   </data>
+  <data name="MenuItemPlugins" xml:space="preserve">
+    <value>Plugins</value>
+  </data>
   <data name="MenuItemStartup" xml:space="preserve">
     <value>Startup</value>
   </data>

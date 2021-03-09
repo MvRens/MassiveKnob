@@ -125,7 +125,7 @@ namespace MassiveKnob.ViewModel
         // ReSharper restore UnusedMember.Global            
 
 
-        public InputOutputViewModel(SettingsViewModel settingsViewModel, IMassiveKnobOrchestrator orchestrator,
+        public InputOutputViewModel(IEnumerable<ActionViewModel> allActions, IMassiveKnobOrchestrator orchestrator,
             MassiveKnobActionType actionType, int index)
         {
             this.orchestrator = orchestrator;
@@ -155,7 +155,7 @@ namespace MassiveKnob.ViewModel
             }
 
 
-            Actions = settingsViewModel.Actions.Where(AllowAction).ToList();
+            Actions = allActions.Where(AllowAction).ToList();
 
             var actionInfo = orchestrator.GetAction(actionType, index);
 

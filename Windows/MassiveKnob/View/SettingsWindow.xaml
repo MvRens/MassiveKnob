@@ -23,6 +23,7 @@
                 <ResourceDictionary Source="../Resources/Logging.xaml" />
                 <ResourceDictionary Source="../Resources/Device.xaml" />
                 <ResourceDictionary Source="../Resources/Startup.xaml" />
+                <ResourceDictionary Source="../Resources/Plugins.xaml" />
             </ResourceDictionary.MergedDictionaries>
 
             <helpers:ComparisonConverter x:Key="ComparisonConverter" />
@@ -81,6 +82,7 @@
                 <TextBlock Style="{StaticResource MenuGroup}" Text="{x:Static massiveKnob:Strings.MenuGroupSettings}" />
                 <RadioButton Style="{StaticResource MenuItem}" viewModel:MenuItemProperties.Text="{x:Static massiveKnob:Strings.MenuItemLogging}" viewModel:MenuItemProperties.Icon="{StaticResource Logging}" IsChecked="{Binding Path=SelectedMenuItem, Converter={StaticResource ComparisonConverter}, ConverterParameter={x:Static settings:SettingsMenuItem.Logging}}"/>
                 <RadioButton Style="{StaticResource MenuItem}" viewModel:MenuItemProperties.Text="{x:Static massiveKnob:Strings.MenuItemStartup}" viewModel:MenuItemProperties.Icon="{StaticResource Startup}" IsChecked="{Binding Path=SelectedMenuItem, Converter={StaticResource ComparisonConverter}, ConverterParameter={x:Static settings:SettingsMenuItem.Startup}}"/>
+                <RadioButton Style="{StaticResource MenuItem}" viewModel:MenuItemProperties.Text="{x:Static massiveKnob:Strings.MenuItemPlugins}" viewModel:MenuItemProperties.Icon="{StaticResource Plugins}" IsChecked="{Binding Path=SelectedMenuItem, Converter={StaticResource ComparisonConverter}, ConverterParameter={x:Static settings:SettingsMenuItem.Plugins}}"/>
             </StackPanel>
         </ScrollViewer>
 

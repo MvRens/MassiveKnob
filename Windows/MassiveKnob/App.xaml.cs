@@ -1,8 +1,11 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.Windows;
 using Hardcodet.Wpf.TaskbarNotification;
 using MassiveKnob.View;
+using Serilog;
 using SimpleInjector;
+using WpfBindingErrors;
 
 namespace MassiveKnob
 {
@@ -27,6 +30,9 @@ namespace MassiveKnob
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
+
+            // Do not let WPF swallow exceptions in bindings
+            BindingExceptionThrower.Attach();
 
             notifyIcon = (TaskbarIcon)FindResource("NotifyIcon");
             Debug.Assert(notifyIcon != null, nameof(notifyIcon) + " != null");

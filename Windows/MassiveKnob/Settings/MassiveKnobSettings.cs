@@ -15,7 +15,8 @@ namespace MassiveKnob.Settings
         AnalogOutputs,
         DigitalOutputs,
         Logging,
-        Startup
+        Startup,
+        Plugins
     }
 
 

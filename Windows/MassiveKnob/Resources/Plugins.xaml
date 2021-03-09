@@ -1,0 +1,17 @@
+<ResourceDictionary 
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+    <Viewbox Stretch="Uniform" x:Key="Plugins" x:Shared="False">
+        <Canvas Width="24" Height="24">
+            <Canvas.Resources>
+                <ResourceDictionary Source="IconStyle.xaml" />
+            </Canvas.Resources>
+            <Polygon Points="12 2 2 7 12 12 22 7 12 2" FillRule="NonZero" Style="{StaticResource IconStroke}" />
+            <Polyline Points="2 17 12 22 22 17" FillRule="NonZero" Style="{StaticResource IconStroke}" />
+            <Polyline Points="2 12 12 17 22 12" FillRule="NonZero" Style="{StaticResource IconStroke}" />
+        </Canvas>
+    </Viewbox>
+</ResourceDictionary>

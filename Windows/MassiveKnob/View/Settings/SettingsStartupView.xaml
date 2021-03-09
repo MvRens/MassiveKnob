@@ -1,12 +1,12 @@
-﻿<UserControl x:Class="MassiveKnob.View.Settings.AnalogOutputsView"
+﻿<UserControl x:Class="MassiveKnob.View.Settings.SettingsStartupView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:viewModel="clr-namespace:MassiveKnob.ViewModel"
-             xmlns:view="clr-namespace:MassiveKnob.View"
+             xmlns:massiveKnob="clr-namespace:MassiveKnob"
              mc:Ignorable="d" 
-             d:DesignHeight="300" d:DesignWidth="800"
+             d:DesignHeight="200" d:DesignWidth="800"
              d:DataContext="{d:DesignInstance Type=viewModel:SettingsViewModelDesignTime, IsDesignTimeCreatable=True}">
     <UserControl.Resources>
         <ResourceDictionary>
@@ -17,12 +17,10 @@
     </UserControl.Resources>
 
     <StackPanel Orientation="Vertical" SnapsToDevicePixels="True" UseLayoutRounding="True"  TextOptions.TextFormattingMode="Display">
-        <ItemsControl ItemsSource="{Binding AnalogOutputs}">
-            <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                    <view:InputOutputView />
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
-        </ItemsControl>
+        <StackPanel Orientation="Vertical" Style="{StaticResource Content}">
+            <CheckBox Margin="0,0,0,8" IsChecked="{Binding RunAtStartup}">
+                <TextBlock Text="{x:Static massiveKnob:Strings.RunAtStartup}" />
+            </CheckBox>
+        </StackPanel>
     </StackPanel>
 </UserControl>

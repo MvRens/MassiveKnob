@@ -304,6 +304,15 @@ namespace MassiveKnob {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Plugins.
+        /// </summary>
+        public static string MenuItemPlugins {
+            get {
+                return ResourceManager.GetString("MenuItemPlugins", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Startup.
         /// </summary>
         public static string MenuItemStartup {
