@@ -21,6 +21,8 @@
                 <StackPanel Orientation="Vertical" Margin="0,0,0,24">
                     <TextBlock Text="{Binding Name}" Style="{StaticResource PluginName}" />
                     <TextBlock Text="{Binding Description}" Visibility="{Binding DescriptionVisibility}" Style="{StaticResource PluginDescription}" />
+                    <TextBlock Text="{Binding Author}" Visibility="{Binding AuthorVisibility}" Style="{StaticResource PluginAuthor}" />
+                    <TextBlock Text="{Binding Url}" Cursor="{x:Static Cursors.Hand}" MouseDown="UrlMouseDown" Visibility="{Binding UrlVisibility}" Style="{StaticResource PluginUrl}" />
                     <TextBlock Text="{Binding Filename}" Style="{StaticResource PluginFilename}" />
                 </StackPanel>
             </DataTemplate>

@@ -1,4 +1,8 @@
-﻿using MassiveKnob.ViewModel.Settings;
+﻿using System.Diagnostics;
+using System.Windows;
+using System.Windows.Input;
+using MassiveKnob.ViewModel;
+using MassiveKnob.ViewModel.Settings;
 
 namespace MassiveKnob.View.Settings
 {
@@ -11,6 +15,17 @@ namespace MassiveKnob.View.Settings
         {
             DataContext = viewModel;
             InitializeComponent();
+        }
+
+        private void UrlMouseDown(object sender, MouseButtonEventArgs e)
+        {
+            var dataContext = ((FrameworkElement) e.Source).DataContext;
+
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = ((PluginViewModel) dataContext).Url,
+                Verb = "open"
+            });
         }
     }
 }
