@@ -18,13 +18,15 @@ AppPublisher={#AppPublisher}
 AppPublisherURL={#AppURL}
 AppSupportURL={#AppURL}
 AppUpdatesURL={#AppURL}
-DefaultDirName={pf}\{#AppName}
+DefaultDirName={commonpf}\{#AppName}
 DisableProgramGroupPage=yes
 OutputDir={#BasePath}\Release
 OutputBaseFilename=MassiveKnobSetup-{#AppVersion}
 Compression=lzma
 SolidCompression=yes
 ArchitecturesInstallIn64BitMode=x64
+PrivilegesRequired=admin
+UsedUserAreasWarning=no
 
 [Types]
 Name: "full"; Description: "Full installation"
