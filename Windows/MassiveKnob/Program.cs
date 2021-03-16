@@ -4,10 +4,7 @@ using System.Text;
 using System.Windows;
 using MassiveKnob.Core;
 using MassiveKnob.Settings;
-using MassiveKnob.View;
-using MassiveKnob.ViewModel;
 using Serilog;
-using SimpleInjector;
 
 namespace MassiveKnob
 {
@@ -19,23 +16,40 @@ namespace MassiveKnob
         {
             var settings = MassiveKnobSettingsJsonSerializer.Deserialize();
 
+            
             var loggingSwitch = new LoggingSwitch();
             loggingSwitch.SetLogging(settings.Log.Enabled, settings.Log.Level);
+
+            var logFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"MassiveKnob", @"Logs");
 
             var logger = new LoggerConfiguration()
                 .MinimumLevel.Verbose()
                 .Filter.ByIncludingOnly(loggingSwitch.IsIncluded)
                 .Enrich.FromLogContext()
                 .WriteTo.File(
-                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"MassiveKnob", @"Logs", @".log"),
+                    Path.Combine(logFilePath, @".log"),
                     rollingInterval: RollingInterval.Day,
                     outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{@Context}{NewLine}{Exception}")
                 .CreateLogger();
             
             
             logger.Information("MassiveKnob starting");
-            var pluginManager = new PluginManager(logger);
 
+
+            AppDomain.CurrentDomain.UnhandledException += (sender, args) =>
+            {
+                var e = (Exception)args.ExceptionObject;
+                logger.Error(e, "Unhandled exception: {message}", e.Message);
+
+                MessageBox.Show(
+                    "Oops, something went very wrong. Please notify the developer and include this message, you can copy it using Ctrl-C. " +
+                    "Preferably also include the log file which can be found at:" + Environment.NewLine + logFilePath +
+                    Environment.NewLine + Environment.NewLine +
+                    e.Message, "Massive Knob - Fatal error", MessageBoxButton.OK, MessageBoxImage.Error);
+            };
+
+
+            var pluginManager = new PluginManager(logger);
             var messages = new StringBuilder();
             pluginManager.Load((exception, filename) =>
             {
@@ -48,23 +62,17 @@ namespace MassiveKnob
                 return 1;
             }
             
+            
             var orchestrator = new MassiveKnobOrchestrator(pluginManager, logger, settings);
             orchestrator.Load();
 
-
-            var container = new Container();
-            container.Options.EnableAutoVerification = false;
-
-            container.RegisterInstance(logger);
+            
+            var container = ContainerBuilder.Create();
+            container.RegisterInstance<ILogger>(logger);
             container.RegisterInstance<ILoggingSwitch>(loggingSwitch);
             container.RegisterInstance<IPluginManager>(pluginManager);
             container.RegisterInstance<IMassiveKnobOrchestrator>(orchestrator);
 
-            container.Register<App>();
-            container.Register<SettingsWindow>();
-            container.Register<SettingsViewModel>();
-
-            
             var app = container.GetInstance<App>();
             app.Run();
 

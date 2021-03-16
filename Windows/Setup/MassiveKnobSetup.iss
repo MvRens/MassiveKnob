@@ -36,6 +36,7 @@ Name: essentialplugins; Description: "Essential plugins"; Types: full custom
 Name: essentialplugins\serialdevice; Description: "Serial device"; Types: full custom
 Name: essentialplugins\coreaudio; Description: "Windows Core Audio actions"; Types: full custom
 Name: optionalplugins; Description: "Optional plugins"; Types: full custom
+Name: optionalplugins\runprogram; Description: "Run program"; Types: full custom
 Name: optionalplugins\emulatordevice; Description: "Emulator device"; Types: full custom
 Name: optionalplugins\voicemeeter; Description: "VoiceMeeter actions"; Types: full custom
 
@@ -64,6 +65,10 @@ Source: {#BasePath}\MassiveKnob.Plugin.EmulatorDevice\bin\Release\*.dll; DestDir
 ; VoiceMeeter plugin
 Source: {#BasePath}\MassiveKnob.Plugin.VoiceMeeter\bin\Release\MassiveKnobPlugin.json; DestDir: "{app}\Plugins\VoiceMeeter"; Flags: ignoreversion; Components: optionalplugins\voicemeeter
 Source: {#BasePath}\MassiveKnob.Plugin.VoiceMeeter\bin\Release\*.dll; DestDir: "{app}\Plugins\VoiceMeeter"; Flags: ignoreversion; Components: optionalplugins\voicemeeter
+
+; Run Program plugin
+Source: {#BasePath}\MassiveKnob.Plugin.RunProgram\bin\Release\MassiveKnobPlugin.json; DestDir: "{app}\Plugins\RunProgram"; Flags: ignoreversion; Components: optionalplugins\runprogram
+Source: {#BasePath}\MassiveKnob.Plugin.RunProgram\bin\Release\*.dll; DestDir: "{app}\Plugins\RunProgram"; Flags: ignoreversion; Components: optionalplugins\runprogram
 
 [Dirs]
 Name: "{localappdata}\MassiveKnob"

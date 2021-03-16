@@ -22,8 +22,8 @@
         <Setter Property="Margin" Value="0,0,0,4" />
     </Style>
 
-    <Style TargetType="StackPanel" x:Key="Content">
-        <Setter Property="Margin" Value="8" />
+    <Style x:Key="Content">
+        <Setter Property="Control.Margin" Value="8" />
     </Style>
 
     <Style TargetType="ContentControl" x:Key="SettingsControl">
@@ -40,5 +40,31 @@
 
     <Style TargetType="TextBlock" x:Key="SubLabel">
         <Setter Property="Foreground" Value="#808080" />
+    </Style>
+
+    <Style TargetType="TextBlock" x:Key="PluginName">
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+    </Style>
+
+    <Style TargetType="TextBlock" x:Key="PluginDescription">
+        <Setter Property="TextWrapping" Value="Wrap" />
+        <Setter Property="Margin" Value="0,0,0,8" />
+    </Style>
+
+    <Style TargetType="TextBlock" x:Key="PluginFilename">
+        <Setter Property="TextWrapping" Value="Wrap" />
+        <Setter Property="Foreground" Value="#808080" />
+    </Style>
+
+    <Style TargetType="TextBlock" x:Key="PluginAuthor">
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        <Setter Property="Margin" Value="0,8,0,0" />
+    </Style>
+
+    <Style TargetType="TextBlock" x:Key="PluginUrl">
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        <Setter Property="Foreground" Value="Navy" />
+        <Setter Property="Margin" Value="0,0,0,8" />
     </Style>
 </ResourceDictionary>
