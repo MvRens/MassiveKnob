@@ -19,7 +19,7 @@ configuration:
   - Release
 
 after_build:
-  - cmd: "C:\\Program Files (x86)\\Inno Setup 6\\ISCC.exe" "Windows\\Setup\\MassiveKnobSetup.iss"
+  - cmd: "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "Windows\Setup\MassiveKnobSetup.iss"
 
 deploy:
   provider: GitHub
