@@ -26,7 +26,8 @@ deploy:
   provider: GitHub
   auth_token:
     secure: fPvma5Dn9PV65Juan1Lx9AcxoGwLSRIxSjYZGZ46EvI8QoXEUGH0T0fnJDYF5vbM
-  artifact: /Windows\\Release\\MassiveKnobSetup-.*\.exe/
+  artifacts:
+    - path: 'Windows\Release\MassiveKnobSetup-*.exe'
   draft: false
   prerelease: false
   on:
