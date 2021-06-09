@@ -45,3 +45,13 @@ The Windows software is written in C# using .NET Framework 4.7.2 and Visual Stud
 Refer to the bundled plugins for examples.
 
 Some icons courtesy of https://feathericons.com/
+
+
+## Releases
+Builds are automatically run using AppVeyor. Tagged master releases are available on the [GitHub releases page](https://github.com/MvRens/MassiveKnob/releases). You can find an installer for each version under the "Assets" section for a release.
+
+Master build (release versions)
+[![Build status](https://ci.appveyor.com/api/projects/status/ycn9ydiitn25em99/branch/master?svg=true)](https://ci.appveyor.com/project/MvRens/massiveknob/branch/master)
+
+Latest build
+[![Build status](https://ci.appveyor.com/api/projects/status/ycn9ydiitn25em99?svg=true)](https://ci.appveyor.com/project/MvRens/massiveknob)

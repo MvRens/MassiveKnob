@@ -39,6 +39,10 @@ namespace MassiveKnob.Plugin.CoreAudio.OSD
         
         private static void WindowOnClosed(object sender, EventArgs e)
         {
+            // ReSharper disable once PossibleUnintendedReferenceComparison - it's intended.
+            if (sender != window) 
+                return;
+            
             hideTimer?.Dispose();
             hideTimer = null;
 
