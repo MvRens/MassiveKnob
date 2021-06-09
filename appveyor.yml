@@ -22,12 +22,14 @@ configuration:
 after_build:
   - cmd: "\"C:\\Program Files (x86)\\Inno Setup 6\\ISCC.exe\" \"Windows\\Setup\\MassiveKnobSetup.iss\""
 
+artifacts:
+- path: 'Windows\Release\MassiveKnobSetup-*.exe'
+
 deploy:
   provider: GitHub
   auth_token:
     secure: fPvma5Dn9PV65Juan1Lx9AcxoGwLSRIxSjYZGZ46EvI8QoXEUGH0T0fnJDYF5vbM
-  artifacts:
-    - path: 'Windows\Release\MassiveKnobSetup-*.exe'
+  artifact: /Windows\\Release\\MassiveKnobSetup-.*\.exe/
   draft: false
   prerelease: false
   on:
