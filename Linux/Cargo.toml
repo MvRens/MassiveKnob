@@ -1,0 +1,19 @@
+[package]
+name = "MassiveKnob"
+version = "0.1.0"
+edition = "2021"
+build = "build.rs"
+
+[dependencies]
+env_logger = "0.11.3"
+log = "0.4.21"
+relm4 = "0.8.1"
+relm4-icons = "0.8.3"
+rust-i18n = "3.0.1"
+
+[dependencies.min-rs]
+git = "https://github.com/MvRens/min-rs.git"
+
+[build-dependencies]
+slint-build = "1.6"
+walkdir = "2.5.0"
