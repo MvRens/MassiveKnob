@@ -32,8 +32,9 @@ impl SimpleComponent for EmulatorWindow
     fn init(_data: Self::Init, root: Self::Root, _sender: ComponentSender<Self>, ) -> ComponentParts<Self> 
     {
         let model = EmulatorWindow {};
-
         let widgets = view_output!();
+
+        root.set_visible(true);
         ComponentParts { model, widgets }
     }
 
