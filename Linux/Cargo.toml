@@ -7,9 +7,11 @@ build = "build.rs"
 [dependencies]
 env_logger = "0.11.3"
 log = "0.4.21"
+platform-dirs = "0.3.0"
 relm4 = "0.8.1"
 relm4-icons = "0.8.3"
 rust-i18n = "3.0.1"
+serde = "1.0.203"
 
 [dependencies.min-rs]
 git = "https://github.com/MvRens/min-rs.git"

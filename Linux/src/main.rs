@@ -10,6 +10,7 @@ i18n!("locales");
 pub mod devices;
 pub mod actions;
 
+pub mod config;
 pub mod mainwindow;
 
 fn main()
@@ -18,12 +19,20 @@ fn main()
 //        .format_timestamp(None)
         .init();
 
-    //devices::register();
+    devices::register();
     actions::register();
 
     relm4_icons::initialize_icons();
 
-    let app = RelmApp::new("com.github.mvrens.massiveknob");
+    load_config();
 
+    let app = RelmApp::new("com.github.mvrens.massiveknob");
     app.run::<mainwindow::MainWindow>(());
+}
+
+
+fn load_config()
+{
+    //let config = config::Config::new();
+    //config.get_reader(name)
 }

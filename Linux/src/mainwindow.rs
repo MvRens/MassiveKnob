@@ -7,36 +7,51 @@ pub struct MainWindow
 
 
 #[derive(Debug)]
-pub enum Msg
+pub enum MainWindowMsg
 {
 }
 
 
-#[relm4::component(pub)]
+pub struct MainWindowWidgets
+{
+}
+
+
 impl SimpleComponent for MainWindow
 {
     type Init = ();
-    type Input = Msg;
+    type Input = MainWindowMsg;
     type Output = ();
+    type Root = gtk::Window;
+    type Widgets = MainWindowWidgets;
 
-    view!
-    {        
-        gtk::Window
-        {            
-            set_title: Some(&t!("mainwindow.title")),
-            set_default_size: (300, 100)
-        }
+
+    fn init_root() -> Self::Root
+    {
+        // I prefer not to use the view! macro, as VSCode / rust-analyzer will not provide autocompletion
+        gtk::Window::builder()
+            .title(t!("mainwindow.title"))
+            .default_width(500)
+            .default_height(500)
+            .build()   
     }
 
 
-    fn init(_data: Self::Init, root: Self::Root, _sender: ComponentSender<Self>, ) -> ComponentParts<Self> 
+    fn init(_data: Self::Init, window: Self::Root, _sender: ComponentSender<Self>, ) -> ComponentParts<Self> 
     {
-    // TEMP - device should not use GTK at register time
-    crate::devices::register();
-
         let model = MainWindow {};
 
-        let widgets = view_output!();
+        let tabs = gtk::Notebook::builder().build();
+        window.set_child(Some(&tabs));
+
+        add_box_tab(&tabs, "mainwindow.tab.device");
+        add_box_tab(&tabs, "mainwindow.tab.analoginputs");
+        add_box_tab(&tabs, "mainwindow.tab.digitalinputs");
+        //add_box_tab(&tabs, "mainwindow.tab.analogoutputs");
+        //add_box_tab(&tabs, "mainwindow.tab.digitaloutputs");
+
+
+        let widgets = MainWindowWidgets {};
         ComponentParts { model, widgets }
     }
 
@@ -47,4 +62,20 @@ impl SimpleComponent for MainWindow
         {
         }
     }    
+}
+
+
+fn add_box_tab(notebook: &gtk::Notebook, title_key: &str) -> gtk::Box
+{
+    let tab = gtk::Box::builder()
+        .orientation(gtk::Orientation::Vertical)
+        .build();
+
+    let tab_label = gtk::Label::builder()
+        .label(t!(title_key))
+        .build();
+
+    notebook.append_page(&tab, Some(&tab_label));
+
+    tab
 }
