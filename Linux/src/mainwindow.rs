@@ -1,8 +1,28 @@
+use std::rc::Rc;
 use gtk::prelude::*;
 use relm4::prelude::*;
 
+use crate::orchestrator::Orchestrator;
+
 pub struct MainWindow
 { 
+}
+
+
+pub struct MainWindowViewModel
+{
+    pub orchestrator: Rc<Orchestrator>
+}
+
+
+impl std::fmt::Debug for MainWindowViewModel
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result 
+    {
+        f.debug_struct("MainWindowViewModel")
+            // Skip orchestrator
+            .finish()
+    }
 }
 
 
@@ -19,7 +39,7 @@ pub struct MainWindowWidgets
 
 impl SimpleComponent for MainWindow
 {
-    type Init = ();
+    type Init = MainWindowViewModel;
     type Input = MainWindowMsg;
     type Output = ();
     type Root = gtk::Window;

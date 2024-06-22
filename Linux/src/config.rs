@@ -2,10 +2,11 @@ use std::path::{Path, PathBuf};
 use std::io::{Error, Read, Write};
 use platform_dirs::AppDirs;
 
-
+#[derive(Debug)]
 pub struct Config
 {
-    root: PathBuf
+    root: PathBuf,
+    pub device_id: Option<String>
 }
 
 
@@ -17,7 +18,8 @@ impl Config
 
         Self
         {
-            root: appdirs.data_dir
+            root: appdirs.data_dir,
+            device_id: None
         }
     }
 

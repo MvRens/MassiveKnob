@@ -1,17 +1,18 @@
-//use emulatorwindow::EmulatorWindow;
-//use relm4::prelude::*;
-//use relm4::gtk::prelude::GtkApplicationExt;
-
-
-use super::registry::{MkDevice, register_device};
+use crate::registry::MkRegistry;
+use crate::util::unique_id::UniqueId;
+use super::MkDevice;
 
 
 pub mod emulatorwindow;
 
 
-pub fn register()
+
+
+pub fn register(registry: &mut MkRegistry<MkDevice>)
 {
-    register_device(MkDevice::new("Emulator"));
+    registry.register(MkDevice {
+        unique_id: UniqueId::new("emulator")
+    });
 }
 
 /*

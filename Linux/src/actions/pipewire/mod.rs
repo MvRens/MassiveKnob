@@ -1,10 +1,14 @@
-use super::registry::{MkAction, register_action};
-
+use crate::registry::MkRegistry;
+use crate::util::unique_id::UniqueId;
+use super::MkAction;
 
 pub mod set_volume;
 
 
-pub fn register()
+pub fn register(registry: &mut MkRegistry<MkAction>)
 {
-    register_action(MkAction::new("Set volume"));
+    registry.register(MkAction 
+    {
+        unique_id: UniqueId::new("pipewire.set_volume")
+    });
 }

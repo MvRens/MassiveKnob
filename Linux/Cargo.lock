@@ -10,6 +10,7 @@ dependencies = [
  "log",
  "min-rs",
  "platform-dirs",
+ "regex",
  "relm4",
  "relm4-icons",
  "rust-i18n",
