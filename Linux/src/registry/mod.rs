@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use log::info;
+use log;
 
 use crate::util::unique_id::UniqueId;
 
@@ -38,7 +38,7 @@ impl<'a, T> MkRegistry<T> where T: RegistryItem
     {    
         let device_id = device.unique_id();        
 
-        info!("Registered device: [{}] {}", device_id.as_str(), device.name());
+        log::debug!("Registered device: [{}] {}", device_id.as_str(), device.name());
         self.items.insert(String::from(device_id.as_str()), device);
     }
 
