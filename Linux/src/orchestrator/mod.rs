@@ -55,10 +55,22 @@ impl Orchestrator
     }
 
 
-    pub fn current_device(&self) -> Option<&MkDevice>
+    pub fn devices(&self) -> impl Iterator<Item = &MkDevice>
+    {
+        self.device_registry.iter()
+    }
+
+
+    pub fn current_device_id(&self) -> Option<UniqueId>
     {
         let Some(device_id) = &self.settings.device_id else { return None };
-        self.device_registry.by_id(UniqueId::new(device_id.as_str()))
+        Some(UniqueId::new(device_id.as_str()))
+    }
+
+    pub fn current_device(&self) -> Option<&MkDevice>
+    {
+        let Some(device_id) = self.current_device_id() else { return None };
+        self.device_registry.by_id(device_id)
     }
 
 

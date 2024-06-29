@@ -2,7 +2,7 @@ use std::rc::Rc;
 use gtk::prelude::*;
 use relm4::prelude::*;
 
-use crate::orchestrator::Orchestrator;
+use crate::{devices::MkDevice, orchestrator::Orchestrator, registry::RegistryItem, util::unique_id::UniqueId};
 
 pub struct MainWindow
 { 
@@ -40,6 +40,7 @@ pub struct MainWindowWidgets
 
 pub struct MainWindowDeviceWidgets
 {
+    devices_sorted: Vec<SortedDevice>,
     devices_combobox: gtk::ComboBoxText
 }
 
@@ -64,10 +65,12 @@ impl SimpleComponent for MainWindow
     }
 
 
-    fn init(_data: Self::Init, window: Self::Root, _sender: ComponentSender<Self>, ) -> ComponentParts<Self> 
+    fn init(data: Self::Init, window: Self::Root, _sender: ComponentSender<Self>, ) -> ComponentParts<Self> 
     {
+        let orchestrator = data.orchestrator.as_ref();
+
         let model = MainWindow {};
-        let widgets = Self::init_ui(&window);
+        let widgets = Self::init_ui(&window, &orchestrator);
 
         ComponentParts { model, widgets }
     }
@@ -85,14 +88,14 @@ impl SimpleComponent for MainWindow
 
 impl MainWindow
 {
-    fn init_ui(window: &gtk::Window) -> MainWindowWidgets
+    fn init_ui(window: &gtk::Window, orchestrator: &Orchestrator) -> MainWindowWidgets
     {
         let tabs = gtk::Notebook::builder().build();
         window.set_child(Some(&tabs));
 
         MainWindowWidgets
         {
-            device: Self::init_device_tab(&tabs)
+            device: Self::init_device_tab(&tabs, &orchestrator)
             //Self::new_box_tab(&tabs, "mainwindow.tab.analoginputs");
             //Self::new_box_tab(&tabs, "mainwindow.tab.digitalinputs");
             //Self::add_box_tab(&tabs, "mainwindow.tab.analogoutputs");
@@ -101,7 +104,7 @@ impl MainWindow
     }
 
 
-    fn init_device_tab(tabs: &gtk::Notebook) -> MainWindowDeviceWidgets
+    fn init_device_tab(tabs: &gtk::Notebook, orchestrator: &Orchestrator) -> MainWindowDeviceWidgets
     {
         let tab = Self::new_box_tab(&tabs, "mainwindow.tab.device");
 
@@ -120,13 +123,36 @@ impl MainWindow
         tab.append(&devices_combobox);
 
 
-        // TEMP
-        devices_combobox.append_text("Test");
-        devices_combobox.append_text("Test 2");
+        let mut devices_sorted: Vec<SortedDevice> = orchestrator.devices()
+            .map(|device| SortedDevice
+            {
+                unique_id: device.unique_id(),
+                name: device.name()
+            })
+            .collect();
+
+        devices_sorted.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
+
+        let current_device_id = orchestrator.current_device_id();
+
+
+        for (index, device) in devices_sorted.iter().enumerate()
+        {
+            devices_combobox.append_text(device.name.as_str());
+
+            if let Some(device_id) = current_device_id
+            {
+                if device_id == device.unique_id
+                {
+                    devices_combobox.set_active(Some(index as u32));
+                }
+            }
+        }
 
 
         MainWindowDeviceWidgets
         {
+            devices_sorted,
             devices_combobox
         }
     }
@@ -151,4 +177,11 @@ impl MainWindow
 
         tab
     }
+}
+
+
+struct SortedDevice
+{
+    unique_id: UniqueId,
+    name: String
 }

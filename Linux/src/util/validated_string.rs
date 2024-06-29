@@ -5,6 +5,7 @@ use regex::Regex;
 /// A string which must conform to the specified regex pattern,
 /// otherwise it will panic by design. Intended for code validation,
 /// not for runtime input validation.
+#[derive(PartialEq, Eq)]
 pub struct ValidatedString<T: ValidatedStringPattern>
 {
     inner: String,

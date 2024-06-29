@@ -23,7 +23,7 @@ pub struct MkRegistry<T> where T: RegistryItem
 
 
 
-impl<'a, T> MkRegistry<T> where T: RegistryItem
+impl<T> MkRegistry<T> where T: RegistryItem
 {
     pub fn new() -> Self
     {
@@ -40,6 +40,12 @@ impl<'a, T> MkRegistry<T> where T: RegistryItem
 
         log::debug!("Registered device: [{}] {}", device_id.as_str(), device.name());
         self.items.insert(String::from(device_id.as_str()), device);
+    }
+
+
+    pub fn iter(&self) -> impl Iterator<Item = &T>
+    {
+        self.items.values()
     }
 
 
