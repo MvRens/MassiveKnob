@@ -16,14 +16,14 @@ pub trait RegistryItem
 
 
 
-pub struct MkRegistry<T> where T: RegistryItem
+pub struct Registry<T> where T: RegistryItem
 {
     items: HashMap<String, T>
 }
 
 
 
-impl<T> MkRegistry<T> where T: RegistryItem
+impl<T> Registry<T> where T: RegistryItem
 {
     pub fn new() -> Self
     {
@@ -35,8 +35,8 @@ impl<T> MkRegistry<T> where T: RegistryItem
 
 
     pub fn register(&mut self, device: T)
-    {    
-        let device_id = device.unique_id();        
+    {
+        let device_id = device.unique_id();
 
         log::debug!("Registered device: [{}] {}", device_id.as_str(), device.name());
         self.items.insert(String::from(device_id.as_str()), device);

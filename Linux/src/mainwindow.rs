@@ -1,25 +1,31 @@
+use std::cell::RefCell;
 use std::rc::Rc;
+use gtk::glib::clone;
 use gtk::prelude::*;
 use relm4::prelude::*;
 
-use crate::{devices::MkDevice, orchestrator::Orchestrator, registry::RegistryItem, util::unique_id::UniqueId};
+use crate::orchestrator::Orchestrator;
+use crate::registry::RegistryItem;
+use crate::util::unique_id::UniqueId;
 
 pub struct MainWindow
-{ 
+{
+    orchestrator: Rc<RefCell<Orchestrator>>,
+    devices_sorted: Vec<SortedDevice>
 }
 
 
-pub struct MainWindowViewModel
+pub struct MainWindowInit
 {
-    pub orchestrator: Rc<Orchestrator>
+    pub orchestrator: Rc<RefCell<Orchestrator>>
 }
 
 
-impl std::fmt::Debug for MainWindowViewModel
+impl std::fmt::Debug for MainWindowInit
 {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result 
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result
     {
-        f.debug_struct("MainWindowViewModel")
+        f.debug_struct("MainWindowInit")
             // Skip orchestrator
             .finish()
     }
@@ -29,25 +35,25 @@ impl std::fmt::Debug for MainWindowViewModel
 #[derive(Debug)]
 pub enum MainWindowMsg
 {
+    DeviceChanged(usize)
 }
 
 
 pub struct MainWindowWidgets
 {
-    device: MainWindowDeviceWidgets
+    _device: MainWindowDeviceWidgets
 }
 
 
 pub struct MainWindowDeviceWidgets
 {
-    devices_sorted: Vec<SortedDevice>,
-    devices_combobox: gtk::ComboBoxText
+    _devices_combobox: gtk::ComboBoxText
 }
 
 
 impl SimpleComponent for MainWindow
 {
-    type Init = MainWindowViewModel;
+    type Init = MainWindowInit;
     type Input = MainWindowMsg;
     type Output = ();
     type Root = gtk::Window;
@@ -61,67 +67,19 @@ impl SimpleComponent for MainWindow
             .title(t!("mainwindow.title"))
             .default_width(500)
             .default_height(500)
-            .build()   
+            .build()
     }
 
 
-    fn init(data: Self::Init, window: Self::Root, _sender: ComponentSender<Self>, ) -> ComponentParts<Self> 
+    fn init(data: Self::Init, window: Self::Root, sender: ComponentSender<Self>) -> ComponentParts<Self>
     {
-        let orchestrator = data.orchestrator.as_ref();
-
-        let model = MainWindow {};
-        let widgets = Self::init_ui(&window, &orchestrator);
-
-        ComponentParts { model, widgets }
-    }
-
-
-    fn update(&mut self, msg: Self::Input, _sender: ComponentSender<Self>) 
-    {
-        match msg 
         {
+            let mut init_orchestrator = data.orchestrator.borrow_mut();
+            init_orchestrator.initialize();
         }
-    }    
-}
 
 
-
-impl MainWindow
-{
-    fn init_ui(window: &gtk::Window, orchestrator: &Orchestrator) -> MainWindowWidgets
-    {
-        let tabs = gtk::Notebook::builder().build();
-        window.set_child(Some(&tabs));
-
-        MainWindowWidgets
-        {
-            device: Self::init_device_tab(&tabs, &orchestrator)
-            //Self::new_box_tab(&tabs, "mainwindow.tab.analoginputs");
-            //Self::new_box_tab(&tabs, "mainwindow.tab.digitalinputs");
-            //Self::add_box_tab(&tabs, "mainwindow.tab.analogoutputs");
-            //Self::add_box_tab(&tabs, "mainwindow.tab.digitaloutputs");
-        }
-    }
-
-
-    fn init_device_tab(tabs: &gtk::Notebook, orchestrator: &Orchestrator) -> MainWindowDeviceWidgets
-    {
-        let tab = Self::new_box_tab(&tabs, "mainwindow.tab.device");
-
-        let label = gtk::Label::builder()
-            .label(t!("mainwindow.deviceType.label"))
-            .halign(gtk::Align::Start)
-            .build();
-
-        tab.append(&label);
-
-
-
-        let devices_combobox = gtk::ComboBoxText::builder()                                
-            .build();
-
-        tab.append(&devices_combobox);
-
+        let orchestrator = data.orchestrator.borrow();
 
         let mut devices_sorted: Vec<SortedDevice> = orchestrator.devices()
             .map(|device| SortedDevice
@@ -133,14 +91,114 @@ impl MainWindow
 
         devices_sorted.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
 
-        let current_device_id = orchestrator.current_device_id();
+
+        let model = MainWindow
+        {
+            orchestrator: data.orchestrator.clone(),
+            devices_sorted
+        };
+
+        let widgets = MainWindowBuilder::new(&window, &model, &sender).build();
+
+        ComponentParts { model, widgets }
+    }
 
 
-        for (index, device) in devices_sorted.iter().enumerate()
+    fn update(&mut self, msg: Self::Input, _sender: ComponentSender<Self>)
+    {
+        match msg
+        {
+            MainWindowMsg::DeviceChanged(index) =>
+            {
+                let mut orchestrator = self.orchestrator.borrow_mut();
+                let device = &self.devices_sorted[index];
+
+                orchestrator.set_current_device_id(device.unique_id.clone());
+            }
+        }
+    }
+}
+
+
+struct MainWindowBuilder<'a>
+{
+    window: &'a gtk::Window,
+    model: &'a MainWindow,
+    sender: &'a ComponentSender<MainWindow>
+}
+
+
+impl<'a> MainWindowBuilder<'a>
+{
+    fn new(window: &'a gtk::Window, model: &'a MainWindow, sender: &'a ComponentSender<MainWindow>) -> Self
+    {
+        Self
+        {
+            window,
+            model,
+            sender
+        }
+    }
+
+
+    fn build(&self) -> MainWindowWidgets
+    {
+        let tabs = gtk::Notebook::builder().build();
+        self.window.set_child(Some(&tabs));
+
+        MainWindowWidgets
+        {
+            _device: self.init_device_tab(&tabs)
+            //Self::new_box_tab(&tabs, "mainwindow.tab.analoginputs");
+            //Self::new_box_tab(&tabs, "mainwindow.tab.digitalinputs");
+            //Self::add_box_tab(&tabs, "mainwindow.tab.analogoutputs");
+            //Self::add_box_tab(&tabs, "mainwindow.tab.digitaloutputs");
+        }
+    }
+
+
+    fn init_device_tab(&self, tabs: &gtk::Notebook) -> MainWindowDeviceWidgets
+    {
+        let sender = self.sender;
+        let tab = Self::new_box_tab(&tabs, "mainwindow.tab.device");
+
+        let label = gtk::Label::builder()
+            .label(t!("mainwindow.deviceType.label"))
+            .halign(gtk::Align::Start)
+            .build();
+
+        tab.append(&label);
+
+
+
+        let devices_combobox = gtk::ComboBoxText::builder()
+            .build();
+
+        let devices_combobox_cloned = devices_combobox.clone();
+
+        devices_combobox.connect_changed(clone!(
+            @strong sender => move |_|
+            {
+                if let Some(active_index) = devices_combobox_cloned.active()
+                {
+                    if let Ok(active_index_usize) = usize::try_from(active_index)
+                    {
+                        sender.input(MainWindowMsg::DeviceChanged(active_index_usize));
+                    }
+                }
+            }));
+
+        tab.append(&devices_combobox);
+
+
+        let current_device_id = self.model.orchestrator.borrow().current_device_id();
+
+
+        for (index, device) in self.model.devices_sorted.iter().enumerate()
         {
             devices_combobox.append_text(device.name.as_str());
 
-            if let Some(device_id) = current_device_id
+            if let Some(device_id) = current_device_id.clone()
             {
                 if device_id == device.unique_id
                 {
@@ -152,12 +210,11 @@ impl MainWindow
 
         MainWindowDeviceWidgets
         {
-            devices_sorted,
-            devices_combobox
+            _devices_combobox: devices_combobox
         }
     }
 
-    
+
     fn new_box_tab(notebook: &gtk::Notebook, title_key: &str) -> gtk::Box
     {
         let tab = gtk::Box::builder()

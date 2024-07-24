@@ -1,17 +1,22 @@
 pub mod pipewire;
 
-use crate::registry::MkRegistry;
+use crate::registry::Registry;
 use crate::registry::RegistryItem;
 use crate::util::unique_id::UniqueId;
 
 
-pub struct MkAction
+pub struct ActionRegistryItem
 {
     pub unique_id: UniqueId
 }
 
 
-impl RegistryItem for MkAction
+pub trait Action
+{
+}
+
+
+impl RegistryItem for ActionRegistryItem
 {
     fn unique_id(&self) -> UniqueId
     {
@@ -26,7 +31,7 @@ impl RegistryItem for MkAction
 
 
 
-pub fn register(registry: &mut MkRegistry<MkAction>)
+pub fn register(registry: &mut Registry<ActionRegistryItem>)
 {
     pipewire::register(registry);
 }

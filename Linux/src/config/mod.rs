@@ -49,15 +49,20 @@ impl ConfigManager
     pub fn get_writer(&self, name: &ConfigName) -> Result<impl Write, Error>
     {
         let path = Path::join(&self.root, name.as_str());
-        if !path.exists()
+        let parent = Path::parent(&path);
+
+        if let Some(parent) = parent
         {
-            match std::fs::create_dir_all(path.clone())
+            if !parent.exists()
             {
-                Ok(_v) => (),
-                Err(e) => return Err(e)
+                match std::fs::create_dir_all(parent)
+                {
+                    Ok(_v) => (),
+                    Err(e) => return Err(e)
+                }
             }
         }
-
+        
         std::fs::File::create(path)
     }
 }

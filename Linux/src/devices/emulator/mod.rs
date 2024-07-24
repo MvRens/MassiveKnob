@@ -1,24 +1,58 @@
-use crate::registry::MkRegistry;
+use emulatorwindow::EmulatorWindow;
+use relm4::{component::Connector, ComponentController};
+use relm4::Component;
+use relm4::gtk::prelude::*;
+
+use crate::registry::Registry;
 use crate::util::unique_id::UniqueId;
-use super::MkDevice;
+use super::{Device, DeviceRegistryItem};
 
 
 pub mod emulatorwindow;
 
 
-
-
-pub fn register(registry: &mut MkRegistry<MkDevice>)
+pub struct EmulatorWindowDevice
 {
-    registry.register(MkDevice {
-        unique_id: UniqueId::new("emulator")
-    });
+    window: Option<Connector<EmulatorWindow>>
 }
 
-/*
-    let app = relm4::main_application();
-    let builder = EmulatorWindow::builder();
-    app.add_window(&builder.root);
 
-    builder.launch(()).detach_runtime();
-*/
+impl EmulatorWindowDevice
+{
+    fn new() -> Self
+    {
+        EmulatorWindowDevice
+        {
+            window: None
+        }
+    }
+}
+
+
+impl Device for EmulatorWindowDevice
+{
+    fn activate(&mut self)
+    {
+        if self.window.is_some() { return }
+
+        let builder = EmulatorWindow::builder();
+        self.window = Some(builder.launch({}));
+    }
+
+
+    fn deactivate(&mut self)
+    {
+        let Some(window) = self.window.take() else { return };
+
+        window.widget().close();
+    }
+}
+
+
+pub fn register(registry: &mut Registry<DeviceRegistryItem>)
+{
+    registry.register(DeviceRegistryItem {
+        unique_id: UniqueId::new("emulator"),
+        factory: || Box::new(EmulatorWindowDevice::new())
+    });
+}

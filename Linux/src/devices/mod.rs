@@ -2,18 +2,26 @@ pub mod emulator;
 pub mod serial_min;
 
 
-use crate::registry::MkRegistry;
+use crate::registry::Registry;
 use crate::registry::RegistryItem;
 use crate::util::unique_id::UniqueId;
 
 
-pub struct MkDevice
+pub struct DeviceRegistryItem
 {
-    pub unique_id: UniqueId
+    pub unique_id: UniqueId,
+    pub factory: fn() -> Box<dyn Device>
 }
 
 
-impl RegistryItem for MkDevice
+pub trait Device
+{
+    fn activate(&mut self);
+    fn deactivate(&mut self);
+}
+
+
+impl RegistryItem for DeviceRegistryItem
 {
     fn unique_id(&self) -> UniqueId
     {
@@ -28,7 +36,7 @@ impl RegistryItem for MkDevice
 
 
 
-pub fn register(registry: &mut MkRegistry<MkDevice>)
+pub fn register(registry: &mut Registry<DeviceRegistryItem>)
 {
     emulator::register(registry);
     serial_min::register(registry);

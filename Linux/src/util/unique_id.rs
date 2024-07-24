@@ -4,7 +4,9 @@ use super::validated_string::{ValidatedString, ValidatedStringPattern};
 pub type UniqueId = ValidatedString<UniqueIdPattern>;
 
 
+#[derive(PartialEq, Eq)]
 pub struct UniqueIdPattern;
+
 
 impl ValidatedStringPattern for UniqueIdPattern
 {

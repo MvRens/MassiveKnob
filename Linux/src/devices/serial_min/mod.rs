@@ -1,11 +1,33 @@
-use crate::registry::MkRegistry;
+use crate::registry::Registry;
 use crate::util::unique_id::UniqueId;
-use super::MkDevice;
+use super::{Device, DeviceRegistryItem};
 
 
-pub fn register(registry: &mut MkRegistry<MkDevice>)
+pub struct SerialMinDevice
 {
-    registry.register(MkDevice {
-        unique_id: UniqueId::new("serial_min")
+
+}
+
+
+impl Device for SerialMinDevice
+{
+    fn activate(&mut self)
+    {
+        //todo!()
+    }
+
+
+    fn deactivate(&mut self)
+    {
+        //todo!()
+    }
+}
+
+
+pub fn register(registry: &mut Registry<DeviceRegistryItem>)
+{
+    registry.register(DeviceRegistryItem {
+        unique_id: UniqueId::new("serial_min"),
+        factory: || Box::new(SerialMinDevice {})
     });
 }
