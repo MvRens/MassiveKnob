@@ -1,59 +1,49 @@
-use std::cell::RefCell;
-use std::rc::Rc;
 use gtk::glib::clone;
 use gtk::prelude::*;
 use relm4::prelude::*;
 
 use crate::orchestrator::Orchestrator;
 use crate::registry::RegistryItem;
+use crate::ui::EmbeddedWidgetConnector;
 use crate::util::unique_id::UniqueId;
 
+#[tracker::track]
 pub struct MainWindow
 {
-    orchestrator: Rc<RefCell<Orchestrator>>,
-    devices_sorted: Vec<SortedDevice>
-}
+    #[do_not_track]
+    orchestrator: Orchestrator,
 
+    #[do_not_track]
+    devices_sorted: Vec<SortedDevice>,
 
-pub struct MainWindowInit
-{
-    pub orchestrator: Rc<RefCell<Orchestrator>>
-}
-
-
-impl std::fmt::Debug for MainWindowInit
-{
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result
-    {
-        f.debug_struct("MainWindowInit")
-            // Skip orchestrator
-            .finish()
-    }
+    #[no_eq]
+    device_settings_widget: Option<Box<dyn EmbeddedWidgetConnector>>
 }
 
 
 #[derive(Debug)]
 pub enum MainWindowMsg
 {
+    DeviceInitial(usize),
     DeviceChanged(usize)
 }
 
 
 pub struct MainWindowWidgets
 {
-    _device: MainWindowDeviceWidgets
+    device: MainWindowDeviceWidgets
 }
 
 
 pub struct MainWindowDeviceWidgets
 {
-    _devices_combobox: gtk::ComboBoxText
+    settings_container: gtk::Box
 }
 
 
 impl SimpleComponent for MainWindow
 {
-    type Init = MainWindowInit;
+    type Init = ();
     type Input = MainWindowMsg;
     type Output = ();
     type Root = gtk::Window;
@@ -71,20 +61,14 @@ impl SimpleComponent for MainWindow
     }
 
 
-    fn init(data: Self::Init, window: Self::Root, sender: ComponentSender<Self>) -> ComponentParts<Self>
+    fn init(_data: Self::Init, window: Self::Root, sender: ComponentSender<Self>) -> ComponentParts<Self>
     {
-        {
-            let mut init_orchestrator = data.orchestrator.borrow_mut();
-            init_orchestrator.initialize();
-        }
-
-
-        let orchestrator = data.orchestrator.borrow();
+        let orchestrator = Orchestrator::new();
 
         let mut devices_sorted: Vec<SortedDevice> = orchestrator.devices()
             .map(|device| SortedDevice
             {
-                unique_id: device.unique_id(),
+                unique_id: device.unique_id.clone(),
                 name: device.name()
             })
             .collect();
@@ -94,8 +78,12 @@ impl SimpleComponent for MainWindow
 
         let model = MainWindow
         {
-            orchestrator: data.orchestrator.clone(),
-            devices_sorted
+            orchestrator,
+            devices_sorted,
+
+            device_settings_widget: None,
+
+            tracker: 0
         };
 
         let widgets = MainWindowBuilder::new(&window, &model, &sender).build();
@@ -108,14 +96,49 @@ impl SimpleComponent for MainWindow
     {
         match msg
         {
-            MainWindowMsg::DeviceChanged(index) =>
-            {
-                let mut orchestrator = self.orchestrator.borrow_mut();
-                let device = &self.devices_sorted[index];
+            MainWindowMsg::DeviceInitial(index) => self.apply_device_settings_widget(index, true),
+            MainWindowMsg::DeviceChanged(index) => self.apply_device_settings_widget(index, false)
+        }
+    }
 
-                orchestrator.set_current_device_id(device.unique_id.clone());
+
+    fn update_view(&self, widgets: &mut Self::Widgets, _sender: ComponentSender<Self>)
+    {
+        if self.changed(MainWindow::device_settings_widget())
+        {
+            let current_child = widgets.device.settings_container.last_child();
+            if let Some(current_child) = &current_child
+            {
+                widgets.device.settings_container.remove(current_child);
+            }
+
+            if let Some(new_child) = &self.device_settings_widget
+            {
+                widgets.device.settings_container.append(new_child.as_ref().root());
             }
         }
+    }
+}
+
+
+impl MainWindow
+{
+    fn apply_device_settings_widget(&mut self, index: usize, initial: bool)
+    {
+        let mut widget = None;
+        {
+            if initial
+            {
+                self.orchestrator.with_active_device(|device_instance, cookie| { widget = device_instance.create_settings_widget(cookie) });
+            }
+            else
+            {
+                let device_id = self.devices_sorted[index].unique_id.clone();
+                self.orchestrator.set_active_device_id(&device_id, |device_instance, cookie| { widget = device_instance.create_settings_widget(cookie) });
+            }
+        }
+
+        self.set_device_settings_widget(widget)
     }
 }
 
@@ -148,7 +171,7 @@ impl<'a> MainWindowBuilder<'a>
 
         MainWindowWidgets
         {
-            _device: self.init_device_tab(&tabs)
+            device: self.init_device_tab(&tabs)
             //Self::new_box_tab(&tabs, "mainwindow.tab.analoginputs");
             //Self::new_box_tab(&tabs, "mainwindow.tab.digitalinputs");
             //Self::add_box_tab(&tabs, "mainwindow.tab.analogoutputs");
@@ -171,11 +194,27 @@ impl<'a> MainWindowBuilder<'a>
 
 
 
-        let devices_combobox = gtk::ComboBoxText::builder()
-            .build();
+        let devices_combobox = gtk::ComboBoxText::builder().build();
+        tab.append(&devices_combobox);
+
+
+        let active_device_id = self.model.orchestrator.active_device_id();
+        for (index, device) in self.model.devices_sorted.iter().enumerate()
+        {
+            devices_combobox.append_text(device.name.as_str());
+
+            if let Some(device_id) = &active_device_id
+            {
+                if *device_id == device.unique_id
+                {
+                    devices_combobox.set_active(Some(index as u32));
+                    sender.input(MainWindowMsg::DeviceInitial(index));
+                }
+            }
+        }
+
 
         let devices_combobox_cloned = devices_combobox.clone();
-
         devices_combobox.connect_changed(clone!(
             @strong sender => move |_|
             {
@@ -188,29 +227,14 @@ impl<'a> MainWindowBuilder<'a>
                 }
             }));
 
-        tab.append(&devices_combobox);
 
-
-        let current_device_id = self.model.orchestrator.borrow().current_device_id();
-
-
-        for (index, device) in self.model.devices_sorted.iter().enumerate()
-        {
-            devices_combobox.append_text(device.name.as_str());
-
-            if let Some(device_id) = current_device_id.clone()
-            {
-                if device_id == device.unique_id
-                {
-                    devices_combobox.set_active(Some(index as u32));
-                }
-            }
-        }
+        let settings_container = gtk::Box::builder().build();
+        tab.append(&settings_container);
 
 
         MainWindowDeviceWidgets
         {
-            _devices_combobox: devices_combobox
+            settings_container
         }
     }
 
@@ -237,6 +261,7 @@ impl<'a> MainWindowBuilder<'a>
 }
 
 
+#[derive(Clone)]
 struct SortedDevice
 {
     unique_id: UniqueId,

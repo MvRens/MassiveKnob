@@ -1,8 +1,4 @@
-use std::cell::RefCell;
-use std::rc::Rc;
 use env_logger::Env;
-use mainwindow::MainWindowInit;
-use orchestrator::Orchestrator;
 use relm4::prelude::*;
 
 #[macro_use]
@@ -12,6 +8,7 @@ i18n!("locales");
 
 
 pub mod util;
+pub mod ui;
 pub mod registry;
 pub mod devices;
 pub mod actions;
@@ -28,13 +25,6 @@ fn main()
 
     relm4_icons::initialize_icons();
 
-    let orchestrator = Rc::new(RefCell::new(Orchestrator::new()));
-
     let app = RelmApp::new("com.github.mvrens.massiveknob");
-    app.run::<mainwindow::MainWindow>(MainWindowInit
-    {
-        orchestrator: Rc::clone(&orchestrator)
-    });
-
-    orchestrator.borrow_mut().finalize();
+    app.run::<mainwindow::MainWindow>(());
 }

@@ -1,4 +1,5 @@
 {
     "nixEnvSelector.nixFile": "${workspaceFolder}/shell.nix",
-    "files.trimTrailingWhitespace": true
+    "files.trimTrailingWhitespace": true,
+    "rust-analyzer.imports.granularity.group": "item"
 }

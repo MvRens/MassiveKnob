@@ -1,5 +1,8 @@
+use std::borrow::{Borrow, BorrowMut};
+use std::sync::Arc;
+
 use crate::actions;
-use crate::actions::ActionRegistryItem;
+//use crate::actions::ActionRegistryItem;
 use crate::config::json::JsonConfigManager;
 use crate::config::{ConfigManager, ConfigName};
 use crate::devices::{self, Device};
@@ -14,15 +17,13 @@ mod settings;
 pub struct Orchestrator
 {
     config_manager: ConfigManager,
+    settings_name: ConfigName,
 
     device_registry: Registry<DeviceRegistryItem>,
-    action_registry: Registry<ActionRegistryItem>,
+    //action_registry: Registry<ActionRegistryItem>,
 
-    settings_name: ConfigName,
-    settings: settings::Settings,
-
-
-    current_device_instance: Option<Box<dyn Device>>
+//    current_device_instance: Option<Box<dyn Device>>
+    active_device: Option<ActiveDevice>
 }
 
 
@@ -31,13 +32,13 @@ impl Orchestrator
     pub fn new() -> Self
     {
         let config_manager = ConfigManager::new();
-
         let settings_name = ConfigName::new("settings");
         let settings = match config_manager.read_json(&settings_name).expect("Error reading settings")
         {
-            None => settings::Settings::new(),
+            None => settings::Settings::default(),
             Some(v) => v
         };
+
 
         let mut device_registry = Registry::new();
         let mut action_registry = Registry::new();
@@ -45,31 +46,32 @@ impl Orchestrator
         devices::register(&mut device_registry);
         actions::register(&mut action_registry);
 
-        Self
+        let mut instance = Self
         {
             config_manager,
+            settings_name,
 
             device_registry,
-            action_registry,
+            //action_registry,
 
-            settings_name,
-            settings,
+            //settings,
 
 
-            current_device_instance: None
+            active_device: None
+        };
+
+
+        instance.initialize(settings);
+        instance
+    }
+
+
+    fn initialize(&mut self, settings: settings::Settings)
+    {
+        if let Some(device_id) = settings.device_id
+        {
+            self.set_active_device(Some(UniqueId::from(device_id)));
         }
-    }
-
-
-    pub fn initialize(&mut self)
-    {
-        self.set_current_device(self.current_device_id());
-    }
-
-
-    pub fn finalize(&mut self)
-    {
-        self.set_current_device(None);
     }
 
 
@@ -79,11 +81,13 @@ impl Orchestrator
     }
 
 
-    pub fn current_device_id(&self) -> Option<UniqueId>
+    pub fn active_device_id(&self) -> Option<UniqueId>
     {
-        let Some(device_id) = &self.settings.device_id else { return None };
-        Some(UniqueId::new(device_id.as_str()))
+        let Some(active_device) = &self.active_device else { return None };
+        Some(active_device.id.clone())
     }
+
+    /*
 
 
     pub fn current_device(&self) -> Option<&DeviceRegistryItem>
@@ -91,57 +95,88 @@ impl Orchestrator
         let Some(device_id) = self.current_device_id() else { return None };
         self.device_registry.by_id(device_id)
     }
+    */
 
 
-    pub fn set_current_device_id(&mut self, id: UniqueId)
+    pub fn with_active_device<F>(&self, callback: F) where F: FnOnce(&dyn Device)
     {
-        let new_id = Some(String::from(id.as_str()));
-        if new_id == self.settings.device_id { return; }
+        let Some(active_device) = self.active_device else { return };
+        let instance = active_device.instance.clone();
 
-        self.settings.device_id = new_id;
+        callback(instance.as_ref().as_ref());
+
+        self.active_device.as_ref().map(|device| callback(&*device.instance.clone()));
+    }
+
+
+
+    pub fn set_active_device_id<F>(&mut self, id: &UniqueId, on_changed: F) where F: FnOnce(&dyn Device)
+    {
+        let id = Some(id.clone());
+        if id == self.active_device_id() { return }
+
+        self.set_active_device(id);
         self.store_settings();
 
-        self.set_current_device(Some(id));
+        self.with_active_device(on_changed);
     }
+
 
 
     fn store_settings(&self)
     {
-        if let Err(e) = self.config_manager.write_json(&self.settings_name, &self.settings)
+        let settings = settings::Settings
+        {
+            device_id: match &self.active_device
+            {
+                None => None,
+                Some(v) => Some(v.id.clone().into())
+            }
+        };
+
+        if let Err(e) = self.config_manager.write_json(&self.settings_name, &settings)
         {
             log::error!("Error writing settings: {e}");
         }
     }
 
 
-    fn set_current_device(&mut self, id: Option<UniqueId>)
+
+    fn set_active_device(&mut self, id: Option<UniqueId>)
     {
-        let prev_device_instance;
-        let new_device = match id
+        self.active_device = match id
         {
             None => None,
-            Some(v) => self.device_registry.by_id(v)
+            Some(v) =>
+                match self.device_registry.by_id(&v)
+                {
+                    None => None,
+                    Some(d) =>
+                    {
+                        Some(ActiveDevice
+                        {
+                            id: v.clone(),
+                            instance: Arc::new((d.factory)())
+                        })
+                    }
+                }
         };
-
-
-        // Replace the device instance
-        if let Some(new_device) = new_device
-        {
-            let mut new_device_instance = (new_device.factory)();
-            new_device_instance.activate();
-
-            prev_device_instance = self.current_device_instance.replace(new_device_instance);
-        }
-        else
-        {
-            prev_device_instance = self.current_device_instance.take();
-        }
-
-
-        // Deactivate the previous instance
-        if let Some(mut prev_device_instance) = prev_device_instance
-        {
-            prev_device_instance.deactivate();
-        }
     }
+}
+
+
+impl Drop for Orchestrator
+{
+    fn drop(&mut self)
+    {
+        self.set_active_device(None);
+    }
+}
+
+
+
+struct ActiveDevice
+{
+    id: UniqueId,
+    instance: Arc<Box<dyn Device>>
 }

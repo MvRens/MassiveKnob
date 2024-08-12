@@ -4,3 +4,13 @@ devices:
   serial_min:
     name:
       en: Serial device using MIN protocol
+
+serial_min:
+  settings:
+    port:
+      label:
+        en: Serial port
+      custom:
+        en: Custom...
+    custom_port_placeholder:
+      en: e.g. /dev/ttyACM0

@@ -9,6 +9,6 @@ pub fn register(registry: &mut Registry<ActionRegistryItem>)
 {
     registry.register(ActionRegistryItem
     {
-        unique_id: UniqueId::new("pipewire.set_volume")
+        unique_id: UniqueId::from("pipewire.set_volume")
     });
 }

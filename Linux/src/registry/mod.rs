@@ -49,7 +49,7 @@ impl<T> Registry<T> where T: RegistryItem
     }
 
 
-    pub fn by_id(&self, id: UniqueId) -> Option<&T>
+    pub fn by_id(&self, id: &UniqueId) -> Option<&T>
     {
         self.items.get(id.as_str())
     }

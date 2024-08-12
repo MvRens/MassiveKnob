@@ -7,11 +7,11 @@ pub struct Settings
 }
 
 
-impl Settings
+impl Default for Settings
 {
-    pub fn new() -> Self
+    fn default() -> Self
     {
-        Self 
+        Self
         {
             device_id: None
         }

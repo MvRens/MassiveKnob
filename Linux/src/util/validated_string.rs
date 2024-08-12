@@ -22,10 +22,10 @@ impl<T: ValidatedStringPattern> ValidatedString<T>
         let pattern = Regex::new(T::pattern()).unwrap();
         assert!(pattern.is_match(value), "Value '{value}' has invalid characters");
 
-        Self 
-        { 
-            inner: value.to_string(), 
-            _phantom: PhantomData 
+        Self
+        {
+            inner: value.to_string(),
+            _phantom: PhantomData
         }
     }
 
@@ -39,14 +39,41 @@ impl<T: ValidatedStringPattern> ValidatedString<T>
 
 impl<T: ValidatedStringPattern> Clone for ValidatedString<T>
 {
-    fn clone(&self) -> Self 
+    fn clone(&self) -> Self
     {
-        Self 
+        Self
         {
             inner: self.inner.clone(),
             _phantom: PhantomData
         }
-    }    
+    }
+}
+
+
+impl<T: ValidatedStringPattern> From<&str> for ValidatedString<T>
+{
+    fn from(value: &str) -> Self
+    {
+        Self::new(value)
+    }
+}
+
+
+impl<T: ValidatedStringPattern> From<String> for ValidatedString<T>
+{
+    fn from(value: String) -> Self
+    {
+        Self::new(value.as_str())
+    }
+}
+
+
+impl<T: ValidatedStringPattern> Into<String> for ValidatedString<T>
+{
+    fn into(self) -> String
+    {
+        self.inner.clone()
+    }
 }
 
 

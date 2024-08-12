@@ -4,20 +4,20 @@ pub mod serial_min;
 
 use crate::registry::Registry;
 use crate::registry::RegistryItem;
+use crate::ui::EmbeddedWidgetConnector;
 use crate::util::unique_id::UniqueId;
 
 
 pub struct DeviceRegistryItem
 {
     pub unique_id: UniqueId,
-    pub factory: fn() -> Box<dyn Device>
+    pub factory: fn() -> Box<dyn Device>,
+    pub settings_widget_factory: fn() -> Option<Box<dyn EmbeddedWidgetConnector>>
 }
 
 
 pub trait Device
 {
-    fn activate(&mut self);
-    fn deactivate(&mut self);
 }
 
 

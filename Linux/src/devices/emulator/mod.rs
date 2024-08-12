@@ -1,11 +1,13 @@
 use emulatorwindow::EmulatorWindow;
-use relm4::{component::Connector, ComponentController};
+use relm4::component::Connector;
 use relm4::Component;
 use relm4::gtk::prelude::*;
+use relm4::ComponentController;
 
 use crate::registry::Registry;
 use crate::util::unique_id::UniqueId;
-use super::{Device, DeviceRegistryItem};
+use super::Device;
+use super::DeviceRegistryItem;
 
 
 pub mod emulatorwindow;
@@ -13,7 +15,7 @@ pub mod emulatorwindow;
 
 pub struct EmulatorWindowDevice
 {
-    window: Option<Connector<EmulatorWindow>>
+    window: Connector<EmulatorWindow>
 }
 
 
@@ -21,9 +23,12 @@ impl EmulatorWindowDevice
 {
     fn new() -> Self
     {
+        let builder = EmulatorWindow::builder();
+        let window = builder.launch({});
+
         EmulatorWindowDevice
         {
-            window: None
+            window
         }
     }
 }
@@ -31,20 +36,14 @@ impl EmulatorWindowDevice
 
 impl Device for EmulatorWindowDevice
 {
-    fn activate(&mut self)
+}
+
+
+impl Drop for EmulatorWindowDevice
+{
+    fn drop(&mut self)
     {
-        if self.window.is_some() { return }
-
-        let builder = EmulatorWindow::builder();
-        self.window = Some(builder.launch({}));
-    }
-
-
-    fn deactivate(&mut self)
-    {
-        let Some(window) = self.window.take() else { return };
-
-        window.widget().close();
+        self.window.widget().close();
     }
 }
 
@@ -52,7 +51,8 @@ impl Device for EmulatorWindowDevice
 pub fn register(registry: &mut Registry<DeviceRegistryItem>)
 {
     registry.register(DeviceRegistryItem {
-        unique_id: UniqueId::new("emulator"),
-        factory: || Box::new(EmulatorWindowDevice::new())
+        unique_id: UniqueId::from("emulator"),
+        factory: || Box::new(EmulatorWindowDevice::new()),
+        settings_widget_factory: || None
     });
 }
