@@ -1,0 +1,16 @@
+[package]
+name = "massiveknob_ui_gtk"
+version = "0.1.0"
+edition = "2021"
+build = "build.rs"
+
+[dependencies]
+env_logger = "0.11.3"
+gtk = { version = "0.9.0", package = "gtk4", features = ["v4_14"] }
+log = "0.4.21"
+rust-i18n = "3.0.1"
+serialport = { version = "4.4.0", default-features = false }
+tracker = "0.2.2"
+
+[dependencies.massiveknob_backend]
+path = "../backend"

@@ -1,0 +1,6 @@
+_version: 2
+
+devices:
+  emulator:
+    name:
+      en: Emulator

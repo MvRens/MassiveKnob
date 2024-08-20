@@ -1,0 +1,6 @@
+_version: 2
+
+devices:
+  serial_min:
+    name:
+      en: Serial device using MIN protocol

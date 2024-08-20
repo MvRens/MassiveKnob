@@ -1,0 +1,9 @@
+_version: 2
+
+actions:
+  pipewire:
+    group_name:
+      en: Pipewire
+    set_volume:
+      name:
+        en: Set volume

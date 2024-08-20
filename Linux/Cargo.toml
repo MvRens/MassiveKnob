@@ -1,22 +1,6 @@
-[package]
-name = "MassiveKnob"
-version = "0.1.0"
-edition = "2021"
-build = "build.rs"
-
-[dependencies]
-anyhow = "1.0.86"
-env_logger = "0.11.3"
-log = "0.4.21"
-platform-dirs = "0.3.0"
-regex = "1.10.5"
-relm4 = "0.8.1"
-relm4-icons = "0.8.3"
-rust-i18n = "3.0.1"
-serde = { version = "1.0.203", features = ["derive"] }
-serde_json = "1.0.117"
-serialport = { version = "4.4.0", default-features = false }
-tracker = "0.2.2"
-
-[dependencies.min-rs]
-git = "https://github.com/MvRens/min-rs.git"
+[workspace]
+resolver = "2"
+members = [
+    "backend",
+    "ui-gtk"
+]
