@@ -7,16 +7,10 @@ use crate::registry::RegistryItem;
 use crate::ui::EmbeddedWidgetConnector;
 use crate::util::unique_id::UniqueId;
 
-#[tracker::track]
 pub struct MainWindow
 {
-    #[do_not_track]
     orchestrator: Orchestrator,
-
-    #[do_not_track]
     devices_sorted: Vec<SortedDevice>,
-
-    #[no_eq]
     device_settings_widget: Option<Box<dyn EmbeddedWidgetConnector>>
 }
 

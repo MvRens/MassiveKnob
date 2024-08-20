@@ -25,13 +25,13 @@ pub trait UiComponent : Sized
     fn build_root(init: &Self::Init) -> Self::Root;
     fn build_widgets(root: &Self::Root, init: &Self::Init) -> Self::Widgets;
 
-    fn init(root: &Self::Root, state: &Rc<RefCell<Self::State>>);
+    fn init(root: &Self::Root, widgets: &Rc<Self::Widgets>, state: &Rc<RefCell<Self::State>>);
 }
 
 
 pub trait UiComponentState<C: UiComponent>
 {
-    fn new(init: C::Init, widgets: C::Widgets) -> Self;
+    fn new(init: C::Init) -> Self;
 }
 
 
@@ -71,10 +71,10 @@ impl<C: UiComponent> UiComponentBuilder<C>
     pub fn build(&self, init: C::Init) -> UiComponentConnector<C>
     {
         let root = C::build_root(&init);
-        let widgets = C::build_widgets(&root, &init);
-        let state = Rc::new(RefCell::new(C::State::new(init, widgets)));
+        let widgets = Rc::new(C::build_widgets(&root, &init));
+        let state = Rc::new(RefCell::new(C::State::new(init)));
 
-        C::init(&root, &state);
+        C::init(&root, &widgets, &state);
 
 
         UiComponentConnector::<C>

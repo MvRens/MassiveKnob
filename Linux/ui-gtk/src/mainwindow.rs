@@ -11,6 +11,7 @@ use massiveknob_backend::util::unique_id::UniqueId;
 
 use crate::devices::DeviceSettingsUiBuilder;
 use crate::ui::uicomponent::UiComponent;
+use crate::ui::uicomponent::UiComponentConnectorWidget;
 use crate::ui::uicomponent::UiComponentState;
 
 
@@ -26,9 +27,8 @@ pub struct MainWindow
 {
     orchestrator: Arc<Mutex<Orchestrator>>,
     devices_sorted: Vec<SortedDevice>,
-    widgets: MainWindowWidgets,
 
-    device_settings_widget: Option<gtk::Widget>
+    device_settings_widget: Option<Box<dyn UiComponentConnectorWidget>>
 }
 
 
@@ -75,11 +75,11 @@ impl UiComponent for MainWindow
     }
 
 
-    fn init(_root: &Self::Root, state: &Rc<RefCell<Self::State>>)
+    fn init(_root: &Self::Root, widgets: &Rc<Self::Widgets>, state: &Rc<RefCell<Self::State>>)
     {
         {
             let state_borrowed = state.borrow();
-            let devices_dropdown = state_borrowed.widgets.device.devices_dropdown.clone();
+            let devices_dropdown = widgets.device.devices_dropdown.clone();
             let orchestrator = state_borrowed.orchestrator.lock().unwrap();
 
             let active_device_id = orchestrator.active_device_id();
@@ -106,23 +106,26 @@ impl UiComponent for MainWindow
                 #[weak]
                 state,
 
+                #[weak]
+                widgets,
+
                 move |_|
                 {
                     let mut state = state.borrow_mut();
-                    state.update_active_device(true);
+                    state.update_active_device(&widgets, true);
                 }
             ));
         }
 
         let mut state = state.borrow_mut();
-        state.update_active_device(false);
+        state.update_active_device(&widgets, false);
     }
 }
 
 
 impl UiComponentState<MainWindow> for MainWindow
 {
-    fn new(init: MainWindowInit, widgets: MainWindowWidgets) -> Self
+    fn new(init: MainWindowInit) -> Self
     {
         let mut devices_sorted: Vec<SortedDevice>;
         {
@@ -144,7 +147,6 @@ impl UiComponentState<MainWindow> for MainWindow
         {
             orchestrator: init.orchestrator.clone(),
             devices_sorted,
-            widgets,
 
             device_settings_widget: None
         }
@@ -204,11 +206,9 @@ impl MainWindow
     }
 
 
-    fn update_active_device(&mut self, set_active: bool)
+    fn update_active_device(&mut self, widgets: &Rc<MainWindowWidgets>, set_active: bool)
     {
-        log::info!("update_active_device");
-
-        let active_index = self.widgets.device.devices_dropdown.selected();
+        let active_index = widgets.device.devices_dropdown.selected();
         if active_index == gtk::ffi::GTK_INVALID_LIST_POSITION { return };
 
         let Ok(active_index_usize) = usize::try_from(active_index) else { return };
@@ -230,14 +230,14 @@ impl MainWindow
 
         if let Some(prev_widget) = &self.device_settings_widget
         {
-            self.widgets.device.settings_container.remove(prev_widget);
+            widgets.device.settings_container.remove(&prev_widget.root());
         }
 
         if let Some(device) = device
         {
             let widget = DeviceSettingsUiBuilder::build(device.clone());
 
-            self.widgets.device.settings_container.append(&widget);
+            widgets.device.settings_container.append(&widget.root());
             self.device_settings_widget = Some(widget);
         }
         else

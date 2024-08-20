@@ -54,7 +54,7 @@ impl UiComponent for EmulatorSettingsUi
 
 impl UiComponentState<EmulatorSettingsUi> for EmulatorSettingsUi
 {
-    fn new(_init: (), _widgets: EmulatorSettingsUiWidgets) -> Self
+    fn new(_init: EmulatorSettingsUiInit, _widgets: EmulatorSettingsUiWidgets) -> Self
     {
         Self
         {

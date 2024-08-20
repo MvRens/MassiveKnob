@@ -1,3 +1,7 @@
+use std::cell::RefCell;
+use std::rc::Rc;
+
+use gtk::glib;
 use gtk::glib::clone;
 use gtk::prelude::*;
 use gtk::StringList;
@@ -6,14 +10,9 @@ use crate::ui::uicomponent::UiComponent;
 use crate::ui::uicomponent::UiComponentState;
 
 
-#[tracker::track]
 pub struct SerialMinSettingsUi
 {
-    #[do_not_track]
-    ports: Vec<String>,
-
-    custom_port: String,
-    custom_port_visible: bool
+    ports: Vec<String>
 }
 
 
@@ -25,6 +24,7 @@ pub struct SerialMinSettingsUiInit
 
 pub struct SerialMinSettingsUiWidgets
 {
+    port_select: gtk::DropDown,
     custom_port_input: gtk::Entry
 }
 
@@ -47,7 +47,7 @@ impl UiComponent for SerialMinSettingsUi
             .build()
     }
 
-    fn build_widgets(root: &Self::Root, init: &Self::Init) -> Self::Widgets
+    fn build_widgets(root: &Self::Root, _init: &Self::Init) -> Self::Widgets
     {
         let port_label = gtk::Label::builder()
             .label(t!("serial_min.settings.port.label"))
@@ -57,31 +57,10 @@ impl UiComponent for SerialMinSettingsUi
         root.append(&port_label);
 
 
-
-        let port_model_vec: Vec<&str> = ports.iter().map(|p| p.as_str()).collect();
-        let port_model = StringList::new(&port_model_vec);
-
-        port_model.append(t!("serial_min.settings.port.custom").as_ref());
-
         let port_select = gtk::DropDown::builder()
-            .model(&port_model)
             .build();
 
         root.append(&port_select);
-
-
-        let port_select_cloned = port_select.clone();
-        port_select.connect_selected_notify(clone!(
-            move |_|
-            {
-                let active_index = port_select_cloned.selected();
-                if active_index == gtk::ffi::GTK_INVALID_LIST_POSITION { return };
-
-                if let Ok(active_index_usize) = usize::try_from(active_index)
-                {
-                    //sender.input(SerialMinSettingsWidgetMessage::PortChanged(active_index_usize));
-                }
-            }));
 
 
         let custom_port_input = gtk::Entry::builder()
@@ -92,34 +71,68 @@ impl UiComponent for SerialMinSettingsUi
         root.append(&custom_port_input);
 
 
-        let custom_port_input_cloned = custom_port_input.clone();
-        /*
-        custom_port_input.connect_changed(clone!(
-            @strong sender => move |_|
-            {
-                sender.input(SerialMinSettingsWidgetMessage::CustomPortChanged(String::from(custom_port_input_cloned.text().as_str())));
-            }
-        ));
-         */
-
         Self::Widgets
         {
+            port_select,
             custom_port_input
         }
     }
 
 
-    fn init(root: &Self::Root, state: &std::rc::Rc<std::cell::RefCell<Self::State>>)
+    fn init(_root: &Self::Root, widgets: &Rc<Self::Widgets>, state: &Rc<RefCell<Self::State>>)
     {
+        let port_model;
+        {
+            let state_borrowed = state.borrow();
 
-        .selected(ports.len().try_into().unwrap_or(gtk::ffi::GTK_INVALID_LIST_POSITION))
+            let port_model_vec: Vec<&str> = state_borrowed.ports.iter().map(|p| p.as_str()).collect();
+            port_model = StringList::new(&port_model_vec);
+
+            port_model.append(t!("serial_min.settings.port.custom").as_ref());
+
+            widgets.port_select.set_model(Some(&port_model));
+            widgets.port_select.set_selected(state_borrowed.ports.len().try_into().unwrap_or(gtk::ffi::GTK_INVALID_LIST_POSITION));
+        }
+
+
+        widgets.port_select.connect_selected_notify(clone!(
+            #[weak]
+            state,
+
+            #[weak]
+            widgets,
+
+            move |_|
+            {
+                let active_index = widgets.port_select.selected();
+                if active_index == gtk::ffi::GTK_INVALID_LIST_POSITION { return };
+
+                let state = state.borrow();
+                state.set_port(&widgets, active_index);
+            }));
+
+        /*
+        widgets.custom_port_input.connect_changed(clone!(
+            #[weak]
+            state,
+
+            #[weak(rename_to = custom_port_input)]
+            widgets.custom_port_input,
+
+            move |_|
+            {
+                let mut state = state.borrow_mut();
+                state.set_custom_port(custom_port_input.text().into());
+            }
+        ));
+        */
     }
 }
 
 
 impl UiComponentState<SerialMinSettingsUi> for SerialMinSettingsUi
 {
-    fn new(_init: <SerialMinSettingsUi as UiComponent>::Init, _widgets: <SerialMinSettingsUi as UiComponent>::Widgets) -> Self
+    fn new(_init: SerialMinSettingsUiInit) -> Self
     {
         let ports_list = serialport::available_ports().unwrap_or_default();
         let ports: Vec<String> = ports_list.iter().map(|p| p.port_name.clone()).collect();
@@ -129,15 +142,22 @@ impl UiComponentState<SerialMinSettingsUi> for SerialMinSettingsUi
 
         Self
         {
-            ports,
-            custom_port: String::default(),
-            custom_port_visible: false,
-            tracker: 0
+            ports
         }
     }
 }
 
 
+impl SerialMinSettingsUi
+{
+    fn set_port(&self, widgets: &Rc<SerialMinSettingsUiWidgets>, index: u32)
+    {
+        let Ok(index_usize) = usize::try_from(index) else { return };
+        let custom_port_visible = index_usize == self.ports.len() - 1;
+
+        widgets.custom_port_input.set_visible(custom_port_visible);
+    }
+}
 
 
 /*
