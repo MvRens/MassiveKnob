@@ -153,7 +153,7 @@ impl SerialMinSettingsUi
     fn set_port(&self, widgets: &Rc<SerialMinSettingsUiWidgets>, index: u32)
     {
         let Ok(index_usize) = usize::try_from(index) else { return };
-        let custom_port_visible = index_usize == self.ports.len() - 1;
+        let custom_port_visible = index_usize == self.ports.len();
 
         widgets.custom_port_input.set_visible(custom_port_visible);
     }

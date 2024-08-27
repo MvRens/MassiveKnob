@@ -23,8 +23,8 @@ impl DeviceSettingsUiBuilder
     {
         match device.as_ref()
         {
-            Device::Emulator(_) => Box::new(EmulatorSettingsUi::builder().build(EmulatorSettingsUiInit { device })),
-            Device::SerialMin(_) => Box::new(SerialMinSettingsUi::builder().build(SerialMinSettingsUiInit { device }))
+            Device::Emulator(_) => Box::new(EmulatorSettingsUi::builder().build("EmulatorSettingsUi", EmulatorSettingsUiInit { device })),
+            Device::SerialMin(_) => Box::new(SerialMinSettingsUi::builder().build("SerialMinSettingsUi", SerialMinSettingsUiInit { device }))
         }
     }
 }

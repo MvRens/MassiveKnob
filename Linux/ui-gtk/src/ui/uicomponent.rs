@@ -35,9 +35,12 @@ pub trait UiComponentState<C: UiComponent>
 }
 
 
+#[must_use]
 pub struct UiComponentConnector<C: UiComponent>
 {
+    pub name: String,
     pub root: C::Root,
+    pub widgets: Rc<C::Widgets>,
     pub state: Rc<RefCell<C::State>>
 }
 
@@ -68,7 +71,7 @@ impl<C: UiComponent> Default for UiComponentBuilder<C>
 
 impl<C: UiComponent> UiComponentBuilder<C>
 {
-    pub fn build(&self, init: C::Init) -> UiComponentConnector<C>
+    pub fn build(&self, name: &str, init: C::Init) -> UiComponentConnector<C>
     {
         let root = C::build_root(&init);
         let widgets = Rc::new(C::build_widgets(&root, &init));
@@ -79,7 +82,9 @@ impl<C: UiComponent> UiComponentBuilder<C>
 
         UiComponentConnector::<C>
         {
+            name: String::from(name),
             root,
+            widgets,
             state
         }
     }
@@ -90,7 +95,7 @@ impl<C: UiComponent> From<UiComponentConnector<C>> for gtk::Widget
 {
     fn from(val: UiComponentConnector<C>) -> Self
     {
-        val.root.into()
+        val.root.clone().into()
     }
 }
 
@@ -100,5 +105,15 @@ impl<C: UiComponent> UiComponentConnectorWidget for UiComponentConnector<C>
     fn root(&self) -> gtk::Widget
     {
         self.root.clone().into()
+    }
+}
+
+
+impl<C: UiComponent> Drop for UiComponentConnector<C>
+{
+    fn drop(&mut self)
+    {
+        self.root.unrealize();
+        log::debug!("Dropped UiComponentConnector for {}", self.name.as_str());
     }
 }

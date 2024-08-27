@@ -118,7 +118,7 @@ impl UiComponent for MainWindow
         }
 
         let mut state = state.borrow_mut();
-        state.update_active_device(&widgets, false);
+        state.update_active_device(widgets, false);
     }
 }
 
