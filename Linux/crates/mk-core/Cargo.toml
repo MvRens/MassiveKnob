@@ -1,0 +1,17 @@
+[package]
+name = "mk-core"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.96"
+crossbeam-channel = "0.5.14"
+log = "0.4.26"
+regex = "1.11.1"
+
+[dependencies.uuid]
+version = "1.10.0"
+features = [ "v4", "fast-rng", "macro-diagnostics" ]
+
+[lints]
+workspace = true

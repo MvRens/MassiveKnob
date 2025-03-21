@@ -7,8 +7,8 @@ use crate::config::ConfigName;
 use crate::config::ConfigManager;
 use crate::devices::DeviceContext;
 use crate::devices::DeviceInfo;
+use crate::devices::DeviceReference;
 use crate::devices::DeviceRegistry;
-use crate::devices::Device;
 use crate::util::unique_id::UniqueId;
 
 
@@ -17,7 +17,7 @@ mod settings;
 
 pub struct Orchestrator
 {
-    config_manager: ConfigManager,
+    config_manager: Arc<ConfigManager>,
     settings_name: ConfigName,
 
     device_registry: DeviceRegistry,
@@ -31,7 +31,7 @@ impl Orchestrator
     #![allow(clippy::new_without_default)]
     pub fn new() -> Self
     {
-        let config_manager = ConfigManager::new();
+        let config_manager = Arc::new(ConfigManager::new());
         let settings_name = ConfigName::new("settings");
         let settings = config_manager.read_json(&settings_name).expect("Error reading settings").unwrap_or_default();
 
@@ -131,6 +131,7 @@ impl Orchestrator
                     {
                         let context = DeviceContext
                         {
+                            config_manager: self.config_manager.clone()
                         };
 
                         let instance_id = Uuid::new_v4();
@@ -160,9 +161,6 @@ impl Drop for Orchestrator
     }
 }
 
-
-
-pub type DeviceReference = Arc<Device>;
 
 
 struct ActiveDevice

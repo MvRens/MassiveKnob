@@ -1,0 +1,16 @@
+[package]
+name = "mk-device-serialmin"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+crossbeam-channel = "0.5.14"
+log = "0.4.26"
+mk-core = { path = "../mk-core" }
+serialport = "4.7.0"
+
+[dependencies.min-rs]
+git = "https://github.com/MvRens/min-rs.git"
+
+[lints]
+workspace = true

@@ -1,6 +1,7 @@
 {
-    "nixEnvSelector.nixFile": "${workspaceFolder}/shell.nix",
     "files.trimTrailingWhitespace": true,
     "rust-analyzer.imports.granularity.group": "item",
-    "rust-analyzer.check.command": "clippy"
+    "rust-analyzer.check.command": "clippy",
+    "nixEnvSelector.suggestion": false,
+    "nixEnvSelector.nixFile": "${workspaceFolder}/shell.nix"
 }

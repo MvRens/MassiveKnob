@@ -1,7 +1,7 @@
 use emulator_settings_ui::EmulatorSettingsUi;
 use emulator_settings_ui::EmulatorSettingsUiInit;
 use massiveknob_backend::devices::Device;
-use massiveknob_backend::orchestrator::DeviceReference;
+use massiveknob_backend::devices::DeviceReference;
 use serial_min_settings_ui::SerialMinSettingsUi;
 use serial_min_settings_ui::SerialMinSettingsUiInit;
 

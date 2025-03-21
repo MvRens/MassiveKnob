@@ -1,3 +1,4 @@
+use core::panic;
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -5,14 +6,18 @@ use gtk::glib;
 use gtk::glib::clone;
 use gtk::prelude::*;
 use gtk::StringList;
-use massiveknob_backend::orchestrator::DeviceReference;
+use massiveknob_backend::devices::serial_min::SerialMinDeviceSettings;
+use massiveknob_backend::devices::Device;
+use massiveknob_backend::devices::DeviceReference;
 use crate::ui::uicomponent::UiComponent;
 use crate::ui::uicomponent::UiComponentState;
 
 
 pub struct SerialMinSettingsUi
 {
-    ports: Vec<String>
+    ports: Vec<String>,
+    device: DeviceReference,
+    init_settings: SerialMinDeviceSettings
 }
 
 
@@ -91,7 +96,24 @@ impl UiComponent for SerialMinSettingsUi
             port_model.append(t!("serial_min.settings.port.custom").as_ref());
 
             widgets.port_select.set_model(Some(&port_model));
-            widgets.port_select.set_selected(state_borrowed.ports.len().try_into().unwrap_or(gtk::ffi::GTK_INVALID_LIST_POSITION));
+
+
+            let known_port_index = state_borrowed.ports
+                .iter()
+                .position(|p| p == &state_borrowed.init_settings.port);
+
+            let selected_index: u32 = known_port_index
+                .unwrap_or(state_borrowed.ports.len())
+                .try_into()
+                .unwrap_or(gtk::ffi::GTK_INVALID_LIST_POSITION);
+
+            widgets.port_select.set_selected(selected_index);
+            state_borrowed.set_port(widgets, selected_index);
+
+            if known_port_index.is_none()
+            {
+                widgets.custom_port_input.set_text(&state_borrowed.init_settings.port);
+            }
         }
 
 
@@ -132,17 +154,19 @@ impl UiComponent for SerialMinSettingsUi
 
 impl UiComponentState<SerialMinSettingsUi> for SerialMinSettingsUi
 {
-    fn new(_init: SerialMinSettingsUiInit) -> Self
+    fn new(init: SerialMinSettingsUiInit) -> Self
     {
+        let Device::SerialMin(serial_min_device) = init.device.as_ref() else { panic!("SerialMinSettingsUi only supports Device::SerialMin") };
+        let settings = serial_min_device.get_settings();
+
         let ports_list = serialport::available_ports().unwrap_or_default();
         let ports: Vec<String> = ports_list.iter().map(|p| p.port_name.clone()).collect();
 
-
-        // TODO read settings
-
         Self
         {
-            ports
+            device: init.device,
+            ports,
+            init_settings: settings
         }
     }
 }
@@ -156,8 +180,47 @@ impl SerialMinSettingsUi
         let custom_port_visible = index_usize == self.ports.len();
 
         widgets.custom_port_input.set_visible(custom_port_visible);
+
+        self.update_device_settings(widgets);
+    }
+
+
+    fn update_device_settings(&self, widgets: &Rc<SerialMinSettingsUiWidgets>)
+    {
+        let port;
+        let selected_port_index: usize = widgets.port_select.selected() as usize;
+
+
+        if selected_port_index == self.ports.len()
+        {
+            port = widgets.custom_port_input.text().into();
+        }
+        else
+        {
+            port = self.ports[selected_port_index].clone();
+        }
+
+
+        let settings = SerialMinDeviceSettings
+        {
+            port
+        };
+
+
+        {
+            self.device.
+            /*
+            let mut device = self.device.clone().as_ref();
+            match device
+            {
+                Device::Emulator(_) => {},
+                Device::SerialMin(d) => d.update_settings(settings)
+            }
+            */
+        }
     }
 }
+
 
 
 /*

@@ -1,6 +1,12 @@
 [workspace]
 resolver = "2"
 members = [
-    "backend",
-    "ui-gtk"
+    "crates/mk-core",
+    "crates/mk-actions-pipewire",
+    "crates/mk-device-serialmin",
+    "ui/console"
 ]
+
+[workspace.lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"

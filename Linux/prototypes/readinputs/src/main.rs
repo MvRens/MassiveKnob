@@ -125,48 +125,7 @@ impl min::Interface for Uart
 
 
 
-#[derive(Copy, Clone)]
-enum MassiveKnobHostToDeviceFrameID 
-{
-    Handshake = 42
-    //AnalogOutput = 3,
-    //DigitalOutput = 4,
-    //Quit = 62,
-}
 
-
-enum MassiveKnobDeviceToHostFrameID 
-{
-    HandshakeResponse = 43,
-    AnalogInput = 1,
-    //DigitalInput = 2,
-    Error = 63
-}
-
-
-struct MassiveKnobDeviceSpecs
-{
-    analog_inputs: u8,
-    digital_inputs: u8,
-    analog_outputs: u8,
-    digital_outputs: u8
-}
-
-
-impl TryFrom<u8> for MassiveKnobDeviceToHostFrameID 
-{
-    type Error = ();
-
-    fn try_from(v: u8) -> Result<Self, <MassiveKnobDeviceToHostFrameID as TryFrom<u8>>::Error> 
-    {
-        match v {
-            x if x == MassiveKnobDeviceToHostFrameID::HandshakeResponse as u8 => Ok(MassiveKnobDeviceToHostFrameID::HandshakeResponse),
-            x if x == MassiveKnobDeviceToHostFrameID::AnalogInput as u8 => Ok(MassiveKnobDeviceToHostFrameID::AnalogInput),
-            x if x == MassiveKnobDeviceToHostFrameID::Error as u8 => Ok(MassiveKnobDeviceToHostFrameID::Error),
-            _ => Err(()),
-        }
-    }
-}
 
 
 fn main() {

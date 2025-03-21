@@ -1,10 +1,15 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use massiveknob_backend::orchestrator::DeviceReference;
+use massiveknob_backend::devices::DeviceReference;
 
 use crate::ui::uicomponent::UiComponent;
 use crate::ui::uicomponent::UiComponentState;
+
+
+pub struct EmulatorSettingsUi
+{
+}
 
 
 pub struct EmulatorSettingsUiInit
@@ -12,11 +17,6 @@ pub struct EmulatorSettingsUiInit
     pub device: DeviceReference
 }
 
-
-
-pub struct EmulatorSettingsUi
-{
-}
 
 
 pub struct EmulatorSettingsUiWidgets

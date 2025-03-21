@@ -1,0 +1,14 @@
+[package]
+name = "readinputs"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+colog = "1.3.0"
+crossbeam-channel = "0.5.14"
+log = "0.4.26"
+mk-core = { path = "../../crates/mk-core" }
+mk-device-serialmin = { path = "../../crates/mk-device-serialmin" }
+
+[lints]
+workspace = true
