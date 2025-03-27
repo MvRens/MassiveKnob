@@ -2,7 +2,7 @@
 resolver = "2"
 members = [
     "crates/mk-core",
-    "crates/mk-actions-pipewire",
+    "crates/mk-actions-pulseaudio",
     "crates/mk-device-serialmin",
     "ui/console"
 ]

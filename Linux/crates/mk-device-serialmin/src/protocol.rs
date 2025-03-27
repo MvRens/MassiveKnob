@@ -1,10 +1,10 @@
 #[derive(Copy, Clone)]
 pub enum MassiveKnobHostToDeviceFrameID
 {
-    Handshake = 42
-    //AnalogOutput = 3,
-    //DigitalOutput = 4,
-    //Quit = 62,
+    Handshake = 42,
+    AnalogOutput = 3,
+    DigitalOutput = 4,
+    Quit = 62,
 }
 
 
@@ -13,6 +13,7 @@ pub enum MassiveKnobDeviceToHostFrameID
     HandshakeResponse = 43,
     AnalogInput = 1,
     DigitalInput = 2,
+    KeepAlive = 61,
     Error = 63
 }
 
@@ -35,7 +36,9 @@ impl TryFrom<u8> for MassiveKnobDeviceToHostFrameID
         match v {
             x if x == MassiveKnobDeviceToHostFrameID::HandshakeResponse as u8 => Ok(MassiveKnobDeviceToHostFrameID::HandshakeResponse),
             x if x == MassiveKnobDeviceToHostFrameID::AnalogInput as u8 => Ok(MassiveKnobDeviceToHostFrameID::AnalogInput),
+            x if x == MassiveKnobDeviceToHostFrameID::DigitalInput as u8 => Ok(MassiveKnobDeviceToHostFrameID::DigitalInput),
             x if x == MassiveKnobDeviceToHostFrameID::Error as u8 => Ok(MassiveKnobDeviceToHostFrameID::Error),
+            x if x == MassiveKnobDeviceToHostFrameID::KeepAlive as u8 => Ok(MassiveKnobDeviceToHostFrameID::KeepAlive),
             _ => Err(()),
         }
     }

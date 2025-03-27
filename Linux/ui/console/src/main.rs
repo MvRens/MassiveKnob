@@ -6,18 +6,23 @@ use std::io::Write;
 
 use crossbeam_channel::unbounded;
 
+use mk_core::action::AnalogInputAction;
 use mk_core::device::DeviceEventMessage;
 use mk_core::device::DeviceFactory;
 use mk_device_serialmin::device::SerialMinDevice;
 use mk_device_serialmin::device::SerialMinDeviceSettings;
+use mk_actions_pulseaudio::set_volume::SetVolumeAction;
 
-fn main()
+#[tokio::main]
+async fn main()
 {
     let port = get_port();
 
 
     colog::basic_builder()
         .filter(None, log::LevelFilter::Trace)
+        .filter(Some("min_rs"), log::LevelFilter::Info)
+        .filter(Some("serialmin"), log::LevelFilter::Info)
         .init();
 
     log::info!("MassiveKnob starting for serial device on port {}", port);
@@ -28,6 +33,9 @@ fn main()
         baud_rate: 115200
     }, sender);
 
+
+    let action = SetVolumeAction {};
+
     log::info!("Waiting for events...");
     loop
     {
@@ -35,8 +43,18 @@ fn main()
         {
             match event
             {
-                DeviceEventMessage::AnalogInput { input, value } => println!("Analog input #{}: {}", input, value),
-                DeviceEventMessage::DigitalInput { input, value } => println!("Digital input #{}: {}", input, value)
+                DeviceEventMessage::Connected { specs } => log::info!("Connected: {:?}", specs),
+                DeviceEventMessage::Disconnected => log::info!("Disconnected"),
+                DeviceEventMessage::AnalogInput { input, value } =>
+                {
+                    if input == 0
+                    {
+                        action.update_analog(value).await;
+                    }
+                    log::info!("Analog input #{}: {}", input, value);
+                }
+
+                DeviceEventMessage::DigitalInput { input, value } => log::info!("Digital input #{}: {}", input, value),
             }
         }
     }

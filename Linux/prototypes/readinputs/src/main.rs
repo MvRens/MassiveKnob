@@ -15,9 +15,10 @@ use env_logger;
 
 const SERIAL_PORT: &str = "/dev/ttyACM1";
 const BAUD_RATE: serial::BaudRate = serial::Baud115200;
+const CONNECT_TIMEOUT: Duration = Duration::from_secs(1);
 
 
-struct Uart 
+struct Uart
 {
     port: RefCell<SystemPort>,
     name: String,
@@ -25,9 +26,9 @@ struct Uart
     output: Arc<Mutex<String>>,
 }
 
-impl Uart 
+impl Uart
 {
-    fn new(port: SystemPort, name: String, tx_space_avaliable: u16) -> Self 
+    fn new(port: SystemPort, name: String, tx_space_avaliable: u16) -> Self
     {
         Uart
         {
@@ -39,9 +40,9 @@ impl Uart
     }
 
 
-    fn open(&self) 
+    fn open(&self)
     {
-        const SETTINGS: serial::PortSettings = serial::PortSettings 
+        const SETTINGS: serial::PortSettings = serial::PortSettings
         {
             baud_rate: BAUD_RATE,
             char_size: serial::Bits8,
@@ -52,27 +53,27 @@ impl Uart
 
         let mut port = self.port.borrow_mut();
         port.configure(&SETTINGS).unwrap();
-        port.set_timeout(Duration::from_millis(1000)).unwrap();
+        port.set_timeout(CONNECT_TIMEOUT).unwrap();
         debug!(target: self.name.as_str(), "{}: Open uart.", self.name);
     }
 
 
-    fn available_for_write(&self) -> u16 
+    fn available_for_write(&self) -> u16
     {
         self.tx_space_avaliable
     }
 
 
-    fn tx(&self, byte: u8) 
+    fn tx(&self, byte: u8)
     {
         let mut output = self.output.lock().unwrap();
         output.push_str(format!("0x{:02x} ", byte).as_str());
         let mut port = self.port.borrow_mut();
 
-        match port.write(&[byte]) 
+        match port.write(&[byte])
         {
             Ok(_) => {},
-            Err(e) => 
+            Err(e) =>
             {
                 debug!(target: self.name.as_str(), "{}", e);
             },
@@ -80,11 +81,11 @@ impl Uart
     }
 
 
-    fn read(&self, buf: &mut [u8]) -> Result<usize, ()> 
+    fn read(&self, buf: &mut [u8]) -> Result<usize, ()>
     {
         let mut port = self.port.borrow_mut();
 
-        match port.read(&mut buf[..]) 
+        match port.read(&mut buf[..])
         {
             Ok(n) => Ok(n),
             _ => Err(()),
@@ -93,17 +94,17 @@ impl Uart
 }
 
 
-impl min::Interface for Uart 
+impl min::Interface for Uart
 {
-    fn tx_start(&self) 
+    fn tx_start(&self)
     {
         let mut output = self.output.lock().unwrap();
         output.clear();
         output.push_str(format!("send frame: [ ").as_str());
     }
-    
 
-    fn tx_finished(&self) 
+
+    fn tx_finished(&self)
     {
         let mut output = self.output.lock().unwrap();
         output.push_str(format!("]").as_str());
@@ -111,13 +112,13 @@ impl min::Interface for Uart
     }
 
 
-    fn tx_space(&self) -> u16 
+    fn tx_space(&self) -> u16
     {
         self.available_for_write()
     }
-    
 
-    fn tx_byte(&self, _min_port: u8, byte: u8) 
+
+    fn tx_byte(&self, _min_port: u8, byte: u8)
     {
         self.tx(byte);
     }
@@ -141,7 +142,7 @@ fn main() {
         &uart,
         0,
         true,
-    );    
+    );
     min.hw_if.open();
 
 
@@ -153,20 +154,20 @@ fn main() {
 
 
     let mut buf: Vec<u8> = (0..255).collect();
-    loop 
-    {        
+    loop
+    {
         min.poll(&[0][0..0], 0);
 
-        if let Ok(n) = min.hw_if.read(&mut buf[..]) 
+        if let Ok(n) = min.hw_if.read(&mut buf[..])
         {
             min.poll(&buf[0..n], n as u32);
         };
 
-        if let Ok(msg) = min.get_msg() 
+        if let Ok(msg) = min.get_msg()
         {
-            match MassiveKnobDeviceToHostFrameID::try_from(msg.min_id) 
+            match MassiveKnobDeviceToHostFrameID::try_from(msg.min_id)
             {
-                Ok(MassiveKnobDeviceToHostFrameID::HandshakeResponse) => 
+                Ok(MassiveKnobDeviceToHostFrameID::HandshakeResponse) =>
                 {
                     if msg.len < 4
                     {
@@ -188,7 +189,7 @@ fn main() {
                     println!("  Digital outputs: {}", specs.digital_outputs);
                 },
 
-                Ok(MassiveKnobDeviceToHostFrameID::AnalogInput) => 
+                Ok(MassiveKnobDeviceToHostFrameID::AnalogInput) =>
                 {
                     if msg.len < 2
                     {
@@ -196,18 +197,18 @@ fn main() {
                     }
 
                     println!("[Analog input #{}] {}", msg.buf[0], msg.buf[1]);
-                }, 
+                },
 
-                Ok(MassiveKnobDeviceToHostFrameID::Error) => 
+                Ok(MassiveKnobDeviceToHostFrameID::Error) =>
                 {
-                    println!("[Device error] {}", match str::from_utf8(msg.buf.as_slice()) 
+                    println!("[Device error] {}", match str::from_utf8(msg.buf.as_slice())
                     {
                         Ok(v) => v,
                         Err(_) => "(unable to parse device error message, invalid UTF-8 sequence)"
                     })
                 },
 
-                Err(_) => 
+                Err(_) =>
                 {
                     println!("Unknown message ID: {}", msg.min_id);
                 }

@@ -5,15 +5,15 @@
  * 
  */
 // Set this to the number of potentiometers you have connected
-const byte AnalogInputCount = 2;
+const byte AnalogInputCount = 3;
 
 // Set this to the number of buttons you have connected
-const byte DigitalInputCount = 3;
+const byte DigitalInputCount = 0;
 
 // Set this to the number of PWM outputs you have connected
 // Note that this version of the sketch only does a simple analogWrite with the full range,
 // which is not compatible with servos. Modify as required.
-const byte AnalogOutputCount = 3;
+const byte AnalogOutputCount = 0;
 
 // Set this to the number of digital outputs you have connected
 const byte DigitalOutputCount = 0;
@@ -22,21 +22,16 @@ const byte DigitalOutputCount = 0;
 // For each potentiometer, specify the pin
 const byte AnalogInputPin[AnalogInputCount] = {
   A0,
-  A1
+  A1,
+  A2
 };
 
 // For each button, specify the pin. Assumes pull-up.
 const byte DigitalInputPin[DigitalInputCount] = {
-  7,
-  8,
-  9
 };
 
 // For each analog output, specify the PWM capable pin
 const byte AnalogOutputPin[AnalogOutputCount] = {
-  3,
-  5,
-  6
 };
 
 // Define this constant to apply a standard LED brightness curve to (all) analog outputs
@@ -61,8 +56,11 @@ const byte EMASeedCount = 5;
 // changes beyond the treshold, that input will report all changes until the FocusTimeout has expired to avoid losing accuracy.
 const byte AnalogTreshold = 2;
 
-// How long to ignore other inputs after an input changes. Reduces noise due voltage drops.
+// How long to ignore other inputs after an input changes. Reduces noise due to voltage drops.
 const unsigned long FocusTimeout = 100;
+
+// How often to send a KeepAlive message to allow the host to detect disconnects
+const unsigned long KeepAliveInterval = 1000;
 
 
 /*
@@ -101,6 +99,7 @@ const uint8_t FrameIDAnalogInput = 1;
 const uint8_t FrameIDDigitalInput = 2;
 const uint8_t FrameIDAnalogOutput = 3;
 const uint8_t FrameIDDigitalOutput = 4;
+const uint8_t FrameIDKeepAlive = 61;
 const uint8_t FrameIDQuit = 62;
 const uint8_t FrameIDError = 63;
 #endif
@@ -184,6 +183,8 @@ void setup()
 
 #ifdef DebugOutputPlotter
 unsigned long lastOutput = 0;
+#else
+unsigned long lastKeepAlive = 0;
 #endif
 
 enum FocusType
@@ -314,8 +315,11 @@ void loop()
     }
   }
 
+
+  unsigned long now = millis();
+
   #ifdef DebugOutputPlotter
-  if (millis() - lastOutput >= 100)
+  if (now - lastOutput >= 100)
   {
     for (byte i = 0; i < AnalogInputCount; i++)
     {
@@ -336,6 +340,14 @@ void loop()
     Serial.println();
 
     lastOutput = millis();
+  }
+  #else
+  if (now - lastKeepAlive >= KeepAliveInterval)
+  {
+    if (active)
+      outputKeepAlive();
+      
+    lastKeepAlive = now;
   }
   #endif
 }
@@ -493,3 +505,11 @@ void outputError(String message)
   min_send_frame(&minContext, FrameIDError, (uint8_t *)message.c_str(), message.length());
   #endif
 }
+
+
+#ifndef DebugOutputPlotter
+void outputKeepAlive()
+{
+  min_send_frame(&minContext, FrameIDKeepAlive, NULL, 0);
+}
+#endif

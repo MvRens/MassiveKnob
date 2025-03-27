@@ -1,0 +1,13 @@
+[package]
+name = "mk-actions-pulseaudio"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+crossbeam-channel = "0.5.14"
+libpulse-binding = "2.29.0"
+log = "0.4.26"
+mk-core = { path = "../mk-core" }
+
+[lints]
+workspace = true

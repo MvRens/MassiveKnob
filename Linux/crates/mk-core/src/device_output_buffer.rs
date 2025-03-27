@@ -1,11 +1,11 @@
 use std::collections::HashMap;
 
-use crate::device::Device;
+use crate::types::AnalogValue;
 
 
 pub struct DeviceOutputBuffer
 {
-    analog_outputs: HashMap<u8, u8>,
+    analog_outputs: HashMap<u8, AnalogValue>,
     digital_outputs: HashMap<u8, bool>
 }
 
@@ -23,7 +23,7 @@ impl DeviceOutputBuffer
     }
 
 
-    pub fn flush_analog_outputs(&mut self) -> HashMap<u8, u8>
+    pub fn flush_analog_outputs(&mut self) -> HashMap<u8, AnalogValue>
     {
         std::mem::take(&mut self.analog_outputs)
     }
@@ -33,6 +33,18 @@ impl DeviceOutputBuffer
     {
         std::mem::take(&mut self.digital_outputs)
     }
+
+
+    pub fn set_analog_output(&mut self, output: u8, value: AnalogValue)
+    {
+        self.analog_outputs.insert(output, value);
+    }
+
+
+    pub fn set_digital_output(&mut self, output: u8, value: bool)
+    {
+        self.digital_outputs.insert(output, value);
+    }
 }
 
 
@@ -41,20 +53,5 @@ impl Default for DeviceOutputBuffer
     fn default() -> Self
     {
         Self::new()
-    }
-}
-
-
-impl Device for DeviceOutputBuffer
-{
-    fn set_analog_output(&mut self, output: u8, value: u8)
-    {
-        self.analog_outputs.insert(output, value);
-    }
-
-
-    fn set_digital_output(&mut self, output: u8, value: bool)
-    {
-        self.digital_outputs.insert(output, value);
     }
 }

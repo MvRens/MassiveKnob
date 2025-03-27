@@ -6,6 +6,7 @@
         graphene
         gdk-pixbuf
         libudev-zero
+        libpulseaudio
     ];
 
     # For a reason I'm yet to find out, my VSCode terminal sets GDK_BACKEND to x11.

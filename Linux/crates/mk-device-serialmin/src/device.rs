@@ -1,26 +1,33 @@
 
+use std::sync::Arc;
+use std::sync::Mutex;
 use std::thread;
 use std::time::Duration;
 
-use crossbeam_channel::bounded;
 use crossbeam_channel::select;
 use crossbeam_channel::unbounded;
 use crossbeam_channel::Receiver;
+use crossbeam_channel::RecvError;
 use crossbeam_channel::Sender;
 use mk_core::device::DeviceEventMessage;
 use mk_core::device::DeviceFactory;
 use mk_core::device::Device;
+use mk_core::device::DeviceSpecs;
+use mk_core::device::OutputDevice;
 use mk_core::device_output_buffer::DeviceOutputBuffer;
+use mk_core::types::AnalogValue;
 
 use crate::connection::SerialMinConnection;
 use crate::connection::SerialMinConnectionState;
 use crate::protocol::MassiveKnobDeviceSpecs;
+use crate::protocol::MassiveKnobHostToDeviceFrameID;
 
 
 pub struct SerialMinDevice
 {
     events_sender: Sender<DeviceEventMessage>,
-    in_sender: Sender<WorkerInMessage>
+    in_sender: Sender<WorkerInMessage>,
+    specs: Arc<Mutex<Option<DeviceSpecs>>>
 }
 
 
@@ -34,7 +41,7 @@ pub struct SerialMinDeviceSettings
 enum WorkerInMessage
 {
     Stop,
-    SetAnalogOutput { output: u8, value: u8 },
+    SetAnalogOutput { output: u8, value: AnalogValue },
     SetDigitalOutput { output: u8, value: bool }
 }
 
@@ -53,72 +60,218 @@ impl SerialMinDevice
 
     fn start(&self, in_receiver: Receiver<WorkerInMessage>, settings: SerialMinDeviceSettings)
     {
-        let events_sender_local = self.events_sender.clone();
-
+        let events_sender = self.events_sender.clone();
+        let specs = self.specs.clone();
 
         thread::spawn(move ||
         {
-            let mut output_buffer = DeviceOutputBuffer::new();
-            let (state_sender, state_receiver) = unbounded();
+            SerialMinDeviceWorker::new(specs.clone(), settings, events_sender.clone())
+                .run(in_receiver);
+        });
+    }
+}
 
-            let mut connection = SerialMinConnection::new(settings.port, settings.baud_rate, state_sender);
 
-            // TODO check result
-            connection.try_connect();
+impl Drop for SerialMinDevice
+{
+    fn drop(&mut self)
+    {
+        _ = self.in_sender.send(WorkerInMessage::Stop);
+    }
+}
 
-            loop
-            {
-                select! {
-                    recv(in_receiver) -> msg =>
+
+impl OutputDevice for SerialMinDevice
+{
+    async fn set_analog_output(&mut self, output: u8, value: AnalogValue)
+    {
+        _ = self.in_sender.send(WorkerInMessage::SetAnalogOutput { output, value });
+    }
+
+
+    async fn set_digital_output(&mut self, output: u8, value: bool)
+    {
+        _ = self.in_sender.send(WorkerInMessage::SetDigitalOutput { output, value });
+    }
+}
+
+
+impl Device for SerialMinDevice
+{
+    fn is_connected(&self) -> bool
+    {
+        match self.specs.lock()
+        {
+            Ok(specs) => specs.is_some(),
+            Err(_) => false
+        }
+    }
+
+
+    fn get_specs(&self) -> Option<DeviceSpecs>
+    {
+        match self.specs.lock()
+        {
+            Ok(specs) => specs.clone(),
+            Err(_) => None
+        }
+    }
+}
+
+
+impl DeviceFactory<SerialMinDeviceSettings> for SerialMinDevice
+{
+    fn create(settings: SerialMinDeviceSettings, events_sender: Sender<DeviceEventMessage>) -> SerialMinDevice
+    {
+        let (in_sender, in_receiver) = unbounded();
+
+        let device = SerialMinDevice
+        {
+            events_sender,
+            in_sender,
+            specs: Arc::new(Mutex::new(None))
+        };
+
+        device.start(in_receiver, settings);
+        device
+    }
+}
+
+
+
+struct SerialMinDeviceWorker
+{
+    events_sender: Sender<DeviceEventMessage>,
+    specs: Arc<Mutex<Option<DeviceSpecs>>>,
+
+    output_buffer: DeviceOutputBuffer,
+    connection: SerialMinConnection,
+    state_receiver: Receiver<SerialMinConnectionState>
+}
+
+
+impl SerialMinDeviceWorker
+{
+    pub fn new(specs: Arc<Mutex<Option<DeviceSpecs>>>, settings: SerialMinDeviceSettings, events_sender: Sender<DeviceEventMessage>) -> Self
+    {
+        let (state_sender, state_receiver) = unbounded();
+
+        Self
+        {
+            events_sender,
+            specs,
+
+            output_buffer: DeviceOutputBuffer::new(),
+            connection: SerialMinConnection::new(settings.port, settings.baud_rate, state_sender),
+            state_receiver
+        }
+    }
+
+
+    pub fn run(&mut self, in_receiver: Receiver<WorkerInMessage>)
+    {
+        // TODO check result
+        self.connection.try_connect();
+
+        loop
+        {
+            select! {
+                recv(in_receiver) -> msg =>
+                    if !self.handle_worker_request(msg)
                     {
-                        // Handle incoming requests
-                        match msg
-                        {
-                            Ok(WorkerInMessage::Stop) => break,
-                            // TODO also send to connection
-                            Ok(WorkerInMessage::SetAnalogOutput { output, value }) => { output_buffer.set_analog_output(output,value); },
-                            Ok(WorkerInMessage::SetDigitalOutput { output, value }) => { output_buffer.set_digital_output(output,value); },
-                            Err(_) => todo!()
-                        }
+                        break;
                     },
 
-                    recv(state_receiver) -> msg =>
-                    {
-                        // Connection state changed
-                        match msg
-                        {
-                            Ok(SerialMinConnectionState::Connected { specs }) =>
-                            {
-                                Self::send_buffered_outputs(&mut output_buffer, specs);
-                            },
+                recv(self.state_receiver) -> msg =>
+                    self.handle_state_change(msg),
 
-                            Ok(SerialMinConnectionState::Disconnected) =>
-                            {
-                                // TODO
-                            },
-
-                            Ok(SerialMinConnectionState::AnalogInput { input, value }) =>
-                            {
-                                _ = events_sender_local.send(DeviceEventMessage::AnalogInput { input, value });
-                            },
-
-                            Ok(SerialMinConnectionState::DigitalInput { input, value }) =>
-                            {
-                                _ = events_sender_local.send(DeviceEventMessage::DigitalInput { input, value });
-                            },
-
-                            Err(_) => todo!()
-                        }
-
-                    }
-
-                    default(Duration::from_millis(10)) =>
-                    {
-                        connection.poll();
-                    }
+                default(Duration::from_millis(10)) =>
+                {
+                    self.connection.poll();
                 }
             }
-        });
+        }
+    }
+
+
+    fn handle_worker_request(&mut self, msg: Result<WorkerInMessage, RecvError>) -> bool
+    {
+        match msg
+        {
+            Ok(WorkerInMessage::Stop) =>
+            {
+                let payload: [u8; 0] = [];
+                self.connection.try_send(MassiveKnobHostToDeviceFrameID::Quit, &payload, 0);
+                false
+            },
+
+            // TODO also send to connection
+            Ok(WorkerInMessage::SetAnalogOutput { output, value }) =>
+            {
+                self.output_buffer.set_analog_output(output,value);
+
+                let payload: [u8; 2] = [output, value.into()];
+                self.connection.try_send(MassiveKnobHostToDeviceFrameID::AnalogOutput, &payload[..], payload.len() as u8);
+                true
+            },
+
+            Ok(WorkerInMessage::SetDigitalOutput { output, value }) =>
+            {
+                self.output_buffer.set_digital_output(output,value);
+
+                let payload: [u8; 2] = [output, if value { 1 } else { 0 }];
+                self.connection.try_send(MassiveKnobHostToDeviceFrameID::DigitalOutput, &payload[..], payload.len() as u8);
+                true
+            },
+
+            Err(e) =>
+            {
+                log::warn!(target: "serialmin", "Internal error while processing worker request message: {}", e);
+                false
+            }
+        }
+    }
+
+
+    fn handle_state_change(&mut self, msg: Result<SerialMinConnectionState, RecvError>)
+    {
+        match msg
+        {
+            Ok(SerialMinConnectionState::Connected { specs }) =>
+            {
+                if let Ok(mut stored_specs) = self.specs.lock()
+                {
+                    stored_specs.replace(DeviceSpecs
+                    {
+                        analog_inputs: specs.analog_inputs,
+                        digital_inputs: specs.digital_inputs,
+                        analog_outputs: specs.analog_outputs,
+                        digital_outputs: specs.digital_outputs
+                    });
+                }
+                Self::send_buffered_outputs(&mut self.output_buffer, specs);
+            },
+
+            Ok(SerialMinConnectionState::Disconnected) =>
+            {
+                if let Ok(mut stored_specs) = self.specs.lock()
+                {
+                    stored_specs.take();
+                }
+            },
+
+            Ok(SerialMinConnectionState::AnalogInput { input, value }) =>
+            {
+                _ = self.events_sender.send(DeviceEventMessage::AnalogInput { input, value });
+            },
+
+            Ok(SerialMinConnectionState::DigitalInput { input, value }) =>
+            {
+                _ = self.events_sender.send(DeviceEventMessage::DigitalInput { input, value });
+            },
+
+            Err(_) => todo!()
+        }
     }
 
 
@@ -139,47 +292,5 @@ impl SerialMinDevice
                 // TODO
             }
         }
-    }
-}
-
-
-impl Drop for SerialMinDevice
-{
-    fn drop(&mut self)
-    {
-        _ = self.in_sender.send(WorkerInMessage::Stop);
-    }
-}
-
-
-impl Device for SerialMinDevice
-{
-    fn set_analog_output(&mut self, output: u8, value: u8)
-    {
-        _ = self.in_sender.send(WorkerInMessage::SetAnalogOutput { output, value });
-    }
-
-
-    fn set_digital_output(&mut self, output: u8, value: bool)
-    {
-        _ = self.in_sender.send(WorkerInMessage::SetDigitalOutput { output, value });
-    }
-}
-
-
-impl DeviceFactory<SerialMinDeviceSettings> for SerialMinDevice
-{
-    fn create(settings: SerialMinDeviceSettings, events_sender: Sender<DeviceEventMessage>) -> SerialMinDevice
-    {
-        let (in_sender, in_receiver) = unbounded();
-
-        let device = SerialMinDevice
-        {
-            events_sender,
-            in_sender
-        };
-
-        device.start(in_receiver, settings);
-        device
     }
 }

@@ -1,10 +1,21 @@
+use std::future::Future;
+
 use crossbeam_channel::Sender;
 
-pub trait Device
+use crate::types::AnalogValue;
+
+pub trait Device: OutputDevice
 {
-    fn set_analog_output(&mut self, output: u8, value: u8);
-    fn set_digital_output(&mut self, output: u8, value: bool);
+    fn is_connected(&self) -> bool;
+    fn get_specs(&self) -> Option<DeviceSpecs>;
 }
+
+pub trait OutputDevice
+{
+    fn set_analog_output(&mut self, output: u8, value: AnalogValue) -> impl Future<Output = ()> + Send;
+    fn set_digital_output(&mut self, output: u8, value: bool) -> impl Future<Output = ()> + Send;
+}
+
 
 
 pub trait DeviceFactory<TSettings>
@@ -13,8 +24,23 @@ pub trait DeviceFactory<TSettings>
 }
 
 
+
+#[derive(Clone, Debug)]
+pub struct DeviceSpecs
+{
+    pub analog_inputs: u8,
+    pub digital_inputs: u8,
+    pub analog_outputs: u8,
+    pub digital_outputs: u8
+}
+
+
+
 pub enum DeviceEventMessage
 {
-    AnalogInput { input: u8, value: u8 },
+    Connected { specs: DeviceSpecs },
+    Disconnected,
+
+    AnalogInput { input: u8, value: AnalogValue },
     DigitalInput { input: u8, value: bool }
 }

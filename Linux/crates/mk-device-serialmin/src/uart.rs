@@ -54,6 +54,12 @@ impl Uart
     }
 
 
+    pub fn close(&self)
+    {
+        self.serial_port.take();
+    }
+
+
     pub fn available_for_write(&self) -> u16
     {
         self.tx_space_available
