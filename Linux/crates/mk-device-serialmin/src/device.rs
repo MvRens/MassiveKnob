@@ -1,4 +1,3 @@
-
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::thread;
@@ -38,6 +37,14 @@ pub struct SerialMinDeviceSettings
 }
 
 
+pub struct SerialMinDevicePort
+{
+    pub port: String,
+    pub display_name: String,
+    pub candidate_mk_device: bool
+}
+
+
 enum WorkerInMessage
 {
     Stop,
@@ -48,11 +55,41 @@ enum WorkerInMessage
 
 impl SerialMinDevice
 {
-    pub fn available_ports() -> Vec<String>
+    pub fn available_ports() -> Vec<SerialMinDevicePort>
     {
         match serialport::available_ports()
         {
-            Ok(ports) => ports.iter().map(|p| p.port_name.clone()).collect(),
+            Ok(ports) => ports.iter().map(|p|
+            {
+                match &p.port_type
+                {
+                    serialport::SerialPortType::UsbPort(usb_port_info) =>
+                    {
+                        SerialMinDevicePort
+                        {
+                            port: p.port_name.clone(),
+                            display_name: match &usb_port_info.product
+                            {
+                                Some(product) => format!("{}: {}", p.port_name, product),
+                                None => format!("{}: vendor = {}, productid = {}", p.port_name, usb_port_info.vid, usb_port_info.pid)
+                            },
+                            candidate_mk_device: true
+                        }
+                    },
+
+                    serialport::SerialPortType::PciPort |
+                    serialport::SerialPortType::BluetoothPort |
+                    serialport::SerialPortType::Unknown =>
+                    {
+                        SerialMinDevicePort
+                        {
+                            port: p.port_name.clone(),
+                            display_name: p.port_name.clone(),
+                            candidate_mk_device: false
+                        }
+                    }
+                }
+            }).collect(),
             Err(_) => Vec::new(),
         }
     }

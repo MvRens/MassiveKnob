@@ -7,6 +7,13 @@ pub trait Action
 }
 
 
+pub trait ActionFactory<TSettings>
+{
+    fn create(settings: TSettings) -> Self;
+}
+
+
+
 pub trait AnalogInputAction: Action
 {
     fn update_analog(&self, value: AnalogValue) -> impl std::future::Future<Output = ()> + Send;

@@ -6,15 +6,20 @@ use std::time::Duration;
 use crossbeam_channel::unbounded;
 use crossbeam_channel::Receiver;
 use crossbeam_channel::Sender;
+use libpulse_binding::callbacks::ListResult;
 use libpulse_binding::context::Context;
 use libpulse_binding::context::FlagSet;
 use libpulse_binding::mainloop::standard::IterateResult;
 use libpulse_binding::mainloop::standard::Mainloop;
 use libpulse_binding::volume::ChannelVolumes;
-use libpulse_binding::volume::Volume;
 //use mk_core::target_log;
 use mk_core::types::AnalogValue;
 use mk_core::util::exponential_backoff::ExponentialBackoff;
+
+use crate::pulseaudio::helpers;
+use crate::shared_oneshot;
+use crate::shared_oneshot::SharedSender;
+use crate::PulseAudioDevice;
 
 
 
@@ -32,7 +37,29 @@ pub struct PulseAudioClient
 
 impl PulseAudioClient
 {
-    pub fn call<F>(callback: F) where F : FnOnce(&PulseAudioClient)
+    pub async fn available_output_devices() -> Vec<PulseAudioDevice>
+    {
+        let (sender, receiver) = shared_oneshot::channel::<Vec<PulseAudioDevice>>();
+
+        Self::call(|p|
+        {
+            p.worker.available_output_devices(sender);
+        });
+
+        receiver.await.unwrap_or_default()
+    }
+
+
+    pub fn set_volume(device_name: &str, value: AnalogValue)
+    {
+        Self::call(|p|
+        {
+            p.worker.set_volume(device_name, value);
+        });
+    }
+
+
+    fn call<F>(callback: F) where F : FnOnce(&PulseAudioClient)
     {
         match INSTANCE.lock()
         {
@@ -41,19 +68,13 @@ impl PulseAudioClient
         }
     }
 
+
     fn new() -> Self
     {
         Self
         {
             worker: PulseAudioWorker::new()
         }
-    }
-
-
-
-    pub fn set_volume(&self, value: AnalogValue)
-    {
-        self.worker.set_volume(value);
     }
 }
 
@@ -68,13 +89,14 @@ pub struct PulseAudioWorker
 enum PulseAudioWorkerMessage
 {
     Quit,
-    SetVolume { value: AnalogValue }
+    SetVolume { device_name: String, value: AnalogValue },
+    GetOutputDevices { sender: SharedSender<Vec<PulseAudioDevice>> }
 }
 
 
 impl PulseAudioWorker
 {
-    pub fn new() -> Self
+    fn new() -> Self
     {
         let (in_sender, in_receiver) = unbounded();
 
@@ -197,10 +219,18 @@ impl PulseAudioWorker
         }
     }
 
-    fn set_volume(&self, value: AnalogValue)
+
+    fn set_volume(&self, device_name: &str, value: AnalogValue)
     {
         // TODO verbose logging
-        _ = self.in_sender.send(PulseAudioWorkerMessage::SetVolume { value });
+        _ = self.in_sender.send(PulseAudioWorkerMessage::SetVolume { device_name: String::from(device_name), value });
+    }
+
+
+    fn available_output_devices(&self, sender: SharedSender<Vec<PulseAudioDevice>>)
+    {
+        // TODO verbose logging
+        _ = self.in_sender.send(PulseAudioWorkerMessage::GetOutputDevices { sender });
     }
 
 
@@ -246,26 +276,56 @@ impl PulseAudioWorker
         match msg
         {
             PulseAudioWorkerMessage::Quit => false,
-            PulseAudioWorkerMessage::SetVolume { value } =>
+            PulseAudioWorkerMessage::SetVolume { device_name, value } =>
             {
-                let mut volume = ChannelVolumes::default();
-                let percentage: u8 = value.into();
-                volume.set(ChannelVolumes::CHANNELS_MAX, Self::percentage_to_volume(percentage as f64));
+                let volume_value = helpers::into_volume(value);
 
-                // TODO support specific device
+                let mut volume = ChannelVolumes::default();
+                volume.set(ChannelVolumes::CHANNELS_MAX, volume_value);
+
                 // TODO callback for logging / awaiting?
-                connection.context.introspect().set_sink_volume_by_name("@DEFAULT_SINK@", &volume, None);
+                log::debug!(target: "pulseaudio", "Setting volume for {} to {} ({})", device_name, value, volume_value.0);
+                connection.context.introspect().set_sink_volume_by_name(&device_name, &volume, None);
+
+                true
+            },
+
+            PulseAudioWorkerMessage::GetOutputDevices { sender } =>
+            {
+                let mut result: Option<Vec<PulseAudioDevice>> = Some(vec![]);
+
+                connection.context.introspect().get_sink_info_list(move |list_result|
+                {
+                    match list_result
+                    {
+                        ListResult::Item(item) =>
+                        {
+                            if let Some(ref mut result) = result
+                            {
+                                result.push(PulseAudioDevice
+                                {
+                                    name: item.name.as_ref().map_or_else(|| String::from("@UNKNOWN@"), |v| v.to_string()),
+                                    device_name: item.proplist.get_str("alsa.card_name").unwrap_or_else(|| String::from("<No ALSA device name>")),
+                                    display_name: item.description.as_ref().map_or_else(|| String::from("<No device description>"), |v| v.to_string())
+                                });
+                            }
+                        },
+
+                        ListResult::End =>
+                        {
+                            if let Some(result) = result.take()
+                            {
+                                let _ = sender.try_send(result);
+                            }
+                        },
+
+                        ListResult::Error => todo!(),
+                    };
+                });
 
                 true
             },
         }
-    }
-
-
-    fn percentage_to_volume(factor: f64) -> Volume
-    {
-        let range = Volume::NORMAL.0 as f64 - Volume::MUTED.0 as f64;
-        Volume((Volume::MUTED.0 as f64 + factor * range / 100.0) as u32)
     }
 
 
@@ -292,6 +352,8 @@ impl Drop for PulseAudioWorker
 {
     fn drop(&mut self)
     {
+        // TODO verbose logging
+        let _ = self.in_sender.send(PulseAudioWorkerMessage::Quit);
     }
 }
 
@@ -301,62 +363,3 @@ struct PulseAudioConnection
     pub mainloop: Mainloop,
     pub context: Context
 }
-
-
-/*
-    fn connect(mainloop: Mainloop) -> Option<PulseAudioConnection>
-    {
-        match Context::new(&mainloop, "MassiveKnob")
-        {
-            Some(context) =>
-            {
-                if let Err(e) = context.connect(None, libpulse_binding::context::FlagSet::NOFLAGS, None)
-                {
-                    log::warn!(target: "pulseaudio", "Failed to connect to PulseAudio server: {}", e);
-                    return None;
-                }
-
-                run_until(main_loop, |_main_loop| {
-                    let state = context.get_state();
-                    log::debug!("Context state: {:?}", state);
-                    match state {
-                        State::Ready => true,
-                        State::Failed => true,
-                        State::Unconnected => true,
-                        State::Terminated => true,
-                        State::Connecting => false,
-                        State::Authorizing => false,
-                        State::SettingName => false,
-                    }
-                })
-                .map_err(|e| log::error!("Error in PulseAudio main loop: {e}"))?;
-
-                // Check the end state to see if we connected successfully.
-                let state = context.get_state();
-                match state {
-                    State::Ready => (),
-                    State::Failed => {
-                        log::error!("Failed to connect to PulseAudio server: {}", context.errno());
-                        return Err(());
-                    },
-                    | State::Unconnected
-                    | State::Terminated
-                    | State::Connecting
-                    | State::Authorizing
-                    | State::SettingName => {
-                        log::error!("PulseAudio context in unexpected state: {state:?}");
-                        log::error!("Last error: {}", context.errno());
-                        return Err(());
-                    }
-                }
-                Ok(context)
-            },
-
-            None =>
-            {
-                log::warn!(target: "pulseaudio", "Failed to initialize PulseAudio context");
-                None
-            }
-        }
-    }
-     */
