@@ -507,6 +507,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "mk-ui-console"
+version = "0.1.0"
+dependencies = [
+ "colog",
+ "crossbeam-channel",
+ "env_logger",
+ "log",
+ "mk-actions-pulseaudio",
+ "mk-core",
+ "mk-device-serialmin",
+ "tokio",
+]
+
+[[package]]
 name = "nix"
 version = "0.26.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -669,19 +683,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "99d9a13982dcf210057a8a78572b2217b667c3beacbf3a0d8b454f6f82837d38"
 dependencies = [
  "getrandom",
-]
-
-[[package]]
-name = "readinputs"
-version = "0.1.0"
-dependencies = [
- "colog",
- "crossbeam-channel",
- "log",
- "mk-actions-pulseaudio",
- "mk-core",
- "mk-device-serialmin",
- "tokio",
 ]
 
 [[package]]

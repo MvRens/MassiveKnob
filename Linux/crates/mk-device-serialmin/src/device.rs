@@ -263,7 +263,7 @@ impl SerialMinDeviceWorker
 
             Err(e) =>
             {
-                log::warn!(target: "serialmin", "Internal error while processing worker request message: {}", e);
+                log::warn!("Internal error while processing worker request message: {}", e);
                 false
             }
         }

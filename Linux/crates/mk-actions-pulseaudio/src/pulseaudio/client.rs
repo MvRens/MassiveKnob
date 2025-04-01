@@ -12,7 +12,6 @@ use libpulse_binding::context::FlagSet;
 use libpulse_binding::mainloop::standard::IterateResult;
 use libpulse_binding::mainloop::standard::Mainloop;
 use libpulse_binding::volume::ChannelVolumes;
-//use mk_core::target_log;
 use mk_core::types::AnalogValue;
 use mk_core::util::exponential_backoff::ExponentialBackoff;
 
@@ -21,9 +20,6 @@ use crate::shared_oneshot;
 use crate::shared_oneshot::SharedSender;
 use crate::PulseAudioDevice;
 
-
-
-//target_log!("pulseaudio");
 
 
 static INSTANCE: LazyLock<Mutex<PulseAudioClient>> = LazyLock::new(|| Mutex::new(PulseAudioClient::new()));
@@ -64,7 +60,7 @@ impl PulseAudioClient
         match INSTANCE.lock()
         {
             Ok(i) => callback(&i),
-            Err(_) => log::error!(target: "pulseaudio", "Failed to lock PulseAudioClient instance")
+            Err(_) => log::error!("Failed to lock PulseAudioClient instance")
         }
     }
 
@@ -117,23 +113,23 @@ impl PulseAudioWorker
         let mut backoff = ExponentialBackoff::new(Duration::from_secs(1), Duration::from_secs(8));
         let mut connection: Option<PulseAudioConnection> = None;
 
-        log::debug!(target: "pulseaudio", "PulseAudio worker started");
+        log::debug!("PulseAudio worker started");
 
         'worker: loop
         {
             // Connect to PulseAudio server if required
             if connection.is_none() && backoff.allowed()
             {
-                log::debug!(target: "pulseaudio", "Connecting to PulseAudio server...");
+                log::debug!("Connecting to PulseAudio server...");
 
                 connection = match Self::try_connect()
                 {
                     Some(mut new_connection) =>
                     {
-                        log::debug!(target: "pulseaudio", "Waiting for PulseAudio state changes");
+                        log::debug!("Waiting for PulseAudio state changes");
 
                         let mut last_state = new_connection.context.get_state();
-                        log::debug!(target: "pulseaudio", "Current PulseAudio state: {:?}", last_state);
+                        log::debug!("Current PulseAudio state: {:?}", last_state);
 
                         // Wait while the connection is being established
                         while match last_state
@@ -153,7 +149,7 @@ impl PulseAudioWorker
                             let new_state = new_connection.context.get_state();
                             if new_state != last_state
                             {
-                                log::debug!(target: "pulseaudio", "PulseAudio state changed to: {:?}", last_state);
+                                log::debug!("PulseAudio state changed to: {:?}", last_state);
                                 last_state = new_state;
                             }
                         }
@@ -162,20 +158,20 @@ impl PulseAudioWorker
                         {
                             libpulse_binding::context::State::Ready =>
                             {
-                                log::info!(target: "pulseaudio", "Connected to PulseAudio server");
+                                log::info!("Connected to PulseAudio server");
                                 backoff.clear();
                                 Some(new_connection)
                             },
                             libpulse_binding::context::State::Failed =>
                             {
-                                log::error!(target: "pulseaudio", "Failed to connect to PulseAudio server: {}", new_connection.context.errno());
+                                log::error!("Failed to connect to PulseAudio server: {}", new_connection.context.errno());
                                 backoff.fail();
                                 None
                             },
 
                             state =>
                             {
-                                log::error!(target: "pulseaudio", "PulseAudio state not expected: {:?}", state);
+                                log::error!("PulseAudio state not expected: {:?}", state);
                                 backoff.fail();
                                 None
 
@@ -249,14 +245,14 @@ impl PulseAudioWorker
                             Ok(_) => Some(PulseAudioConnection { mainloop, context }),
                             Err(_) =>
                             {
-                                log::warn!(target: "pulseaudio", "Failed to connect PulseAudio Context");
+                                log::warn!("Failed to connect PulseAudio Context");
                                 None
                             },
                         }
                     }
                     None =>
                     {
-                        log::warn!(target: "pulseaudio", "Failed to construct PulseAudio Context");
+                        log::warn!("Failed to construct PulseAudio Context");
                         None
                     },
                 }
@@ -264,7 +260,7 @@ impl PulseAudioWorker
 
             None =>
             {
-                log::warn!(target: "pulseaudio", "Failed to construct PulseAudio Mainloop");
+                log::warn!("Failed to construct PulseAudio Mainloop");
                 None
             },
         }
@@ -284,7 +280,7 @@ impl PulseAudioWorker
                 volume.set(ChannelVolumes::CHANNELS_MAX, volume_value);
 
                 // TODO callback for logging / awaiting?
-                log::debug!(target: "pulseaudio", "Setting volume for {} to {} ({})", device_name, value, volume_value.0);
+                log::debug!("Setting volume for {} to {} ({})", device_name, value, volume_value.0);
                 connection.context.introspect().set_sink_volume_by_name(&device_name, &volume, None);
 
                 true

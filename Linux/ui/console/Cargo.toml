@@ -1,5 +1,5 @@
 [package]
-name = "readinputs"
+name = "mk-ui-console"
 version = "0.1.0"
 edition = "2021"
 
@@ -10,6 +10,7 @@ mk-core = { path = "../../crates/mk-core" }
 mk-device-serialmin = { path = "../../crates/mk-device-serialmin" }
 mk-actions-pulseaudio = { path = "../../crates/mk-actions-pulseaudio" }
 tokio = { version = "1.44.1", features = ["full"] }
+env_logger = "0.11.7"
 
 [dependencies.log]
 version = "0.4.26"

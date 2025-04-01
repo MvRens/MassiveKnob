@@ -3,7 +3,9 @@ use std::env;
 use std::io::stdin;
 use std::io::stdout;
 use std::io::Write;
+use std::sync::Mutex;
 
+use colog::format::CologStyle;
 use crossbeam_channel::unbounded;
 
 use mk_actions_pulseaudio::set_volume::SetVolumeActionSettings;
@@ -15,6 +17,56 @@ use mk_device_serialmin::device::SerialMinDevice;
 use mk_device_serialmin::device::SerialMinDeviceSettings;
 use mk_actions_pulseaudio::set_volume::SetVolumeAction;
 
+
+pub struct ExtendedLogger
+{
+    longest_target: Mutex<usize>
+}
+
+impl ExtendedLogger
+{
+    fn new() -> Self
+    {
+        Self
+        {
+            longest_target: Mutex::new(0)
+        }
+    }
+}
+
+impl CologStyle for ExtendedLogger
+{
+    fn format(&self, buf: &mut env_logger::fmt::Formatter, record: &log::Record<'_>) -> Result<(), std::io::Error>
+    {
+        let sep = self.line_separator();
+        let prefix = self.prefix_token(&record.level());
+        let target = record.metadata().target();
+        let mut target_length = target.len();
+
+        if let Ok(mut longest_target) = self.longest_target.lock()
+        {
+            if target_length > *longest_target
+            {
+                *longest_target = target_length;
+            }
+            else
+            {
+                target_length = *longest_target;
+            }
+        }
+
+        writeln!(
+            buf,
+            "{} {:>target_length$} | {}",
+            prefix,
+            target,
+            record.args().to_string().replace('\n', &sep),
+            target_length=target_length
+        )
+    }
+}
+
+
 #[tokio::main]
 async fn main()
 {
@@ -22,18 +74,12 @@ async fn main()
         .filter(None, log::LevelFilter::Trace)
         .filter(Some("min_rs"), log::LevelFilter::Info)
         .filter(Some("serialmin"), log::LevelFilter::Info)
+        .format(colog::formatter(ExtendedLogger::new()))
         .init();
 
-    println!("Select serial port:");
     let port = get_port();
-
-    println!();
-    println!("Select audio device for analog input 1:");
-    let output_device_1 = get_output_device().await;
-
-    println!();
-    println!("Select audio device for analog input 2:");
-    let output_device_2 = get_output_device().await;
+    let output_device_1 = get_output_device(1).await;
+    let output_device_2 = get_output_device(2).await;
 
 
     log::info!("MassiveKnob starting for serial device on port {}", port);
@@ -99,6 +145,7 @@ fn get_port() -> String
     let mut stdout = stdout();
     let mut line = String::new();
 
+    println!("Select serial port:");
     loop
     {
         println!();
@@ -126,9 +173,12 @@ fn get_port() -> String
 
 
 
-async fn get_output_device() -> String
+async fn get_output_device(number: u8) -> String
 {
     let available_devices = mk_actions_pulseaudio::available_output_devices().await;
+
+    println!();
+    println!("Select audio device for analog input {}:", number);
 
     for (i, device) in available_devices.iter().enumerate()
     {

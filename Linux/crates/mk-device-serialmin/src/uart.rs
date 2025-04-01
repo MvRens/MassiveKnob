@@ -76,7 +76,7 @@ impl Uart
                 Ok(_) => {},
                 Err(_e) =>
                 {
-                    //debug!(target: self.name.as_str(), "{}", e);
+                    //debug!("{}", e);
                 },
             }
         }

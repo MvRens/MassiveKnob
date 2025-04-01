@@ -75,7 +75,7 @@ impl SerialMinConnection
         {
             if Instant::now().duration_since(self.last_message) > KEEPALIVE_TIMEOUT
             {
-                log::warn!(target: "serialmin", "Keep alive timeout expired, disconnecting from serial device");
+                log::warn!("Keep alive timeout expired, disconnecting from serial device");
                 self.disconnect();
             }
             else
@@ -94,7 +94,7 @@ impl SerialMinConnection
         else
         {
             let retry_timeout = self.connect_backoff.fail();
-            log::warn!(target: "serialmin", "Connecting to serial device failed, retry in {:?}", retry_timeout);
+            log::warn!("Connecting to serial device failed, retry in {:?}", retry_timeout);
 
             false
         }
@@ -108,19 +108,19 @@ impl SerialMinConnection
             {
                 if let Err(e) = locked_uart.try_open()
                 {
-                    log::error!(target: "serialmin", "Error while opening serial device: {}", e);
+                    log::error!("Error while opening serial device: {}", e);
                     return false;
                 }
             }
             else
             {
-                log::debug!(target: "serialmin", "Failed to acquire uart lock");
+                log::debug!("Failed to acquire uart lock");
                 return false;
             }
 
             if let Err(e) = self.min.reset_transport(true)
             {
-                log::error!(target: "serialmin", "Error while resetting MIN transport: {}", e);
+                log::error!("Error while resetting MIN transport: {}", e);
                 return false;
             }
         }
@@ -129,12 +129,12 @@ impl SerialMinConnection
         let response_specs;
 
         // Send handshake
-        log::debug!(target: "serialmin", "Sending handshake...");
+        log::debug!("Sending handshake...");
         let handshake: [u8; 2] = [b'M', b'K'];
         {
             if let Err(e) = self.min.queue_frame(MassiveKnobHostToDeviceFrameID::Handshake as u8, &handshake[..], handshake.len() as u8)
             {
-                log::error!(target: "serialmin", "Failed to send handshake: {}", e);
+                log::error!("Failed to send handshake: {}", e);
             }
         }
 
@@ -144,7 +144,7 @@ impl SerialMinConnection
         {
             if Instant::now() - handshake_start > HANDSHAKE_TIMEOUT
             {
-                log::warn!(target: "serialmin", "Handshake timeout, disconnecting...");
+                log::warn!("Handshake timeout, disconnecting...");
                 self.disconnect();
                 return false
             }
@@ -159,7 +159,7 @@ impl SerialMinConnection
                         {
                             if msg.len < 4
                             {
-                                log::warn!(target: "serialmin", "Invalid handshake response length during handshake. Expected 4, got {}", msg.len);
+                                log::warn!("Invalid handshake response length during handshake. Expected 4, got {}", msg.len);
                                 return false;
                             }
 
@@ -177,7 +177,7 @@ impl SerialMinConnection
                         Ok(MassiveKnobDeviceToHostFrameID::AnalogInput) |
                         Ok(MassiveKnobDeviceToHostFrameID::DigitalInput) =>
                         {
-                            log::debug!(target: "serialmin", "Received input frame during handshake, ignoring");
+                            log::debug!("Received input frame during handshake, ignoring");
                         },
 
                         Ok(MassiveKnobDeviceToHostFrameID::Error) =>
@@ -195,13 +195,13 @@ impl SerialMinConnection
 
                 PollMessageResult::Timeout =>
                 {
-                    log::warn!(target: "serialmin", "Timeout while polling for messages");
+                    log::warn!("Timeout while polling for messages");
                     return false;
                 }
 
                 PollMessageResult::Disconnected =>
                 {
-                    log::warn!(target: "serialmin", "Device disconnected while polling for messages");
+                    log::warn!("Device disconnected while polling for messages");
                     return false;
                 }
             }
@@ -210,7 +210,7 @@ impl SerialMinConnection
 
         if let Some(specs) = response_specs
         {
-            log::info!(target: "serialmin", "Connected to serial device");
+            log::info!("Connected to serial device");
 
             // TODO verbose logging on failure
             _ = self.state_sender.send(SerialMinConnectionState::Connected { specs });
@@ -221,7 +221,7 @@ impl SerialMinConnection
         }
         else
         {
-            log::debug!(target: "serialmin", "No device specs received after handshake, connecting failed");
+            log::debug!("No device specs received after handshake, connecting failed");
             false
         }
     }
@@ -249,7 +249,7 @@ impl SerialMinConnection
                     {
                         Ok(MassiveKnobDeviceToHostFrameID::HandshakeResponse) =>
                         {
-                            log::debug!(target: "serialmin", "Handshake response received after initial handshake");
+                            log::debug!("Handshake response received after initial handshake");
                             // TODO reconnect?
                             break;
                         },
@@ -258,7 +258,7 @@ impl SerialMinConnection
                         {
                             if msg.len < 2
                             {
-                                log::warn!(target: "serialmin", "Invalid analog input payload length, expected 2, got {}", msg.len);
+                                log::warn!("Invalid analog input payload length, expected 2, got {}", msg.len);
                             }
 
                             // TODO verbose logging on failure
@@ -269,7 +269,7 @@ impl SerialMinConnection
                         {
                             if msg.len < 2
                             {
-                                log::warn!(target: "serialmin", "Invalid digital input payload length, expected 2, got {}", msg.len);
+                                log::warn!("Invalid digital input payload length, expected 2, got {}", msg.len);
                             }
 
                             // TODO verbose logging on failure
@@ -279,7 +279,7 @@ impl SerialMinConnection
                         Ok(MassiveKnobDeviceToHostFrameID::KeepAlive) =>
                         {
                             // TODO record moment
-                            log::debug!(target: "serialmin", "Keep-alive received");
+                            log::debug!("Keep-alive received");
                         },
 
                         Ok(MassiveKnobDeviceToHostFrameID::Error) =>
@@ -337,7 +337,7 @@ impl SerialMinConnection
                 Err(_e) =>
                 {
                     /*
-                    log::error!(target: "serialmin", "Error while reading from serial port: {:?}", e);
+                    log::error!("Error while reading from serial port: {:?}", e);
                     // TODO set disconnected
                     return None
                     */
@@ -363,7 +363,7 @@ impl SerialMinConnection
 
                 Err(min_rs::Error::NoEnoughTxSpace(overflow)) =>
                 {
-                    log::debug!(target: "serialmin", "MIN transmit buffer is full, {} bytes overflowed", overflow);
+                    log::debug!("MIN transmit buffer is full, {} bytes overflowed", overflow);
 
                     self.disconnect();
                     return PollMessageResult::Disconnected;
@@ -378,12 +378,12 @@ impl SerialMinConnection
     fn log_error_frame(msg: &Msg)
     {
         let error = String::from_utf8(msg.buf.clone()).unwrap_or_else(|_| String::from("<UTF-8 decoding failed>"));
-        log::error!(target: "serialmin", "Error reported by device: {}", error);
+        log::error!("Error reported by device: {}", error);
     }
 
     fn log_unrecognized_frame(msg: &Msg)
     {
-        log::warn!(target: "serialmin", "Unrecognized frame ID {} of length {}", msg.min_id, msg.len);
+        log::warn!("Unrecognized frame ID {} of length {}", msg.min_id, msg.len);
     }
 }
 
